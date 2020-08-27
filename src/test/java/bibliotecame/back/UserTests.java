@@ -1,12 +1,8 @@
 package bibliotecame.back;
 
-import bibliotecame.back.controllers.BookController;
 import bibliotecame.back.controllers.UserController;
-import bibliotecame.back.models.BookModel;
 import bibliotecame.back.models.UserModel;
-import bibliotecame.back.repository.BookRepository;
 import bibliotecame.back.repository.UserRepository;
-import bibliotecame.back.services.BookService;
 import bibliotecame.back.services.UserService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -16,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import java.lang.module.ResolutionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

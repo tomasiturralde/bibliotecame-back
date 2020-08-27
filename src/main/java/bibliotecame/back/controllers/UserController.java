@@ -1,8 +1,6 @@
 package bibliotecame.back.controllers;
 
-import bibliotecame.back.models.BookModel;
 import bibliotecame.back.models.UserModel;
-import bibliotecame.back.services.BookService;
 import bibliotecame.back.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
