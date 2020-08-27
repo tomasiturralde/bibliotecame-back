@@ -22,15 +22,15 @@ public class UserController {
 
     @GetMapping("{id}")
     public ResponseEntity<UserModel> getUserModel(@PathVariable Integer id){
-        return new ResponseEntity(this.userService.findUserById(id), HttpStatus.OK);
+        return new ResponseEntity<>(this.userService.findUserById(id), HttpStatus.OK);
     }
 
     @PostMapping()
-    public ResponseEntity createUser(@Valid @RequestBody UserModel userModel){
+    public ResponseEntity<UserModel> createUser(@Valid @RequestBody UserModel userModel){
 
-        if(!userService.validUser(userModel))return new ResponseEntity(userModel, HttpStatus.BAD_REQUEST);
+        if(!userService.validUser(userModel))return new ResponseEntity<>(userModel, HttpStatus.BAD_REQUEST);
 
-        if(userService.emailExists(userModel.getEmail())) return new ResponseEntity(userModel, HttpStatus.BAD_REQUEST);
+        if(userService.emailExists(userModel.getEmail())) return new ResponseEntity<>(userModel, HttpStatus.BAD_REQUEST);
         userModel.setAdmin(false);
 
         return ResponseEntity.ok(userService.saveUser(userModel));
