@@ -1,7 +1,5 @@
-package bibliotecame.back.services;
+package bibliotecame.back.Author;
 
-import bibliotecame.back.models.AuthorModel;
-import bibliotecame.back.repository.AuthorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

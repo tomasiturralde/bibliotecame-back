@@ -1,10 +1,10 @@
-package bibliotecame.back.models;
+package bibliotecame.back.Tag;
 
 import javax.persistence.*;
 
 @Entity
 @Table
-public class PublisherModel {
+public class TagModel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -14,10 +14,10 @@ public class PublisherModel {
     @Column
     private String name;
 
-    public PublisherModel() {
+    public TagModel() {
     }
 
-    public PublisherModel(String name) {
+    public TagModel(String name) {
         this.name = name;
     }
 

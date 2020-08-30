@@ -1,7 +1,5 @@
-package bibliotecame.back.services;
+package bibliotecame.back.User;
 
-import bibliotecame.back.models.UserModel;
-import bibliotecame.back.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +16,11 @@ public class UserService {
     }
 
     public UserModel findUserById (int id){
-        return this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User with id: " + id + " not found!"));
+        return this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("bibliotecame.back.User with id: " + id + " not found!"));
     }
 
     public UserModel findUserByEmail(String email){
-        return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User with email: " + email + " not found!"));
+        return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("bibliotecame.back.User with email: " + email + " not found!"));
     }
 
 

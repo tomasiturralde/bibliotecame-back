@@ -1,7 +1,5 @@
-package bibliotecame.back.services;
+package bibliotecame.back.Tag;
 
-import bibliotecame.back.models.TagModel;
-import bibliotecame.back.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,6 +1,5 @@
-package bibliotecame.back.repository;
+package bibliotecame.back.Publisher;
 
-import bibliotecame.back.models.PublisherModel;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

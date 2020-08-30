@@ -1,4 +1,4 @@
-package bibliotecame.back.models;
+package bibliotecame.back.Author;
 
 import javax.persistence.*;
 

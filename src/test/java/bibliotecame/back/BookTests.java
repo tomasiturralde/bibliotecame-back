@@ -1,15 +1,19 @@
 package bibliotecame.back;
 
-import bibliotecame.back.controllers.BookController;
-import bibliotecame.back.models.*;
-import bibliotecame.back.repository.AuthorRepository;
-import bibliotecame.back.repository.BookRepository;
-import bibliotecame.back.repository.PublisherRepository;
-import bibliotecame.back.repository.TagRepository;
-import bibliotecame.back.services.AuthorService;
-import bibliotecame.back.services.BookService;
-import bibliotecame.back.services.PublisherService;
-import bibliotecame.back.services.TagService;
+import bibliotecame.back.Book.BookController;
+import bibliotecame.back.Book.BookModel;
+import bibliotecame.back.User.UserModel;
+import bibliotecame.back.Author.AuthorModel;
+import bibliotecame.back.Publisher.*;
+import bibliotecame.back.Author.AuthorRepository;
+import bibliotecame.back.Book.BookRepository;
+import bibliotecame.back.Publisher.PublisherRepository;
+import bibliotecame.back.Tag.TagModel;
+import bibliotecame.back.Tag.TagRepository;
+import bibliotecame.back.Author.AuthorService;
+import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Publisher.PublisherService;
+import bibliotecame.back.Tag.TagService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -162,6 +166,97 @@ public class BookTests {
         PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
 
         assertThat(bookController.createBook(new BookModel("papap", 2000, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.NOT_ACCEPTABLE);
+
+    }
+
+    @Test
+    void testGetAllAndGetOnlyActives(){
+        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
+        user.setAdmin(true);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
+        PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
+
+        TagModel tag1 =  tagService.findTagByName("Historia");
+        TagModel tag2 =  tagService.findTagByName("Fantasia");
+
+        List<TagModel> tagList = new ArrayList<TagModel>();
+        tagList.add(tag1);
+        tagList.add(tag2);
+
+        assertThat(bookController.createBook(new BookModel("Las marias", 2010, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(bookController.createBook(new BookModel("hola", 2010, author, publisher, tagList)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+        BookModel lasMarias = bookService.findByAttributeCombination("Las marias",author,publisher,2010);
+
+        List<BookModel> result = new ArrayList<>();
+        bookService.findAll().iterator().forEachRemaining(result::add);
+        assertThat(result.contains(lasMarias));
+
+        lasMarias.setActive(false);
+        bookService.saveBook(lasMarias);
+
+        result= new ArrayList<>();
+        bookService.findAllActive().iterator().forEachRemaining(result::add);
+        assertThat(!result.contains(lasMarias));
+
+    }
+
+    @Test
+    void testUnauthorizedForDeactivate(){
+
+        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
+        user.setAdmin(false);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
+        PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
+
+        assertThat(bookController.deactivateBook(new BookModel("Las calles", 2012, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+
+    }
+
+    @Test
+    void testDeactivatingNonexistentBookReturnsBadRequest(){
+
+        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
+        user.setAdmin(true);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
+        PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
+
+        assertThat(bookController.deactivateBook(new BookModel("Las calles", 2012, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
+    }
+
+    @Test
+    void testDeactivatingBook(){
+
+        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
+        user.setAdmin(true);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
+        PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
+        BookModel book = new BookModel("Las calles", 2012, author, publisher);
+        bookService.saveBook(book);
+
+        assertThat(bookController.deactivateBook(book).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(!bookService.findBookById(book.getId()).isActive());
 
     }
 }

@@ -1,9 +1,9 @@
-package bibliotecame.back.services;
+package bibliotecame.back.Book;
 
-import bibliotecame.back.models.AuthorModel;
-import bibliotecame.back.models.BookModel;
-import bibliotecame.back.models.PublisherModel;
-import bibliotecame.back.repository.BookRepository;
+import bibliotecame.back.Author.AuthorModel;
+import bibliotecame.back.Publisher.PublisherModel;
+import bibliotecame.back.Author.AuthorService;
+import bibliotecame.back.Publisher.PublisherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +25,7 @@ public class BookService {
     }
 
     public BookModel findBookById(int id){
-        return this.bookRepository.findById(id).orElseThrow(() -> new RuntimeException("Book with id: " + id + " not found!"));
+        return this.bookRepository.findById(id).orElseThrow(() -> new RuntimeException("bibliotecame.back.Book with id: " + id + " not found!"));
     }
 
     public BookModel saveBook(BookModel bookModel){
@@ -55,7 +55,15 @@ public class BookService {
     }
 
     public BookModel findByAttributeCombination(String title, AuthorModel author, PublisherModel publisher, int year){
-        return this.bookRepository.findByTitleAndAuthorAndPublisherAndYear(title, author, publisher, year).orElseThrow(() -> new RuntimeException("Book not found."));
+        return this.bookRepository.findByTitleAndAuthorAndPublisherAndYear(title, author, publisher, year).orElseThrow(() -> new RuntimeException("bibliotecame.back.Book not found."));
+    }
+
+    public Iterable<BookModel> findAll(){
+        return this.bookRepository.findAll();
+    }
+
+    public Iterable<BookModel> findAllActive(){
+        return this.bookRepository.findAllByActive(true);
     }
 
 }

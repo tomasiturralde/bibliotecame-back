@@ -1,6 +1,5 @@
-package bibliotecame.back.repository;
+package bibliotecame.back.User;
 
-import bibliotecame.back.models.UserModel;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

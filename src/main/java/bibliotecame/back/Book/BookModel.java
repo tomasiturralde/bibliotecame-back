@@ -1,4 +1,8 @@
-package bibliotecame.back.models;
+package bibliotecame.back.Book;
+
+import bibliotecame.back.Author.AuthorModel;
+import bibliotecame.back.Publisher.PublisherModel;
+import bibliotecame.back.Tag.TagModel;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -28,7 +32,11 @@ public class BookModel {
     @ManyToMany
     private List<TagModel> tags;
 
+    @Column
+    private boolean active;
+
     public BookModel() {
+        this.active= true;
     }
 
     public BookModel(String title, int year, AuthorModel author, PublisherModel publisher) {
@@ -37,6 +45,7 @@ public class BookModel {
         this.author = author;
         this.publisher = publisher;
         tags = new ArrayList<>();
+        this.active= true;
     }
 
     public BookModel(String title, int year, AuthorModel author, PublisherModel publisher, List<TagModel> tags) {
@@ -45,6 +54,7 @@ public class BookModel {
         this.author = author;
         this.publisher = publisher;
         this.tags = tags;
+        this.active= true;
     }
 
     public int getId() {
@@ -89,5 +99,13 @@ public class BookModel {
 
     public void setTags(List<TagModel> tags) {
         this.tags = tags;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
