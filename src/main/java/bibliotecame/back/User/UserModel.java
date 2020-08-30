@@ -1,9 +1,10 @@
-package bibliotecame.back.models;
+package bibliotecame.back.User;
 
 import javax.persistence.*;
 
 @Entity
 @Table
+@SuppressWarnings("unused")
 public class UserModel {
 
     @Id
