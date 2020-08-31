@@ -30,15 +30,13 @@ public class UserService {
 
     public boolean validUser(UserModel userModel){
         String passwordRegex = "^(?=.*?[A-Z]?)(?=.*?[a-z]?)(?=.*?[0-9]?).{6,}$";
-        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.austral.edu.)+[\\w-]{2,4}$";
+        String emailRegex = "^[\\w-.]+@([\\w-]+\\.austral.edu.)+[\\w-]{2,4}$";
 
-        if(!userModel.getPassword().matches(passwordRegex)) return false;
         if(userModel.getPhoneNumber().isEmpty()) return false;
         if(userModel.getFirstName().isEmpty()) return false;
         if(userModel.getLastName().isEmpty()) return false;
-        if(!userModel.getEmail().matches(emailRegex)) return false;
-
-        return true;
+        if(!userModel.getPassword().matches(passwordRegex)) return false;
+        return userModel.getEmail().matches(emailRegex);
     }
 
     public boolean emailExists(String email) {

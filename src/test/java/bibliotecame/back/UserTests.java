@@ -37,44 +37,57 @@ public class UserTests {
 
     @Test
     void testAddUser(){
-
-        ResponseEntity create = userController.createUser(new UserModel("rocio@ing.austral.edu.ar", "123abc", "Rocio","Ferreiro", "+54 (911) 1234 5678"));
+        String email = "name@mail.austral.edu.ar";
+        ResponseEntity<UserModel> create = userController.createUser(new UserModel(email, "123abc", "Name","LastName", "+54 (911) 1234 5678"));
 
         assertThat(create.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        UserModel savedUser = userService.findUserByEmail("rocio@ing.austral.edu.ar");
+        UserModel savedUser = userService.findUserByEmail(email);
 
         assertThat(userController.getUserModel(savedUser.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-
     }
 
     @Test
-    void testBadRequest(){
+    // asserts failure for: empty email, no .austral.edu., no @
+    void testFailureOnInvalidEmail(){
+        assertThat(userController.createUser(new UserModel("name@gmail.com", "123abcABC", "Name",
+                "LastName", "+54 (911) 1234 5678"))
+                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(userController.createUser(new UserModel("name.austral.edu.ar", "123abcABC", "Name",
+                "LastName", "+54 (911) 1234 5678"))
+                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(userController.createUser(new UserModel("", "123abc", "Name",
+                "LastName", "+54 (911) 1234 5678"))
+                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
 
-        assertThat(userController.createUser(new UserModel("rocio@gmail.com", "123abcABC", "Rocio",
-                "Ferreiro", "+54 (911) 1234 5678"))
+    @Test
+    //asserts failure for: empty password, short password
+    void testFailureOnInvalidPassword(){
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123ab", "Name",
+                "LastName", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("rocioferreiro", "123abcABC", "Rocio",
-                "Ferreiro", "+54 (911) 1234 5678"))
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "", "Name",
+                "LastName", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("rocio@ing.austral.edu.ar", "123ab", "Rocio",
-                "Ferreiro", "+54 (911) 1234 5678"))
+    }
+
+    @Test
+    //asserts failure for: empty first name, empty last name
+    void testFailureOnInvalidName(){
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abc", "",
+                "LastName", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("rocio@ing.austral.edu.ar", "123abc", "",
-                "Ferreiro", "+54 (911) 1234 5678"))
-                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("rocio@ing.austral.edu.ar", "123abc", "Rocio",
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abc", "Name",
                 "", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("rocio@ing.austral.edu.ar", "", "Rocio",
-                "Ferreiro", "+54 (911) 1234 5678"))
-                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("", "123abc", "Rocio",
-                "Ferreiro", "+54 (911) 1234 5678"))
-                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("rocio@ing.austral.edu.ar", "123abc", "Rocio",
-                "Ferreiro", ""))
-                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
 
+    @Test
+    //asserts failure for empty phone number
+    void testFailureOnInvalidPhoneNumber(){
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abc", "Name",
+                "LastName", ""))
+                .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
 }

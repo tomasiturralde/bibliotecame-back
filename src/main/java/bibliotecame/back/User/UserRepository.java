@@ -11,5 +11,4 @@ public interface UserRepository extends CrudRepository<UserModel, Integer> {
     Optional<UserModel> findById(Integer id);
 
     Optional<UserModel> findByEmail(String email);
-
 }

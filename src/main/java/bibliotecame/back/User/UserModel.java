@@ -4,6 +4,7 @@ import javax.persistence.*;
 
 @Entity
 @Table
+@SuppressWarnings("unused")
 public class UserModel {
 
     @Id
