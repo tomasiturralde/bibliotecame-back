@@ -1,5 +1,6 @@
-package bibliotecame.back.User;
+package bibliotecame.back.repository;
 
+import bibliotecame.back.models.UserModel;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,4 +12,5 @@ public interface UserRepository extends CrudRepository<UserModel, Integer> {
     Optional<UserModel> findById(Integer id);
 
     Optional<UserModel> findByEmail(String email);
+
 }
