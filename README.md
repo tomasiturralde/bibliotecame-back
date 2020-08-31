@@ -7,7 +7,7 @@ Layout of the project:
 
   Create a directory for an entire model, for example:
   
-    If the model is the bibliotecame.back.User, create a directory with the name 'user'
+    If the model is the User, create a directory with the name 'user'
     Inside it, create the controller, service, repository and model for user.
     
     Repeat this process for every model (which requires a controller, service, repository. 
