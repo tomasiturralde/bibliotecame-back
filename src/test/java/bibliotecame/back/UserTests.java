@@ -1,6 +1,9 @@
 package bibliotecame.back;
 
-import bibliotecame.back.User.*;
+import bibliotecame.back.User.UserController;
+import bibliotecame.back.User.UserModel;
+import bibliotecame.back.User.UserRepository;
+import bibliotecame.back.User.UserService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;

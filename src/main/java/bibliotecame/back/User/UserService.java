@@ -16,11 +16,11 @@ public class UserService {
     }
 
     public UserModel findUserById (int id){
-        return this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("User with id: " + id + " not found!"));
+        return this.userRepository.findById(id).orElseThrow(() -> new RuntimeException("bibliotecame.back.User with id: " + id + " not found!"));
     }
 
     public UserModel findUserByEmail(String email){
-        return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User with email: " + email + " not found!"));
+        return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("bibliotecame.back.User with email: " + email + " not found!"));
     }
 
 
