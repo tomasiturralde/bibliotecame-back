@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @RestController
-@ComponentScan("bibliotecame.back.repository")
+@ComponentScan("bibliotecame.back.User")
 public class BackApplication {
 
 	public static void main(String[] args) {
