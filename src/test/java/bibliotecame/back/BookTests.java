@@ -219,7 +219,7 @@ public class BookTests {
         AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
         PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
 
-        assertThat(bookController.deactivateBook(new BookModel("Las calles", 2012, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+        assertThat(bookController.deactivateBook(new BookModel("Las calles", 2012, author, publisher).getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
 
     }
 
@@ -236,7 +236,7 @@ public class BookTests {
         AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
         PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
 
-        assertThat(bookController.deactivateBook(new BookModel("Las calles", 2012, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(bookController.deactivateBook(new BookModel("Las calles", 2012, author, publisher).getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
 
     }
 
@@ -255,7 +255,7 @@ public class BookTests {
         BookModel book = new BookModel("Las calles", 2012, author, publisher);
         bookService.saveBook(book);
 
-        assertThat(bookController.deactivateBook(book).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(bookController.deactivateBook(book.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(!bookService.findBookById(book.getId()).isActive());
 
     }

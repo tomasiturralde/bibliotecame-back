@@ -54,15 +54,16 @@ public class BookController {
 
 
     @PostMapping("{id}/deactivate")
-    public ResponseEntity<BookModel> deactivateBook(@Valid @RequestBody BookModel bookModel){
+    public ResponseEntity<BookModel> deactivateBook(@PathVariable Integer id){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserModel user = (UserModel) authentication.getPrincipal();
         if(!user.isAdmin()){
-            return new ResponseEntity<>(bookModel, HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        if(!bookService.exists(bookModel.getTitle(), bookModel.getAuthor(), bookModel.getPublisher(), bookModel.getYear())){
-            return new ResponseEntity<>(bookModel, HttpStatus.BAD_REQUEST);
+        if(!bookService.exists(id)){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
+        BookModel bookModel = bookService.findBookById(id);
         bookModel.setActive(false);
         return ResponseEntity.ok(this.bookService.saveBook(bookModel));
     }

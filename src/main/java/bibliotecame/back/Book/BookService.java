@@ -36,6 +36,10 @@ public class BookService {
         return this.bookRepository.findByTitleAndAuthorAndPublisherAndYear(title, author, publisher, year).isPresent();
     }
 
+    public boolean exists(int id){
+        return this.bookRepository.findById(id).isPresent();
+    }
+
     public boolean hasAuthor(BookModel bookModel){
         AuthorModel author = bookModel.getAuthor();
         return authorService.exists(author.getFirstName(), author.getLastName());
