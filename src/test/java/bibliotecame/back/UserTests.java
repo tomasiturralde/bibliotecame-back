@@ -87,7 +87,4 @@ public class UserTests {
                 "LastName", ""))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
-
-
-
 }
