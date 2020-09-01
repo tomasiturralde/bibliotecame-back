@@ -8,10 +8,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,11 +32,17 @@ public class UserTests {
     @Autowired
     private UserRepository userRepository;
 
+    Authentication authentication;
+    SecurityContext securityContext;
 
     @BeforeAll
     void setUp(){
         userService = new UserService(userRepository);
         userController = new UserController(userService);
+
+        authentication = Mockito.mock(Authentication.class);
+        securityContext = Mockito.mock(SecurityContext.class);
+
     }
 
     @Test
@@ -90,4 +100,68 @@ public class UserTests {
                 "LastName", ""))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
+
+    @Test
+    void testUnauthorizedOnTryingToModifyAnIdDifferentFromMyId(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        assertThat(userController.updateUser(-1,user).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testUnauthorizedWhenUpdatingUserWithoutBeingLoggedIn(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testUnauthorizedWhenUsingUpdateForChangingEmail(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        user.setEmail("notKhalilTest@ing.austral.edu.ar");
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testUnauthorizedWhenUpdatingBodyUserIdDiffersFromLoggedId(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        UserModel user2 = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        assertThat(userController.updateUser(user.getId(),user2).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testBadRequestWhenTryingToUpdateUserWithInvalidPassword(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        user.setPassword("te12");
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testOkWhenSuccessfullyUpdatingAUserAndVerifyUpdatedPassword(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        user.setPassword("estaesmassegura1432");
+        assertThat(userController.getUserModel(user.getId()).getBody().getPassword()).isEqualTo("test123");
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(userController.getUserModel(user.getId()).getBody().getPassword()).isEqualTo("estaesmassegura1432");
+    }
+
 }
