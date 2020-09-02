@@ -8,12 +8,17 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -28,11 +33,17 @@ public class UserTests {
     @Autowired
     private UserRepository userRepository;
 
+    Authentication authentication;
+    SecurityContext securityContext;
+
 
     @BeforeAll
     void setUp(){
         userService = new UserService(userRepository);
         userController = new UserController(userService);
+
+        authentication = Mockito.mock(Authentication.class);
+        securityContext = Mockito.mock(SecurityContext.class);
     }
 
     @Test
@@ -89,5 +100,47 @@ public class UserTests {
         assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abc", "Name",
                 "LastName", ""))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+
+    @Test
+    //test delete user
+    void testDeleteUser(){
+        UserModel user = userController.createUser(new UserModel("mail@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        assert user != null;
+        assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+        assertThrows(RuntimeException.class, () -> userController.getUserModel(user.getId()));
+    }
+
+    @Test
+    //test failure for non valid id
+    void testFailureNonValidIdOnDelete(){
+        UserModel user = userController.createUser(new UserModel("mailmailmail@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        assertThat(userController.deleteUser(12345).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    //test failure for deleting some other account
+    void testFailureWrongAccountOnDelete(){
+        UserModel user = userController.createUser(new UserModel("mailmail@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user2 = userController.createUser(new UserModel("mailito@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        assert user2 != null;
+        assertThat(userController.deleteUser(user2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
     }
 }
