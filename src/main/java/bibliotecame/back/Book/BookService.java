@@ -4,10 +4,16 @@ import bibliotecame.back.Author.AuthorModel;
 import bibliotecame.back.Publisher.PublisherModel;
 import bibliotecame.back.Author.AuthorService;
 import bibliotecame.back.Publisher.PublisherService;
+import bibliotecame.back.Tag.TagModel;
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.List;
 
 @Service
 public class BookService {
@@ -68,6 +74,38 @@ public class BookService {
 
     public Iterable<BookModel> findAllActive(){
         return this.bookRepository.findAllByActive(true);
+    }
+
+    public ResponseEntity<BookModel> updateBook(Integer id, BookModel book) {
+        BookModel bookToUpdate;
+        try {
+            bookToUpdate = this.bookRepository.findById(id).orElseThrow(() -> new NotFoundException("Book not found"));
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(book, HttpStatus.NOT_FOUND);
+        }
+
+
+        String updatedTitle = book.getTitle();
+        AuthorModel updatedAuthor = book.getAuthor();
+        PublisherModel updatedPublisher = book.getPublisher();
+        List<TagModel> updatedTags = book.getTags();
+        int updatedYear = book.getYear();
+
+        //check validity
+        if (updatedTitle == null || updatedAuthor == null || updatedPublisher == null || updatedYear < 800 || updatedYear > Calendar.getInstance().get(Calendar.YEAR)){
+            return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
+        }
+
+        //update fields
+        bookToUpdate.setTitle(updatedTitle);
+        bookToUpdate.setAuthor(updatedAuthor);
+        bookToUpdate.setPublisher(updatedPublisher);
+        bookToUpdate.setTags(updatedTags);
+        bookToUpdate.setYear(updatedYear);
+
+        //save book and return
+        BookModel updated = this.bookRepository.save(bookToUpdate);
+        return ResponseEntity.ok(updated);
     }
 
 }

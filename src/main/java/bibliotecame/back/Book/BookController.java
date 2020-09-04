@@ -52,6 +52,19 @@ public class BookController {
         return ResponseEntity.ok(this.bookService.saveBook(bookModel));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<BookModel> updateBook(@PathVariable Integer id, @Valid @RequestBody BookModel book){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserModel user = (UserModel) authentication.getPrincipal();
+
+        if(!user.isAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        return bookService.updateBook(id, book);
+    }
+
 
     @PostMapping("{id}/deactivate")
     public ResponseEntity<BookModel> deactivateBook(@PathVariable Integer id){
