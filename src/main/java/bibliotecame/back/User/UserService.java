@@ -42,4 +42,6 @@ public class UserService {
     public boolean emailExists(String email) {
         return this.userRepository.findByEmail(email).isPresent();
     }
+
+    public boolean userExists(int id) {return this.userRepository.findById(id).isPresent(); }
 }
