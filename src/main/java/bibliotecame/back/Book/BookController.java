@@ -28,6 +28,15 @@ public class BookController {
 
     @GetMapping("{id}")
     public ResponseEntity<BookModel> getBookModel(@PathVariable Integer id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(!bookService.exists(id)){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        UserModel user = (UserModel) authentication.getPrincipal();
+        BookModel book = this.bookService.findBookById(id);
+        if(!book.isActive() && !user.isAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         return new ResponseEntity<>(this.bookService.findBookById(id), HttpStatus.OK);
     }
 
@@ -65,6 +74,21 @@ public class BookController {
         }
         BookModel bookModel = bookService.findBookById(id);
         bookModel.setActive(false);
+        return ResponseEntity.ok(this.bookService.saveBook(bookModel));
+    }
+
+    @PostMapping("{id}/activate")
+    public ResponseEntity<BookModel> activateBook(@PathVariable Integer id){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserModel user = (UserModel) authentication.getPrincipal();
+        if(!user.isAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        if(!bookService.exists(id)){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+        BookModel bookModel = bookService.findBookById(id);
+        bookModel.setActive(true);
         return ResponseEntity.ok(this.bookService.saveBook(bookModel));
     }
 
