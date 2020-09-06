@@ -26,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,6 +84,9 @@ public class BookTests {
 
     @Test
     void testAddBook(){
+
+        String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
+        String randomName2 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
         user.setAdmin(true);
 
@@ -96,21 +100,22 @@ public class BookTests {
         TagModel tag1 =  tagService.findTagByName("Historia");
         TagModel tag2 =  tagService.findTagByName("Fantasia");
 
-        List<TagModel> tagList = new ArrayList<TagModel>();
+        List<TagModel> tagList = new ArrayList<>();
         tagList.add(tag1);
         tagList.add(tag2);
 
-        assertThat(bookController.createBook(new BookModel("Las marias", 2010, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(bookController.createBook(new BookModel("hola", 2010, author, publisher, tagList)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(bookController.createBook(new BookModel(randomName1, 2010, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(bookController.createBook(new BookModel(randomName2, 2010, author, publisher, tagList)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        assertThat(bookService.exists("Las marias", author, publisher, 2010)).isTrue();
-        assertThat(bookController.getBookModel(bookService.findByAttributeCombination("Las marias", author, publisher, 2010).getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(bookService.exists(randomName1, author, publisher, 2010)).isTrue();
+        assertThat(bookController.getBookModel(bookService.findByAttributeCombination(randomName1, author, publisher, 2010).getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        assertThat(bookService.exists("hola", author, publisher, 2010)).isTrue();
-        assertThat(bookController.getBookModel(bookService.findByAttributeCombination("hola", author, publisher, 2010).getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(bookService.exists(randomName2, author, publisher, 2010)).isTrue();
+        assertThat(bookController.getBookModel(bookService.findByAttributeCombination(randomName2, author, publisher, 2010).getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
     }
 
     @Test
+    //asserts failure for: not admin user creating book
     void testUnauthorized(){
 
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
@@ -128,6 +133,12 @@ public class BookTests {
     }
 
     @Test
+    //asserts failure for:
+    // empty name
+    // non valid year
+    // non recognised author
+    // non recognised publisher
+    // non recognised tag
     void testBadRequest(){
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
         user.setAdmin(true);
@@ -139,12 +150,12 @@ public class BookTests {
         AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
         PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
 
-        List<TagModel> tagList = new ArrayList<TagModel>();
+        List<TagModel> tagList = new ArrayList<>();
         tagList.add(new TagModel("hola"));
 
         assertThat(bookController.createBook(new BookModel("", 2012, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
         assertThat(bookController.createBook(new BookModel("Asd", 700, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(bookController.createBook(new BookModel("Asd", 2022, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(bookController.createBook(new BookModel("Asd", LocalDate.now().getYear()+1, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
         assertThat(bookController.createBook(new BookModel("Asd", 2012, new AuthorModel(), publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
         assertThat(bookController.createBook(new BookModel("Asd", 2012, author, new PublisherModel("asd"))).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
         assertThat(bookController.createBook(new BookModel("Asd", 2012, author, publisher, tagList)).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
@@ -152,6 +163,7 @@ public class BookTests {
     }
 
     @Test
+    //asserts failure for: creating already existing book
     void testNotAcceptable(){
 
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
@@ -170,6 +182,8 @@ public class BookTests {
 
     @Test
     void testGetAllAndGetOnlyActives(){
+
+        String randomName = RandomStringGenerator.getAlphaNumericStringWithSymbols(20);
         UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
         user.setAdmin(true);
 
@@ -183,14 +197,14 @@ public class BookTests {
         TagModel tag1 =  tagService.findTagByName("Historia");
         TagModel tag2 =  tagService.findTagByName("Fantasia");
 
-        List<TagModel> tagList = new ArrayList<TagModel>();
+        List<TagModel> tagList = new ArrayList<>();
         tagList.add(tag1);
         tagList.add(tag2);
 
-        assertThat(bookController.createBook(new BookModel("Las marias", 2010, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(bookController.createBook(new BookModel(randomName, 2010, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(bookController.createBook(new BookModel("hola", 2010, author, publisher, tagList)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        BookModel lasMarias = bookService.findByAttributeCombination("Las marias",author,publisher,2010);
+        BookModel lasMarias = bookService.findByAttributeCombination(randomName,author,publisher,2010);
 
         List<BookModel> result = new ArrayList<>();
         bookService.findAll().iterator().forEachRemaining(result::add);
@@ -242,6 +256,8 @@ public class BookTests {
     @Test
     void testDeactivatingBook(){
 
+        String randomName = RandomStringGenerator.getAlphaNumericStringWithSymbols(20);
+
         UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
         user.setAdmin(true);
 
@@ -251,7 +267,7 @@ public class BookTests {
 
         AuthorModel author = authorService.findAuthorByName("Rocio", "Ferreiro");
         PublisherModel publisher = publisherService.findPublisherByName("Ediciones");
-        BookModel book = new BookModel("Las calles", 2012, author, publisher);
+        BookModel book = new BookModel(randomName, 2012, author, publisher);
         bookService.saveBook(book);
 
         assertThat(bookController.deactivateBook(book.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
