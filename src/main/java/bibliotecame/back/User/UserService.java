@@ -46,4 +46,6 @@ public class UserService {
     public void deleteUser(UserModel user){
         this.userRepository.delete(user);
     }
+
+    public boolean userExists(int id) {return this.userRepository.findById(id).isPresent(); }
 }

@@ -143,4 +143,68 @@ public class UserTests {
         assert user2 != null;
         assertThat(userController.deleteUser(user2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
     }
+
+    @Test
+    void testUnauthorizedOnTryingToModifyAnIdDifferentFromMyId(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        assertThat(userController.updateUser(-1,user).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testUnauthorizedWhenUpdatingUserWithoutBeingLoggedIn(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testUnauthorizedWhenUsingUpdateForChangingEmail(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        user.setEmail("notKhalilTest@ing.austral.edu.ar");
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testUnauthorizedWhenUpdatingBodyUserIdDiffersFromLoggedId(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        UserModel user2 = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        assertThat(userController.updateUser(user.getId(),user2).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testBadRequestWhenTryingToUpdateUserWithInvalidPassword(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        user.setPassword("te12");
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testOkWhenSuccessfullyUpdatingAUserAndVerifyUpdatedPassword(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        Mockito.when(authentication.getPrincipal()).thenReturn(userService.findUserById(user.getId()));
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        user.setPassword("estaesmassegura1432");
+        assertThat(userController.getUserModel(user.getId()).getBody().getPassword()).isEqualTo("test123");
+        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(userController.getUserModel(user.getId()).getBody().getPassword()).isEqualTo("estaesmassegura1432");
+    }
+
 }

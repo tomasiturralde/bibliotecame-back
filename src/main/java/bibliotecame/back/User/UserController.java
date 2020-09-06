@@ -59,4 +59,31 @@ public class UserController {
 
         return ResponseEntity.ok(id);
     }
+
+    @PutMapping("user/{id}/update")
+    public ResponseEntity<UserModel> updateUser(@PathVariable Integer id, @RequestBody UserModel userModel){
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserModel loggedUser;
+        //It mustn't work if the user isn't loggedIn
+        try {
+            loggedUser = (UserModel) authentication.getPrincipal();
+        } catch (NullPointerException e) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        //It mustn't work if the Id from loggedUser differs from the one to modify, or if it tries to change its Id
+        if(loggedUser.getId() != id || userModel.getId()!=loggedUser.getId()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        //A user isn't allowed to modify its email
+        if(!loggedUser.getEmail().equals(userModel.getEmail())){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        if(!userService.validUser(userModel))return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+        return ResponseEntity.ok(userService.saveUser(userModel));
+    }
 }
