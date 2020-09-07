@@ -84,28 +84,31 @@ public class BookService {
             return new ResponseEntity<>(book, HttpStatus.NOT_FOUND);
         }
 
-
-        String updatedTitle = book.getTitle();
-        AuthorModel updatedAuthor = book.getAuthor();
-        PublisherModel updatedPublisher = book.getPublisher();
-        List<TagModel> updatedTags = book.getTags();
-        int updatedYear = book.getYear();
-
         //check validity
-        if (updatedTitle == null || updatedAuthor == null || updatedPublisher == null || updatedYear < 800 || updatedYear > Calendar.getInstance().get(Calendar.YEAR)){
+        if (!validBook(book)){
             return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
         }
 
         //update fields
-        bookToUpdate.setTitle(updatedTitle);
-        bookToUpdate.setAuthor(updatedAuthor);
-        bookToUpdate.setPublisher(updatedPublisher);
-        bookToUpdate.setTags(updatedTags);
-        bookToUpdate.setYear(updatedYear);
+        bookToUpdate.setTitle(book.getTitle());
+        bookToUpdate.setAuthor(book.getAuthor());
+        bookToUpdate.setPublisher(book.getPublisher());
+        bookToUpdate.setTags(book.getTags());
+        bookToUpdate.setYear(book.getYear());
 
         //save book and return
         BookModel updated = this.bookRepository.save(bookToUpdate);
         return ResponseEntity.ok(updated);
+    }
+
+    boolean validBook(BookModel book) {
+        String updatedTitle = book.getTitle();
+        AuthorModel updatedAuthor = book.getAuthor();
+        PublisherModel updatedPublisher = book.getPublisher();
+        int updatedYear = book.getYear();
+
+        //check validity
+        return updatedTitle != null && updatedAuthor != null && updatedPublisher != null && updatedYear >= 800 && updatedYear <= Calendar.getInstance().get(Calendar.YEAR);
     }
 
 }
