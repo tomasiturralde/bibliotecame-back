@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @RestController
+@ComponentScan("bibliotecame.back.config")
 @ComponentScan("bibliotecame.back.Book")
 @ComponentScan("bibliotecame.back.Author")
 @ComponentScan("bibliotecame.back.Publisher")
