@@ -167,7 +167,6 @@ public class BookTests {
     }
 
     @Test
-    void testNotAcceptable() {
     //asserts failure for: creating already existing book
     void testNotAcceptable(){
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
@@ -208,7 +207,6 @@ public class BookTests {
         assertThat(bookController.createBook(new BookModel(randomName, 2010, author, publisher)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(bookController.createBook(new BookModel("hola", 2010, author, publisher, tagList)).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        BookModel lasMarias = bookService.findByAttributeCombination("Las marias", author, publisher, 2010);
         BookModel lasMarias = bookService.findByAttributeCombination(randomName,author,publisher,2010);
 
         List<BookModel> result = new ArrayList<>();
@@ -282,6 +280,8 @@ public class BookTests {
 
     @Test
     public void testBookModificationOk() {
+        String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
+        String randomName2 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
         user.setAdmin(true);
 
@@ -299,13 +299,13 @@ public class BookTests {
         tagList.add(tag1);
         tagList.add(tag2);
 
-        BookModel book = new BookModel("hola", 2010, author, publisher, tagList);
+        BookModel book = new BookModel(randomName1, 2010, author, publisher, tagList);
 
         ResponseEntity<BookModel> response = bookController.createBook(book);
 
         BookModel saved = response.getBody();
         assert saved != null;
-        testTitleModification(book, saved, HttpStatus.OK, "Test modification");
+        testTitleModification(book, saved, HttpStatus.OK, randomName2);
         testYearModification(book, saved, HttpStatus.OK, 2007);
         testAuthorModification(book, saved, HttpStatus.OK, authorService.findAuthorByName("Facundo", "Bocalandro"));
         testPublisherModification(book, saved, HttpStatus.OK, publisherService.findPublisherByName("Ediciones 2"));
@@ -318,6 +318,8 @@ public class BookTests {
 
     @Test
     public void testBookModificationUnAuthorized() {
+        String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
+        String randomName2 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
         user.setAdmin(true);
 
@@ -335,7 +337,7 @@ public class BookTests {
         tagList.add(tag1);
         tagList.add(tag2);
 
-        BookModel book = new BookModel("hola", 2010, author, publisher, tagList);
+        BookModel book = new BookModel(randomName1, 2010, author, publisher, tagList);
 
         ResponseEntity<BookModel> response = bookController.createBook(book);
 
@@ -344,7 +346,7 @@ public class BookTests {
         user.setAdmin(false);
 
         assert saved != null;
-        testTitleModification(book, saved, HttpStatus.UNAUTHORIZED, "Test modification");
+        testTitleModification(book, saved, HttpStatus.UNAUTHORIZED, randomName2);
         testYearModification(book, saved, HttpStatus.UNAUTHORIZED, 2007);
         testAuthorModification(book, saved, HttpStatus.UNAUTHORIZED, authorService.findAuthorByName("Facundo", "Bocalandro"));
         testPublisherModification(book, saved, HttpStatus.UNAUTHORIZED, publisherService.findPublisherByName("Ediciones 2"));
@@ -357,6 +359,7 @@ public class BookTests {
 
     @Test
     public void testBookModificationBadRequest() {
+        String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
         UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
         user.setAdmin(true);
 
@@ -374,7 +377,7 @@ public class BookTests {
         tagList.add(tag1);
         tagList.add(tag2);
 
-        BookModel book = new BookModel("hola", 2010, author, publisher, tagList);
+        BookModel book = new BookModel(randomName1, 2010, author, publisher, tagList);
 
         ResponseEntity<BookModel> response = bookController.createBook(book);
 
