@@ -1,6 +1,7 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Author.AuthorModel;
+import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Publisher.PublisherModel;
 import bibliotecame.back.Tag.TagModel;
 
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Table
+@SuppressWarnings("unused")
 public class BookModel {
 
     @Id
@@ -32,6 +34,9 @@ public class BookModel {
     @ManyToMany
     private List<TagModel> tags;
 
+    @OneToMany
+    private List<CopyModel> copies;
+
     @Column
     private boolean active;
 
@@ -46,6 +51,7 @@ public class BookModel {
         this.publisher = publisher;
         tags = new ArrayList<>();
         this.active= true;
+        copies = new ArrayList<>();
     }
 
     public BookModel(String title, int year, AuthorModel author, PublisherModel publisher, List<TagModel> tags) {
@@ -55,6 +61,7 @@ public class BookModel {
         this.publisher = publisher;
         this.tags = tags;
         this.active= true;
+        copies = new ArrayList<>();
     }
 
     public int getId() {
@@ -107,5 +114,13 @@ public class BookModel {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public List<CopyModel> getCopies() {
+        return copies;
+    }
+
+    public void setCopies(List<CopyModel> copies) {
+        this.copies = copies;
     }
 }

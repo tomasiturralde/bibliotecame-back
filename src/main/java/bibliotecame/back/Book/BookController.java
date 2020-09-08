@@ -1,5 +1,7 @@
 package bibliotecame.back.Book;
 
+import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Copy.CopyService;
 import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/book")
@@ -19,11 +22,13 @@ public class BookController {
 
     private final TagService tagService;
 
+    private final CopyService copyService;
 
     @Autowired
-    public BookController(BookService bookService, TagService tagService){
+    public BookController(BookService bookService, TagService tagService, CopyService copyService) {
         this.bookService = bookService;
         this.tagService = tagService;
+        this.copyService = copyService;
     }
 
     @GetMapping("{id}")
@@ -69,6 +74,17 @@ public class BookController {
 
         if(!user.isAdmin()){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        List<CopyModel> copies = book.getCopies();
+
+        if(!copies.isEmpty()){
+            if(copies.size()>=100) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+            for(CopyModel copy : copies){
+                if(copyService.exists(copy.getId())) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                copyService.saveCopy(copy);
+            }
         }
 
         return bookService.updateBook(id, book);

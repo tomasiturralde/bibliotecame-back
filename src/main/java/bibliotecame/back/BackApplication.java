@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ComponentScan("bibliotecame.back.Publisher")
 @ComponentScan("bibliotecame.back.Tag")
 @ComponentScan("bibliotecame.back.User")
+@ComponentScan("bibliotecame.back.Copy")
 public class BackApplication {
 
 	public static void main(String[] args) {

@@ -1,10 +1,10 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Author.AuthorModel;
+import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Publisher.PublisherModel;
 import bibliotecame.back.Author.AuthorService;
 import bibliotecame.back.Publisher.PublisherService;
-import bibliotecame.back.Tag.TagModel;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -109,6 +109,19 @@ public class BookService {
 
         //check validity
         return updatedTitle != null && updatedAuthor != null && updatedPublisher != null && updatedYear >= 800 && updatedYear <= Calendar.getInstance().get(Calendar.YEAR);
+    }
+
+    public void addCopies(BookModel book, List<CopyModel> copies){
+        List<CopyModel> actualCopies = book.getCopies();
+        actualCopies.addAll(copies);
+        book.setCopies(actualCopies);
+    }
+
+    public boolean containsCopy(BookModel bookModel, CopyModel copyModel){
+        for(CopyModel copy : bookModel.getCopies()){
+            if(copy.getId().equals(copyModel.getId())) return true;
+        }
+        return false;
     }
 
 }

@@ -2,6 +2,9 @@ package bibliotecame.back;
 
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
+import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Copy.CopyRepository;
+import bibliotecame.back.Copy.CopyService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.Author.AuthorModel;
 import bibliotecame.back.Publisher.*;
@@ -60,6 +63,11 @@ public class BookTests {
     @Autowired
     private TagRepository tagRepository;
 
+    @Mock
+    private CopyService copyService;
+    @Autowired
+    private CopyRepository copyRepository;
+
     Authentication authentication;
     SecurityContext securityContext;
 
@@ -67,9 +75,10 @@ public class BookTests {
     void setUp() {
         authorService = new AuthorService(authorRepository);
         publisherService = new PublisherService(publisherRepository);
+        copyService = new CopyService(copyRepository);
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, authorService, publisherService);
-        bookController = new BookController(bookService, tagService);
+        bookController = new BookController(bookService, tagService, copyService);
 
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
@@ -304,11 +313,19 @@ public class BookTests {
         ResponseEntity<BookModel> response = bookController.createBook(book);
 
         BookModel saved = response.getBody();
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+
         assert saved != null;
         testTitleModification(book, saved, HttpStatus.OK, randomName2);
         testYearModification(book, saved, HttpStatus.OK, 2007);
         testAuthorModification(book, saved, HttpStatus.OK, authorService.findAuthorByName("Facundo", "Bocalandro"));
         testPublisherModification(book, saved, HttpStatus.OK, publisherService.findPublisherByName("Ediciones 2"));
+        testModificationWithNewCopies(book, saved, HttpStatus.OK, copies);
 
 
         List<TagModel> replacementTags = new ArrayList<>();
@@ -345,11 +362,18 @@ public class BookTests {
 
         user.setAdmin(false);
 
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+
         assert saved != null;
         testTitleModification(book, saved, HttpStatus.UNAUTHORIZED, randomName2);
         testYearModification(book, saved, HttpStatus.UNAUTHORIZED, 2007);
         testAuthorModification(book, saved, HttpStatus.UNAUTHORIZED, authorService.findAuthorByName("Facundo", "Bocalandro"));
         testPublisherModification(book, saved, HttpStatus.UNAUTHORIZED, publisherService.findPublisherByName("Ediciones 2"));
+        testModificationWithNewCopies(book, saved, HttpStatus.UNAUTHORIZED, copies);
 
 
         List<TagModel> replacementTags = new ArrayList<>();
@@ -381,14 +405,20 @@ public class BookTests {
 
         ResponseEntity<BookModel> response = bookController.createBook(book);
 
+        CopyModel copy = copyService.saveCopy(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(copy);
+
         BookModel saved = response.getBody();
         assert saved != null;
+        testModificationWithNewCopies(book, saved, HttpStatus.BAD_REQUEST, copies);
         testTitleModification(book, saved, HttpStatus.BAD_REQUEST, null);
         testYearModification(book, saved, HttpStatus.BAD_REQUEST, 799);
         testYearModification(book, saved, HttpStatus.BAD_REQUEST, 2021);
         testAuthorModification(book, saved, HttpStatus.BAD_REQUEST, null);
         testPublisherModification(book, saved, HttpStatus.BAD_REQUEST, null);
         testTagModification(book, saved, HttpStatus.BAD_REQUEST, null);
+
     }
 
     private void testTitleModification(BookModel book, BookModel saved, HttpStatus status, String newValue) {
@@ -434,6 +464,21 @@ public class BookTests {
             PublisherModel responsePublisher = Objects.requireNonNull(responseEntity.getBody()).getPublisher();
             assertThat(responsePublisher.getName()).isEqualTo(newPublisher.getName());
         }
+    }
+
+    private void testModificationWithNewCopies(BookModel book, BookModel saved, HttpStatus status, List<CopyModel> copies) {
+
+        bookService.addCopies(book, copies);
+        ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
+        assertThat(responseEntity.getStatusCode()).isEqualTo(status);
+
+        if(status == HttpStatus.OK){
+            for(CopyModel copy : copies){
+                assertThat(bookService.containsCopy(book, copy)).isTrue();
+            }
+        }
+
+        book.setCopies(new ArrayList<>());
     }
 
     private void testTagModification(BookModel book, BookModel saved, HttpStatus status, List<TagModel> newTags) {
