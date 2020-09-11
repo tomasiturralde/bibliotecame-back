@@ -1,10 +1,6 @@
 package bibliotecame.back.Book;
 
-import bibliotecame.back.Author.AuthorModel;
 import bibliotecame.back.Copy.CopyModel;
-import bibliotecame.back.Publisher.PublisherModel;
-import bibliotecame.back.Author.AuthorService;
-import bibliotecame.back.Publisher.PublisherService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,14 +16,10 @@ public class BookService {
 
     private final BookRepository bookRepository;
 
-    private final AuthorService authorService;
-    private final PublisherService publisherService;
 
     @Autowired
-    public BookService(BookRepository bookRepository, AuthorService authorService, PublisherService publisherService){
+    public BookService(BookRepository bookRepository){
         this.bookRepository = bookRepository;
-        this.authorService = authorService;
-        this.publisherService = publisherService;
     }
 
     public BookModel findBookById(int id){
@@ -38,7 +30,7 @@ public class BookService {
         return this.bookRepository.save(bookModel);
     }
 
-    public boolean exists(String title, AuthorModel author, PublisherModel publisher, int year){
+    public boolean exists(String title, String author, String publisher, int year){
         return this.bookRepository.findByTitleAndAuthorAndPublisherAndYear(title, author, publisher, year).isPresent();
     }
 
@@ -47,13 +39,11 @@ public class BookService {
     }
 
     public boolean hasAuthor(BookModel bookModel){
-        AuthorModel author = bookModel.getAuthor();
-        return authorService.exists(author.getFirstName(), author.getLastName());
+        return bookModel.getAuthor() != null && !bookModel.getAuthor().equals("");
     }
 
     public boolean hasPublisher(BookModel bookModel){
-        PublisherModel publisher = bookModel.getPublisher();
-        return publisherService.exists(publisher.getName());
+        return bookModel.getPublisher() != null && !bookModel.getPublisher().equals("");
     }
 
     public boolean hasTitle(BookModel bookModel){
@@ -64,7 +54,7 @@ public class BookService {
         return bookModel.getYear() > 800 && bookModel.getYear() <= LocalDate.now().getYear();
     }
 
-    public BookModel findByAttributeCombination(String title, AuthorModel author, PublisherModel publisher, int year){
+    public BookModel findByAttributeCombination(String title, String author, String publisher, int year){
         return this.bookRepository.findByTitleAndAuthorAndPublisherAndYear(title, author, publisher, year).orElseThrow(() -> new RuntimeException("bibliotecame.back.Book not found."));
     }
 
@@ -103,12 +93,10 @@ public class BookService {
 
     boolean validBook(BookModel book) {
         String updatedTitle = book.getTitle();
-        AuthorModel updatedAuthor = book.getAuthor();
-        PublisherModel updatedPublisher = book.getPublisher();
         int updatedYear = book.getYear();
 
         //check validity
-        return updatedTitle != null && updatedAuthor != null && updatedPublisher != null && updatedYear >= 800 && updatedYear <= Calendar.getInstance().get(Calendar.YEAR);
+        return updatedTitle != null && hasAuthor(book) && hasAuthor(book) && updatedYear >= 800 && updatedYear <= Calendar.getInstance().get(Calendar.YEAR);
     }
 
     public void addCopies(BookModel book, List<CopyModel> copies){

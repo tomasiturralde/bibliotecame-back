@@ -1,14 +1,12 @@
 package bibliotecame.back.Copy;
 
-import bibliotecame.back.Book.BookModel;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface CopyRepository extends CrudRepository<CopyModel, Integer> {
 
-    public Optional<CopyModel> findById(String id);
+    Optional<CopyModel> findById(String id);
 }
