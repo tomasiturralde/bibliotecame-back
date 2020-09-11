@@ -31,12 +31,10 @@ public class TagService {
         return this.tagRepository.findByName(name).isPresent();
     }
 
-    public boolean validate(List<TagModel> tags) {
-
+    public void validate(List<TagModel> tags) {
         for (TagModel tag : tags){
-            if(!exists(tag.getName())) return false;
+            if(!exists(tag.getName())) saveTag(tag);
         }
-        return true;
     }
 }
 
