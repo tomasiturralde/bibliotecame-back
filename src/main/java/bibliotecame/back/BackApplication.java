@@ -7,10 +7,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @RestController
-@ComponentScan("bibliotecame.back.config")
 @ComponentScan("bibliotecame.back.Book")
 @ComponentScan("bibliotecame.back.Tag")
 @ComponentScan("bibliotecame.back.User")
+@ComponentScan("bibliotecame.back.Auth")
+@ComponentScan("bibliotecame.back.Security")
 @ComponentScan("bibliotecame.back.Copy")
 public class BackApplication {
 

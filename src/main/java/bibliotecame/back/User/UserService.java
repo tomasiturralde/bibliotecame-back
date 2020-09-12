@@ -1,6 +1,9 @@
 package bibliotecame.back.User;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +28,18 @@ public class UserService {
 
 
     public UserModel saveUser(UserModel userModel){
+        userModel.setPassword(BCrypt.hashpw(userModel.getPassword(), BCrypt.gensalt()));
         return this.userRepository.save(userModel);
+    }
+
+    public UserModel updateUser(UserModel userModel,int id){
+        userModel.setPassword(BCrypt.hashpw(userModel.getPassword(), BCrypt.gensalt()));
+        UserModel userToUpdate = findUserById(id);
+        userToUpdate.setPassword(userModel.getPassword());
+        userToUpdate.setFirstName(userModel.getFirstName());
+        userToUpdate.setLastName(userModel.getLastName());
+        userToUpdate.setPhoneNumber(userModel.getPhoneNumber());
+        return this.userRepository.save(userToUpdate);
     }
 
     public boolean validUser(UserModel userModel){
@@ -37,6 +51,12 @@ public class UserService {
         if(userModel.getLastName().isEmpty()) return false;
         if(!userModel.getPassword().matches(passwordRegex)) return false;
         return userModel.getEmail().matches(emailRegex);
+    }
+
+    public UserModel findLogged(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
+        return findUserByEmail(email);
     }
 
     public boolean emailExists(String email) {
