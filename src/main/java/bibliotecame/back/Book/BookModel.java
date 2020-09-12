@@ -1,8 +1,10 @@
 package bibliotecame.back.Book;
 
-import bibliotecame.back.Author.AuthorModel;
-import bibliotecame.back.Publisher.PublisherModel;
+import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Tag.TagModel;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.loader.plan.exec.internal.LoadQueryJoinAndFetchProcessor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import java.util.List;
 
 @Entity
 @Table
+@SuppressWarnings("unused")
 public class BookModel {
 
     @Id
@@ -23,14 +26,15 @@ public class BookModel {
     @Column
     private int year;
 
-    @ManyToOne
-    private AuthorModel author;
+    private String author;
 
-    @ManyToOne
-    private PublisherModel publisher;
+    private String publisher;
 
     @ManyToMany
     private List<TagModel> tags;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<CopyModel> copies;
 
     @Column
     private boolean active;
@@ -39,22 +43,24 @@ public class BookModel {
         this.active= true;
     }
 
-    public BookModel(String title, int year, AuthorModel author, PublisherModel publisher) {
+    public BookModel(String title, int year, String author, String publisher) {
         this.title = title;
         this.year = year;
         this.author = author;
         this.publisher = publisher;
         tags = new ArrayList<>();
         this.active= true;
+        copies = new ArrayList<>();
     }
 
-    public BookModel(String title, int year, AuthorModel author, PublisherModel publisher, List<TagModel> tags) {
+    public BookModel(String title, int year, String author, String publisher, List<TagModel> tags) {
         this.title = title;
         this.year = year;
         this.author = author;
         this.publisher = publisher;
         this.tags = tags;
         this.active= true;
+        copies = new ArrayList<>();
     }
 
     public int getId() {
@@ -77,19 +83,19 @@ public class BookModel {
         this.year = year;
     }
 
-    public AuthorModel getAuthor() {
+    public String getAuthor() {
         return author;
     }
 
-    public void setAuthor(AuthorModel author) {
+    public void setAuthor(String author) {
         this.author = author;
     }
 
-    public PublisherModel getPublisher() {
+    public String getPublisher() {
         return publisher;
     }
 
-    public void setPublisher(PublisherModel publisher) {
+    public void setPublisher(String publisher) {
         this.publisher = publisher;
     }
 
@@ -107,5 +113,13 @@ public class BookModel {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public List<CopyModel> getCopies() {
+        return copies;
+    }
+
+    public void setCopies(List<CopyModel> copies) {
+        this.copies = copies;
     }
 }
