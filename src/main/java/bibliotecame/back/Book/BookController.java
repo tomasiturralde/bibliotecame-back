@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -81,15 +82,18 @@ public class BookController {
 //        }
 
         List<CopyModel> copies = book.getCopies();
+        List<CopyModel> savedCopies = new ArrayList<>();
 
         if(!copies.isEmpty()){
             if(copies.size()>=100) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
             for(CopyModel copy : copies){
                 if(copyService.exists(copy.getId())) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                copyService.saveCopy(copy);
+                savedCopies.add(copyService.saveCopy(copy));
             }
         }
+
+        book.setCopies(savedCopies);
 
         return bookService.updateBook(id, book);
     }

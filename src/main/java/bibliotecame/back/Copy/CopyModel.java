@@ -18,6 +18,7 @@ public class CopyModel {
 
     public CopyModel(String id) {
         this.id = id;
+        isBooked = false;
     }
 
     public String getId() {

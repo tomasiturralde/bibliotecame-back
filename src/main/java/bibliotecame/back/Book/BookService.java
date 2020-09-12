@@ -1,6 +1,7 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Copy.CopyService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -85,6 +86,7 @@ public class BookService {
         bookToUpdate.setPublisher(book.getPublisher());
         bookToUpdate.setTags(book.getTags());
         bookToUpdate.setYear(book.getYear());
+        addCopies(bookToUpdate, book.getCopies());
 
         //save book and return
         BookModel updated = this.bookRepository.save(bookToUpdate);
@@ -100,7 +102,7 @@ public class BookService {
     }
 
     public void addCopies(BookModel book, List<CopyModel> copies){
-        List<CopyModel> actualCopies = book.getCopies();
+        List<CopyModel> actualCopies = findBookById(book.getId()).getCopies() ;
         actualCopies.addAll(copies);
         book.setCopies(actualCopies);
     }
