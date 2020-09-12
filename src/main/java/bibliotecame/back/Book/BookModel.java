@@ -2,6 +2,9 @@ package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Tag.TagModel;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.loader.plan.exec.internal.LoadQueryJoinAndFetchProcessor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -30,7 +33,7 @@ public class BookModel {
     @ManyToMany
     private List<TagModel> tags;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     private List<CopyModel> copies;
 
     @Column

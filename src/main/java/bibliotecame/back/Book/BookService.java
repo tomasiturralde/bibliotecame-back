@@ -2,6 +2,8 @@ package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.Tag.TagModel;
+import bibliotecame.back.Tag.TagService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,10 +19,13 @@ public class BookService {
 
     private final BookRepository bookRepository;
 
+    private final TagService tagService;
+
 
     @Autowired
-    public BookService(BookRepository bookRepository){
+    public BookService(BookRepository bookRepository, TagService tagService){
         this.bookRepository = bookRepository;
+        this.tagService = tagService;
     }
 
     public BookModel findBookById(int id){
@@ -76,16 +81,20 @@ public class BookService {
         }
 
         //check validity
-        if (!validBook(book)){
-            return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
-        }
+//        if (!validBook(book)){
+//            return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
+//        }
 
         //update fields
-        bookToUpdate.setTitle(book.getTitle());
-        bookToUpdate.setAuthor(book.getAuthor());
-        bookToUpdate.setPublisher(book.getPublisher());
-        bookToUpdate.setTags(book.getTags());
-        bookToUpdate.setYear(book.getYear());
+        if(book.getTitle()!= null && !book.getTitle().isEmpty())  bookToUpdate.setTitle(book.getTitle());
+        if(hasAuthor(book)) bookToUpdate.setAuthor(book.getAuthor());
+        if(hasPublisher(book)) bookToUpdate.setPublisher(book.getPublisher());
+        addTags(bookToUpdate, tagService.validate(book.getTags()));
+
+        if(book.getYear() != 0){
+            if(book.getYear() < 800 || book.getYear() > Calendar.getInstance().get(Calendar.YEAR)) return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
+            bookToUpdate.setYear(book.getYear());
+        }
         addCopies(bookToUpdate, book.getCopies());
 
         //save book and return
@@ -114,4 +123,9 @@ public class BookService {
         return false;
     }
 
+    public void addTags(BookModel book, List<TagModel> tags) {
+        List<TagModel> actualTags = findBookById(book.getId()).getTags() ;
+        actualTags.addAll(tags);
+        book.setTags(actualTags);
+    }
 }

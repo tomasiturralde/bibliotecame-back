@@ -1,5 +1,7 @@
 package bibliotecame.back.Copy;
 
+import bibliotecame.back.Book.BookModel;
+
 import javax.persistence.*;
 
 @Entity

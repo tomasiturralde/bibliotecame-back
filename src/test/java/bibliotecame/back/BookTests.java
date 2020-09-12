@@ -62,7 +62,7 @@ public class BookTests {
     void setUp() {
         copyService = new CopyService(copyRepository);
         tagService = new TagService(tagRepository);
-        bookService = new BookService(bookRepository);
+        bookService = new BookService(bookRepository, tagService);
         bookController = new BookController(bookService, tagService, copyService);
 
         authentication = Mockito.mock(Authentication.class);
@@ -438,7 +438,9 @@ public class BookTests {
 
     private void testModificationWithNewCopies(BookModel book, BookModel saved, HttpStatus status, List<CopyModel> copies) {
 
-        bookService.addCopies(book, copies);
+        List<CopyModel> oldCopies = book.getCopies();
+        oldCopies.addAll(copies);
+        book.setCopies(oldCopies);
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
         assertThat(responseEntity.getStatusCode()).isEqualTo(status);
 
