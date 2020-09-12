@@ -64,7 +64,7 @@ public class BookController {
         }
 
         if(!bookModel.getTags().isEmpty()){
-            tagService.validate(bookModel.getTags());
+            bookModel.setTags(tagService.validate(bookModel.getTags()));
         }
 
         return ResponseEntity.ok(this.bookService.saveBook(bookModel));
