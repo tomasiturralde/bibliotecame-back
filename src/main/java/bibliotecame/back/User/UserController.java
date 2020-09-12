@@ -36,20 +36,21 @@ public class UserController {
 
     @DeleteMapping("deleteUser/{id}")
     public ResponseEntity<Integer> deleteUser(@PathVariable Integer id){
-
-        UserModel user;
-        try {
-            user = this.userService.findLogged();
-        } catch (RuntimeException e){
-            return new ResponseEntity<>(id, HttpStatus.BAD_REQUEST);
-        }
-
-        if(user.getId() != id){
-            return new ResponseEntity<>(id, HttpStatus.UNAUTHORIZED);
-        }
+//
+//        UserModel user;
+//        try {
+//            user = this.userService.findLogged();
+//        } catch (RuntimeException e){
+//            return new ResponseEntity<>(id, HttpStatus.BAD_REQUEST);
+//        }
+//
+//        if(user.getId() != id){
+//            return new ResponseEntity<>(id, HttpStatus.UNAUTHORIZED);
+//        }
 
         //todo: check prestamos activos, cuando existan.
 
+        UserModel user = userService.findUserById(id); //Borrar esta linea al descomentar el resto.
         userService.deleteUser(user);
 
         return ResponseEntity.ok(id);
@@ -58,24 +59,24 @@ public class UserController {
     @PutMapping("user/{id}/update")
     public ResponseEntity<UserModel> updateUser(@PathVariable Integer id, @RequestBody UserModel userModel){
 
-        UserModel loggedUser;
-
-        //It mustn't work if the user isn't loggedIn
-        try {
-            loggedUser = userService.findLogged();
-        } catch (NullPointerException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        //It mustn't work if the Id from loggedUser differs from the one to modify, or if it tries to change its Id
-        if(loggedUser.getId() != id){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-
-        //A user isn't allowed to modify its email
-        if(!loggedUser.getEmail().equals(userModel.getEmail())){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+//        UserModel loggedUser;
+//
+//        //It mustn't work if the user isn't loggedIn
+//        try {
+//            loggedUser = userService.findLogged();
+//        } catch (NullPointerException e) {
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        //It mustn't work if the Id from loggedUser differs from the one to modify, or if it tries to change its Id
+//        if(loggedUser.getId() != id){
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        //A user isn't allowed to modify its email
+//        if(!loggedUser.getEmail().equals(userModel.getEmail())){
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//        }
 
         if(!userService.validUser(userModel))return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
