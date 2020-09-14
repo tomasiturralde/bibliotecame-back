@@ -2,15 +2,17 @@ package bibliotecame.back;
 
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
+import bibliotecame.back.Book.BookRepository;
+import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
-import bibliotecame.back.User.UserModel;
-import bibliotecame.back.Book.BookRepository;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.Tag.TagRepository;
-import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Tag.TagService;
+import bibliotecame.back.User.UserModel;
+import bibliotecame.back.User.UserRepository;
+import bibliotecame.back.User.UserService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -52,6 +54,11 @@ public class BookTests {
     @Autowired
     private CopyRepository copyRepository;
 
+    @Mock
+    private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
+
     String authorForSavedBook;
     String publisherForSavedBook;
 
@@ -63,7 +70,8 @@ public class BookTests {
         copyService = new CopyService(copyRepository);
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
-        bookController = new BookController(bookService, tagService, copyService);
+        userService = new UserService(userRepository);
+        bookController = new BookController(bookService, tagService, copyService, userService);
 
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);

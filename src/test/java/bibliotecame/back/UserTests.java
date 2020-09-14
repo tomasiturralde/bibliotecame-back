@@ -1,5 +1,8 @@
 package bibliotecame.back;
 
+import bibliotecame.back.Auth.AuthController;
+import bibliotecame.back.Auth.LoginForm;
+import bibliotecame.back.Security.jwt.TokenProvider;
 import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserRepository;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +34,13 @@ public class UserTests {
     @Mock
     private UserService userService;
 
+    @Mock
+    private AuthController authController;
+    @Autowired
+    private TokenProvider tokenProvider;
+    @Autowired
+    private AuthenticationProvider authProvider;
+
     @Autowired
     private UserRepository userRepository;
 
@@ -41,7 +52,7 @@ public class UserTests {
     void setUp(){
         userService = new UserService(userRepository);
         userController = new UserController(userService);
-
+        authController = new AuthController(tokenProvider,authProvider,userService);
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
     }
@@ -207,4 +218,11 @@ public class UserTests {
         assertThat(userController.getUserModel(user.getId()).getBody().getPassword()).isEqualTo("estaesmassegura1432");
     }
 
+    @Test
+    void testAuthReturnsAToken(){
+        UserModel user = new UserModel("khalilTest@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        LoginForm loginForm = new LoginForm(user.getEmail(),"test123");
+        assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+    }
 }
