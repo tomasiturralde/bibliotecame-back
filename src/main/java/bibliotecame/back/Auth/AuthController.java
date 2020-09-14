@@ -45,7 +45,7 @@ public class AuthController {
         UserModel user = userService.findUserByEmail(loginForm.getEmail());
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JWTConfigurer.AUTHORIZATION_HEADER, "Bearer " + jwt);
-        return new ResponseEntity<>(new LoginResponse(new JWTToken(jwt),(user.isAdmin())? "Admin" : "User", user.isAdmin()), httpHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(new LoginResponse(new JWTToken(jwt), user.isAdmin()), httpHeaders, HttpStatus.OK);
     }
 
 }
