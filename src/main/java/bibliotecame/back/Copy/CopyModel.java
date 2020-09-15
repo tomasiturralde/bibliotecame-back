@@ -1,8 +1,9 @@
 package bibliotecame.back.Copy;
 
-import bibliotecame.back.Book.BookModel;
-
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table
@@ -15,12 +16,15 @@ public class CopyModel {
 
     private Boolean isBooked;
 
+    private Boolean isActive;
+
     public CopyModel() {
     }
 
     public CopyModel(String id) {
         this.id = id;
         isBooked = false;
+        isActive = true;
     }
 
     public String getId() {
@@ -37,5 +41,13 @@ public class CopyModel {
 
     public void setBooked(Boolean booked) {
         isBooked = booked;
+    }
+
+    public Boolean getActive() {
+        return isActive;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
     }
 }
