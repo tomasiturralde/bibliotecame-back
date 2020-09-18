@@ -37,7 +37,7 @@ public class BookController {
         this.userService = userService;
     }
 
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<BookModel> getBookModel(@PathVariable Integer id){
         if(!bookService.exists(id)){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -92,7 +92,7 @@ public class BookController {
     }
 
 
-    @PostMapping("{id}/deactivate")
+    @PostMapping("/{id}/deactivate")
     public ResponseEntity<BookModel> deactivateBook(@PathVariable Integer id){
 //        if(checkAdmin()){
 //            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
@@ -105,7 +105,7 @@ public class BookController {
         return ResponseEntity.ok(this.bookService.saveBook(bookModel));
     }
 
-    @PostMapping("{id}/activate")
+    @PostMapping("/{id}/activate")
     public ResponseEntity<BookModel> activateBook(@PathVariable Integer id){
 //        if(checkAdmin()){
 //            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
