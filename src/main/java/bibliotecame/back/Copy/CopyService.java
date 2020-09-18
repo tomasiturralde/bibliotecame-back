@@ -22,4 +22,8 @@ public class CopyService {
         return this.copyRepository.findById(id).isPresent();
     }
 
+    public CopyModel findCopyById(String id){
+        return this.copyRepository.findById(id).orElseThrow(() -> new RuntimeException("bibliotecame.back.Copy with id: " + id + " not found!"));
+    }
+
 }

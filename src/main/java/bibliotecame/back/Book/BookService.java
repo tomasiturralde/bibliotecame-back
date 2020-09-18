@@ -1,7 +1,6 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
-import bibliotecame.back.Copy.CopyService;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.Tag.TagService;
 import javassist.NotFoundException;
@@ -95,7 +94,7 @@ public class BookService {
             if(book.getYear() < 800 || book.getYear() > Calendar.getInstance().get(Calendar.YEAR)) return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
             bookToUpdate.setYear(book.getYear());
         }
-        addCopies(bookToUpdate, book.getCopies());
+        bookToUpdate.setCopies(book.getCopies());
 
         //save book and return
         BookModel updated = this.bookRepository.save(bookToUpdate);
@@ -108,12 +107,6 @@ public class BookService {
 
         //check validity
         return updatedTitle != null && hasAuthor(book) && hasAuthor(book) && updatedYear >= 800 && updatedYear <= Calendar.getInstance().get(Calendar.YEAR);
-    }
-
-    public void addCopies(BookModel book, List<CopyModel> copies){
-        List<CopyModel> actualCopies = findBookById(book.getId()).getCopies() ;
-        actualCopies.addAll(copies);
-        book.setCopies(actualCopies);
     }
 
     public boolean containsCopy(BookModel bookModel, CopyModel copyModel){

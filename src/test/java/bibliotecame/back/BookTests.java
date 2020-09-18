@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -492,5 +493,29 @@ public class BookTests {
                 assertThat(isContained).isEqualTo(true);
             }
         }
+    }
+
+    @Test
+    public void testModificationWithDisabledCopies() {
+        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
+        user.setAdmin(true);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        BookModel book = new BookModel("ElSeñorDeLasCopias",2020,"J. R. R. Testien","La comarca del testeo");
+        bookService.saveBook(book);
+        List<CopyModel> copies = new ArrayList<>();
+        CopyModel copyModel = new CopyModel("T5T-001");
+        copies.add(copyModel);
+        book.setCopies(copies);
+        bookController.updateBook(book.getId(),book);
+
+        book.getCopies().get(0).setActive(false);
+        ResponseEntity<BookModel> responseEntity = bookController.updateBook(book.getId(),book);
+
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertFalse(responseEntity.getBody().getCopies().get(0).getActive());
     }
 }

@@ -81,8 +81,13 @@ public class BookController {
             if(copies.size()>=100) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
             for(CopyModel copy : copies){
-                if(copyService.exists(copy.getId())) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-                savedCopies.add(copyService.saveCopy(copy));
+                if(copyService.exists(copy.getId())){
+                    if ((copy.getBooked() && !copy.getActive())) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    savedCopies.add(copyService.saveCopy(copy));
+                }
+                else {
+                    savedCopies.add(copyService.saveCopy(new CopyModel(copy.getId())));
+                }
             }
         }
 
