@@ -56,6 +56,18 @@ public class UserController {
         return ResponseEntity.ok(id);
     }
 
+    @GetMapping("user/getLogged")
+    public ResponseEntity<UserModel> getLoggedUser(){
+        UserModel userModel;
+        try{
+            userModel=userService.findLogged();
+        }
+        catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        return new ResponseEntity<>(userModel,HttpStatus.OK);
+    }
+
     @PutMapping("user/{id}/update")
     public ResponseEntity<UserModel> updateUser(@PathVariable Integer id, @RequestBody UserModel userModel){
 
