@@ -43,17 +43,17 @@ public class BookController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         BookModel book = this.bookService.findBookById(id);
-//        if(!book.isActive() && !checkAdmin()){
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
+        if(!book.isActive() && !checkAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         return new ResponseEntity<>(this.bookService.findBookById(id), HttpStatus.OK);
     }
 
     @PostMapping()
     public ResponseEntity<BookModel> createBook(@Valid @RequestBody BookModel bookModel){
-//        if(checkAdmin()){
-//            return new ResponseEntity<>(bookModel, HttpStatus.UNAUTHORIZED);
-//        }
+        if(checkAdmin()){
+            return new ResponseEntity<>(bookModel, HttpStatus.UNAUTHORIZED);
+        }
         if(!bookService.hasTitle(bookModel) || !bookService.hasAuthor(bookModel) || !bookService.validYear(bookModel) || !bookService.hasPublisher(bookModel)){
             return new ResponseEntity<>(bookModel, HttpStatus.BAD_REQUEST);
         }
@@ -70,9 +70,9 @@ public class BookController {
 
     @PutMapping("/{id}")
     public ResponseEntity<BookModel> updateBook(@PathVariable Integer id, @Valid @RequestBody BookModel book){
-//        if(checkAdmin()){
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
+        if(checkAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
 
         List<CopyModel> copies = book.getCopies();
         List<CopyModel> savedCopies = new ArrayList<>();
@@ -99,9 +99,9 @@ public class BookController {
 
     @PostMapping("/{id}/deactivate")
     public ResponseEntity<BookModel> deactivateBook(@PathVariable Integer id){
-//        if(checkAdmin()){
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
+        if(checkAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if(!bookService.exists(id)){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -112,9 +112,9 @@ public class BookController {
 
     @PostMapping("/{id}/activate")
     public ResponseEntity<BookModel> activateBook(@PathVariable Integer id){
-//        if(checkAdmin()){
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
+        if(checkAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         if(!bookService.exists(id)){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -125,9 +125,9 @@ public class BookController {
 
     @GetMapping()
     public ResponseEntity<Iterable<BookModel>> getBookModel(){
-//        if(checkAdmin()){
-//            return ResponseEntity.ok(this.bookService.findAllActive());
-//        }
+        if(checkAdmin()){
+            return ResponseEntity.ok(this.bookService.findAllActive());
+        }
         return ResponseEntity.ok(this.bookService.findAll());
     }
 
