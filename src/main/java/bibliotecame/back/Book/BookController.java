@@ -61,7 +61,7 @@ public class BookController {
             return new ResponseEntity<>(bookModel, HttpStatus.NOT_ACCEPTABLE);
         }
 
-        if(!bookModel.getTags().isEmpty()){
+        if(bookModel.getTags()!= null || !bookModel.getTags().isEmpty()){
             bookModel.setTags(tagService.validate(bookModel.getTags()));
         }
 
@@ -77,7 +77,7 @@ public class BookController {
         List<CopyModel> copies = book.getCopies();
         List<CopyModel> savedCopies = new ArrayList<>();
 
-        if(!copies.isEmpty()){
+        if(copies!=null && !copies.isEmpty()){
             if(copies.size()>=100) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
             for(CopyModel copy : copies){
