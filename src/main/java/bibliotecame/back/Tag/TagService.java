@@ -32,16 +32,19 @@ public class TagService {
     public Optional<TagModel> exists(String name){
         return this.tagRepository.findByName(name);
     }
+
     public List<TagModel> validate(List<TagModel> tags) {
         List<TagModel> newTags = new ArrayList<>();
-        for (TagModel tag : tags){
-            Optional<TagModel> optionalTag = exists(tag.getName());
-            if(optionalTag.isEmpty()) {
-                saveTag(tag);
-                newTags.add(tag);
-            }
-            else {
-                newTags.add(optionalTag.get());
+        if(tags != null){
+            for (TagModel tag : tags){
+                Optional<TagModel> optionalTag = exists(tag.getName());
+                if(optionalTag.isEmpty()) {
+                    saveTag(tag);
+                    newTags.add(tag);
+                }
+                else {
+                    newTags.add(optionalTag.get());
+                }
             }
         }
         return newTags;
