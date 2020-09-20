@@ -294,7 +294,9 @@ public class BookTests {
         tagList.add(tag1);
         tagList.add(tag2);
 
-        ResponseEntity<BookModel> response = bookController.createBook(new BookModel(randomName1, 2010, author, publisher, tagList));
+        BookModel book = new BookModel(randomName1, 2010,  author,  publisher, tagList);
+
+        ResponseEntity<BookModel> response = bookController.createBook(book);
 
         BookModel saved = response.getBody();
 
@@ -305,16 +307,16 @@ public class BookTests {
         copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
 
         assert saved != null;
-        testTitleModification(saved, HttpStatus.OK, randomName2);
-        testYearModification(saved, HttpStatus.OK, 2007);
-        testAuthorModification(saved, HttpStatus.OK, "new Author");
-        testPublisherModification(saved, HttpStatus.OK, "new Publsher");
-        testModificationWithNewCopies(saved, HttpStatus.OK, copies);
+        testTitleModification(book, saved, HttpStatus.OK, randomName2);
+        testYearModification(book, saved, HttpStatus.OK, 2007);
+        testAuthorModification(book, saved, HttpStatus.OK, "new Author");
+        testPublisherModification(book, saved, HttpStatus.OK, "new Publsher");
+        testModificationWithNewCopies(book, saved, HttpStatus.OK, copies);
 
 
         List<TagModel> replacementTags = new ArrayList<>();
         replacementTags.add(new TagModel(RandomStringGenerator.getAlphabeticString(5)));
-        testTagModification(saved, HttpStatus.OK, replacementTags);
+        testTagModification(book, saved, HttpStatus.OK, replacementTags);
     }
 
 //    @Test
@@ -383,23 +385,18 @@ public class BookTests {
 
         ResponseEntity<BookModel> response = bookController.createBook(book);
 
-        CopyModel copy = copyService.saveCopy(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
-        List<CopyModel> copies = new ArrayList<>();
-        copies.add(copy);
-
         BookModel saved = response.getBody();
         assert saved != null;
-//        testTitleModification(book, saved, HttpStatus.BAD_REQUEST, null);
-        testYearModification(saved, HttpStatus.BAD_REQUEST, 799);
-        testYearModification(saved, HttpStatus.BAD_REQUEST, 2021);
-//        testAuthorModification(book, saved, HttpStatus.BAD_REQUEST, null);
-//        testPublisherModification(book, saved, HttpStatus.BAD_REQUEST, null);
-//        testTagModification(saved, HttpStatus.BAD_REQUEST, null);
+        testTitleModification(book, saved, HttpStatus.BAD_REQUEST, null);
+        testYearModification(book, saved, HttpStatus.BAD_REQUEST, 799);
+        testYearModification(book, saved, HttpStatus.BAD_REQUEST, 2021);
+        testAuthorModification(book, saved, HttpStatus.BAD_REQUEST, null);
+        testPublisherModification(book, saved, HttpStatus.BAD_REQUEST, null);
+        testTagModification(book, saved, HttpStatus.BAD_REQUEST, null);
 
     }
 
-    private void testTitleModification(BookModel saved, HttpStatus status, String newValue) {
-        BookModel book = new BookModel();
+    private void testTitleModification(BookModel book, BookModel saved, HttpStatus status, String newValue) {
         book.setTitle(newValue);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -409,8 +406,7 @@ public class BookTests {
         }
     }
 
-    private void testYearModification(BookModel saved, HttpStatus status, int newValue) {
-        BookModel book = new BookModel();
+    private void testYearModification(BookModel book,BookModel saved, HttpStatus status, int newValue) {
         book.setYear(newValue);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -420,8 +416,7 @@ public class BookTests {
         }
     }
 
-    private void testAuthorModification(BookModel saved, HttpStatus status, String newAuthor) {
-        BookModel book = new BookModel();
+    private void testAuthorModification(BookModel book,BookModel saved, HttpStatus status, String newAuthor) {
         book.setAuthor(newAuthor);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -433,8 +428,7 @@ public class BookTests {
         }
     }
 
-    private void testPublisherModification(BookModel saved, HttpStatus status, String newPublisher) {
-        BookModel book = new BookModel();
+    private void testPublisherModification(BookModel book, BookModel saved, HttpStatus status, String newPublisher) {
         book.setPublisher(newPublisher);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -446,8 +440,7 @@ public class BookTests {
         }
     }
 
-    private void testModificationWithNewCopies(BookModel saved, HttpStatus status, List<CopyModel> copies) {
-        BookModel book = new BookModel();
+    private void testModificationWithNewCopies(BookModel book,BookModel saved, HttpStatus status, List<CopyModel> copies) {
 
         List<CopyModel> oldCopies = saved.getCopies();
         oldCopies.addAll(copies);
@@ -464,8 +457,7 @@ public class BookTests {
         book.setCopies(new ArrayList<>());
     }
 
-    private void testTagModification(BookModel saved, HttpStatus status, List<TagModel> newTags) {
-        BookModel book = new BookModel();
+    private void testTagModification(BookModel book,BookModel saved, HttpStatus status, List<TagModel> newTags) {
         book.setTags(newTags);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -520,6 +512,6 @@ public class BookTests {
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(book.getId(),book);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertFalse(responseEntity.getBody().getCopies().get(0).getActive());
+        assertFalse(Objects.requireNonNull(responseEntity.getBody()).getCopies().get(0).getActive());
     }
 }

@@ -80,20 +80,16 @@ public class BookService {
         }
 
         //check validity
-//        if (!validBook(book)){
-//            return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
-//        }
+        if (!validBook(book)){
+            return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
+        }
 
         //update fields
-        if(book.getTitle()!= null && !book.getTitle().isEmpty())  bookToUpdate.setTitle(book.getTitle());
-        if(hasAuthor(book)) bookToUpdate.setAuthor(book.getAuthor());
-        if(hasPublisher(book)) bookToUpdate.setPublisher(book.getPublisher());
-        addTags(bookToUpdate, tagService.validate(book.getTags()));
-
-        if(book.getYear() != 0){
-            if(book.getYear() < 800 || book.getYear() > Calendar.getInstance().get(Calendar.YEAR)) return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
-            bookToUpdate.setYear(book.getYear());
-        }
+        bookToUpdate.setTitle(book.getTitle());
+        bookToUpdate.setAuthor(book.getAuthor());
+        bookToUpdate.setPublisher(book.getPublisher());
+        bookToUpdate.setTags(tagService.validate(book.getTags()));
+        bookToUpdate.setYear(book.getYear());
         bookToUpdate.setCopies(book.getCopies());
 
         //save book and return
