@@ -82,8 +82,8 @@ public class BookTests {
 
         bookService.saveBook(new BookModel("papap", 2000, authorForSavedBook, publisherForSavedBook));
 
-        tagService.saveTag(new TagModel("Historia"));
-        tagService.saveTag(new TagModel("Fantasia"));
+        tagService.saveTag(new TagModel("tag1"));
+        tagService.saveTag(new TagModel("tag2"));
 
     }
 
@@ -103,8 +103,8 @@ public class BookTests {
         String author = RandomStringGenerator.getAlphabeticString(15);
         String publisher = RandomStringGenerator.getAlphabeticString(15);
 
-        TagModel tag1 = tagService.findTagByName("Historia");
-        TagModel tag2 = tagService.findTagByName("Fantasia");
+        TagModel tag1 = tagService.findTagByName("tag1");
+        TagModel tag2 = tagService.findTagByName("tag2");
 
         List<TagModel> tagList = new ArrayList<>();
         tagList.add(tag1);
@@ -196,8 +196,8 @@ public class BookTests {
         String author = RandomStringGenerator.getAlphabeticString(22);
         String publisher = RandomStringGenerator.getAlphabeticString(22);
 
-        TagModel tag1 = tagService.findTagByName("Historia");
-        TagModel tag2 = tagService.findTagByName("Fantasia");
+        TagModel tag1 = tagService.findTagByName("tag1");
+        TagModel tag2 = tagService.findTagByName("tag2");
 
         List<TagModel> tagList = new ArrayList<>();
         tagList.add(tag1);
@@ -287,16 +287,14 @@ public class BookTests {
         String author = RandomStringGenerator.getAlphabeticString(10);
         String publisher = RandomStringGenerator.getAlphabeticString(10);
 
-        TagModel tag1 = tagService.findTagByName("Historia");
-        TagModel tag2 = tagService.findTagByName("Fantasia");
+        TagModel tag1 = tagService.findTagByName("tag1");
+        TagModel tag2 = tagService.findTagByName("tag2");
 
         List<TagModel> tagList = new ArrayList<>();
         tagList.add(tag1);
         tagList.add(tag2);
 
-        BookModel book = new BookModel(randomName1, 2010, author, publisher, tagList);
-
-        ResponseEntity<BookModel> response = bookController.createBook(book);
+        ResponseEntity<BookModel> response = bookController.createBook(new BookModel(randomName1, 2010, author, publisher, tagList));
 
         BookModel saved = response.getBody();
 
@@ -307,16 +305,16 @@ public class BookTests {
         copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
 
         assert saved != null;
-        testTitleModification(book, saved, HttpStatus.OK, randomName2);
-        testYearModification(book, saved, HttpStatus.OK, 2007);
-        testAuthorModification(book, saved, HttpStatus.OK, "new Author");
-        testPublisherModification(book, saved, HttpStatus.OK, "new Publsher");
-        testModificationWithNewCopies(book, saved, HttpStatus.OK, copies);
+        testTitleModification(saved, HttpStatus.OK, randomName2);
+        testYearModification(saved, HttpStatus.OK, 2007);
+        testAuthorModification(saved, HttpStatus.OK, "new Author");
+        testPublisherModification(saved, HttpStatus.OK, "new Publsher");
+        testModificationWithNewCopies(saved, HttpStatus.OK, copies);
 
 
         List<TagModel> replacementTags = new ArrayList<>();
-        replacementTags.add(tag1);
-        testTagModification(book, saved, HttpStatus.OK, replacementTags);
+        replacementTags.add(new TagModel(RandomStringGenerator.getAlphabeticString(5)));
+        testTagModification(saved, HttpStatus.OK, replacementTags);
     }
 
 //    @Test
@@ -330,8 +328,8 @@ public class BookTests {
 //        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
 //        SecurityContextHolder.setContext(securityContext);
 //
-//        TagModel tag1 = tagService.findTagByName("Historia");
-//        TagModel tag2 = tagService.findTagByName("Fantasia");
+//        TagModel tag1 = tagService.findTagByName("tag1");
+//        TagModel tag2 = tagService.findTagByName("tag2");
 //
 //        List<TagModel> tagList = new ArrayList<>();
 //        tagList.add(tag1);
@@ -374,8 +372,8 @@ public class BookTests {
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
-        TagModel tag1 = tagService.findTagByName("Historia");
-        TagModel tag2 = tagService.findTagByName("Fantasia");
+        TagModel tag1 = tagService.findTagByName("tag1");
+        TagModel tag2 = tagService.findTagByName("tag2");
 
         List<TagModel> tagList = new ArrayList<>();
         tagList.add(tag1);
@@ -391,17 +389,17 @@ public class BookTests {
 
         BookModel saved = response.getBody();
         assert saved != null;
-        testModificationWithNewCopies(book, saved, HttpStatus.BAD_REQUEST, copies);
-        testTitleModification(book, saved, HttpStatus.BAD_REQUEST, null);
-        testYearModification(book, saved, HttpStatus.BAD_REQUEST, 799);
-        testYearModification(book, saved, HttpStatus.BAD_REQUEST, 2021);
-        testAuthorModification(book, saved, HttpStatus.BAD_REQUEST, null);
-        testPublisherModification(book, saved, HttpStatus.BAD_REQUEST, null);
-        testTagModification(book, saved, HttpStatus.BAD_REQUEST, null);
+//        testTitleModification(book, saved, HttpStatus.BAD_REQUEST, null);
+        testYearModification(saved, HttpStatus.BAD_REQUEST, 799);
+        testYearModification(saved, HttpStatus.BAD_REQUEST, 2021);
+//        testAuthorModification(book, saved, HttpStatus.BAD_REQUEST, null);
+//        testPublisherModification(book, saved, HttpStatus.BAD_REQUEST, null);
+//        testTagModification(saved, HttpStatus.BAD_REQUEST, null);
 
     }
 
-    private void testTitleModification(BookModel book, BookModel saved, HttpStatus status, String newValue) {
+    private void testTitleModification(BookModel saved, HttpStatus status, String newValue) {
+        BookModel book = new BookModel();
         book.setTitle(newValue);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -411,7 +409,8 @@ public class BookTests {
         }
     }
 
-    private void testYearModification(BookModel book, BookModel saved, HttpStatus status, int newValue) {
+    private void testYearModification(BookModel saved, HttpStatus status, int newValue) {
+        BookModel book = new BookModel();
         book.setYear(newValue);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -421,7 +420,8 @@ public class BookTests {
         }
     }
 
-    private void testAuthorModification(BookModel book, BookModel saved, HttpStatus status, String newAuthor) {
+    private void testAuthorModification(BookModel saved, HttpStatus status, String newAuthor) {
+        BookModel book = new BookModel();
         book.setAuthor(newAuthor);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -433,7 +433,8 @@ public class BookTests {
         }
     }
 
-    private void testPublisherModification(BookModel book, BookModel saved, HttpStatus status, String newPublisher) {
+    private void testPublisherModification(BookModel saved, HttpStatus status, String newPublisher) {
+        BookModel book = new BookModel();
         book.setPublisher(newPublisher);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -445,9 +446,10 @@ public class BookTests {
         }
     }
 
-    private void testModificationWithNewCopies(BookModel book, BookModel saved, HttpStatus status, List<CopyModel> copies) {
+    private void testModificationWithNewCopies(BookModel saved, HttpStatus status, List<CopyModel> copies) {
+        BookModel book = new BookModel();
 
-        List<CopyModel> oldCopies = book.getCopies();
+        List<CopyModel> oldCopies = saved.getCopies();
         oldCopies.addAll(copies);
         book.setCopies(oldCopies);
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -462,7 +464,8 @@ public class BookTests {
         book.setCopies(new ArrayList<>());
     }
 
-    private void testTagModification(BookModel book, BookModel saved, HttpStatus status, List<TagModel> newTags) {
+    private void testTagModification(BookModel saved, HttpStatus status, List<TagModel> newTags) {
+        BookModel book = new BookModel();
         book.setTags(newTags);
 
         ResponseEntity<BookModel> responseEntity = bookController.updateBook(saved.getId(), book);
@@ -471,13 +474,14 @@ public class BookTests {
         if (status == HttpStatus.OK) {
             List<TagModel> responseTags = Objects.requireNonNull(responseEntity.getBody()).getTags();
 
-            for (TagModel tag : responseTags) {
+            for (TagModel newTag : newTags) {
                 boolean isContained = false;
-                for (TagModel newTag : newTags) {
+                for (TagModel tag : responseTags) {
                     if (newTag.getName().equals(tag.getName())) {
                         isContained = true;
                         break;
                     }
+
                 }
                 assertThat(isContained).isEqualTo(true);
             }
