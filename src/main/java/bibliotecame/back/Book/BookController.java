@@ -54,6 +54,11 @@ public class BookController {
         if(!checkAdmin()){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
+
+        return checkAndCreateBook(bookModel);
+    }
+
+    public ResponseEntity<BookModel> checkAndCreateBook(BookModel bookModel){
         if(!bookService.hasTitle(bookModel) || !bookService.hasAuthor(bookModel) || !bookService.validYear(bookModel) || !bookService.hasPublisher(bookModel)){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -69,11 +74,15 @@ public class BookController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BookModel> updateBook(@PathVariable Integer id, @Valid @RequestBody BookModel book){
-        if(!checkAdmin()){
+    public ResponseEntity<BookModel> updateBook(@PathVariable Integer id, @Valid @RequestBody BookModel book) {
+        if (!checkAdmin()) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
+        return checkAndUpdateBook(id, book);
+    }
+
+    public ResponseEntity<BookModel> checkAndUpdateBook(Integer id, BookModel book){
         List<CopyModel> copies = book.getCopies();
         List<CopyModel> savedCopies = new ArrayList<>();
 
@@ -98,11 +107,11 @@ public class BookController {
 
 
     @PostMapping("/{id}/deactivate")
-    public ResponseEntity<BookModel> deactivateBook(@PathVariable Integer id){
-        if(!checkAdmin()){
+    public ResponseEntity<BookModel> deactivateBook(@PathVariable Integer id) {
+        if (!checkAdmin()) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
-        if(!bookService.exists(id)){
+        if (!bookService.exists(id)) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         BookModel bookModel = bookService.findBookById(id);
@@ -125,7 +134,7 @@ public class BookController {
 
     @GetMapping()
     public ResponseEntity<Iterable<BookModel>> getBookModel(){
-        if(checkAdmin()){
+        if(!checkAdmin()){
             return ResponseEntity.ok(this.bookService.findAllActive());
         }
         return ResponseEntity.ok(this.bookService.findAll());
