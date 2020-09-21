@@ -51,14 +51,14 @@ public class BookController {
 
     @PostMapping()
     public ResponseEntity<BookModel> createBook(@Valid @RequestBody BookModel bookModel){
-        if(checkAdmin()){
-            return new ResponseEntity<>(bookModel, HttpStatus.UNAUTHORIZED);
+        if(!checkAdmin()){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if(!bookService.hasTitle(bookModel) || !bookService.hasAuthor(bookModel) || !bookService.validYear(bookModel) || !bookService.hasPublisher(bookModel)){
-            return new ResponseEntity<>(bookModel, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         if(bookService.exists(bookModel.getTitle(), bookModel.getAuthor(), bookModel.getPublisher(), bookModel.getYear())){
-            return new ResponseEntity<>(bookModel, HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
         }
 
         if(bookModel.getTags()!= null || !bookModel.getTags().isEmpty()){
@@ -70,7 +70,7 @@ public class BookController {
 
     @PutMapping("/{id}")
     public ResponseEntity<BookModel> updateBook(@PathVariable Integer id, @Valid @RequestBody BookModel book){
-        if(checkAdmin()){
+        if(!checkAdmin()){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
@@ -99,7 +99,7 @@ public class BookController {
 
     @PostMapping("/{id}/deactivate")
     public ResponseEntity<BookModel> deactivateBook(@PathVariable Integer id){
-        if(checkAdmin()){
+        if(!checkAdmin()){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if(!bookService.exists(id)){
@@ -112,7 +112,7 @@ public class BookController {
 
     @PostMapping("/{id}/activate")
     public ResponseEntity<BookModel> activateBook(@PathVariable Integer id){
-        if(checkAdmin()){
+        if(!checkAdmin()){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         if(!bookService.exists(id)){
