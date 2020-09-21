@@ -23,8 +23,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -66,6 +68,8 @@ public class BookTests {
     Authentication authentication;
     SecurityContext securityContext;
 
+    UserModel admin;
+
     @BeforeAll
     void setUp() {
         copyService = new CopyService(copyRepository);
@@ -85,6 +89,10 @@ public class BookTests {
         tagService.saveTag(new TagModel("tag1"));
         tagService.saveTag(new TagModel("tag2"));
 
+        admin = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
+        admin.setAdmin(true);
+        userRepository.save(admin);
+
     }
 
     @Test
@@ -93,10 +101,12 @@ public class BookTests {
         String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
         String randomName2 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
         String randomName3 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
-        UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
-        user.setAdmin(true);
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -151,10 +161,12 @@ public class BookTests {
     // non recognised publisher
     // non recognised tag
     void testBadRequest(){
-        UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
-        user.setAdmin(true);
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -171,10 +183,12 @@ public class BookTests {
     @Test
     //asserts failure for: creating already existing book
     void testNotAcceptable(){
-        UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
-        user.setAdmin(true);
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -186,10 +200,12 @@ public class BookTests {
     void testGetAllAndGetOnlyActives(){
 
         String randomName = RandomStringGenerator.getAlphaNumericStringWithSymbols(20);
-        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
-        user.setAdmin(true);
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -242,10 +258,11 @@ public class BookTests {
     @Test
     void testDeactivatingNonexistentBookReturnsBadRequest() {
 
-        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
-        user.setAdmin(true);
+        List<GrantedAuthority> auths = new ArrayList<>();
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -258,10 +275,11 @@ public class BookTests {
 
         String randomName = RandomStringGenerator.getAlphaNumericStringWithSymbols(20);
 
-        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
-        user.setAdmin(true);
+        List<GrantedAuthority> auths = new ArrayList<>();
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -277,10 +295,12 @@ public class BookTests {
     public void testBookModificationOk() {
         String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
         String randomName2 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
-        UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
-        user.setAdmin(true);
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -367,10 +387,12 @@ public class BookTests {
     @Test
     public void testBookModificationBadRequest() {
         String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
-        UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
-        user.setAdmin(true);
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
@@ -493,10 +515,12 @@ public class BookTests {
 
     @Test
     public void testModificationWithDisabledCopies() {
-        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
-        user.setAdmin(true);
 
-        Mockito.when(authentication.getPrincipal()).thenReturn(user);
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
