@@ -1,6 +1,11 @@
 package bibliotecame.back.User;
 
+import bibliotecame.back.Loan.LoanModel;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Table
@@ -29,6 +34,10 @@ public class UserModel {
 
     @Column
     private boolean isAdmin;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private List<LoanModel> loans;
 
     public UserModel() {
     }
@@ -91,5 +100,13 @@ public class UserModel {
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public List<LoanModel> getLoans() {
+        return loans;
+    }
+
+    public void setLoans(List<LoanModel> loans) {
+        this.loans = loans;
     }
 }

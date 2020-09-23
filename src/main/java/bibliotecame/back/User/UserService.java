@@ -1,11 +1,16 @@
 package bibliotecame.back.User;
 
+import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional
@@ -57,6 +62,34 @@ public class UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
         return findUserByEmail(email);
+    }
+
+    public List<LoanModel> getActiveLoans(UserModel user){
+        List<LoanModel> actives = new ArrayList<>();
+        for(LoanModel loan : user.getLoans()){
+            if(loan.getReturnDate() == null){
+                actives.add(loan);
+            }
+        }
+        return actives;
+    }
+
+    public List<LoanModel> getDelayedLoans(UserModel user){
+        List<LoanModel> delayed = new ArrayList<>();
+        for(LoanModel loan : user.getLoans()){
+            if(loan.getExpirationDate().isBefore(LocalDate.now()) && loan.getReturnDate() == null){
+                delayed.add(loan);
+            }
+        }
+        return delayed;
+    }
+
+    public void addLoan(UserModel user, LoanModel loan){
+        List<LoanModel> previousLoans = user.getLoans();
+        previousLoans.add(loan);
+        user.setLoans(previousLoans);
+
+        userRepository.save(user);
     }
 
     public boolean emailExists(String email) {
