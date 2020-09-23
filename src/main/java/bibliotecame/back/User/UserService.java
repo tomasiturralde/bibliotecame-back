@@ -1,5 +1,8 @@
 package bibliotecame.back.User;
 
+import bibliotecame.back.Book.BookModel;
+import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -18,9 +21,12 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    private final BookService bookService;
+
     @Autowired
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository, BookService bookService) {
         this.userRepository = userRepository;
+        this.bookService = bookService;
     }
 
     public UserModel findUserById (int id){
@@ -72,6 +78,16 @@ public class UserService {
             }
         }
         return actives;
+    }
+
+    public boolean hasLoanOfBook(UserModel user, BookModel book){
+        List<LoanModel> actives = getActiveLoans(user);
+        for(LoanModel loan : actives){
+            if(bookService.containsCopy(book, loan.getCopy())){
+                return true;
+            }
+        }
+        return false;
     }
 
     public List<LoanModel> getDelayedLoans(UserModel user){

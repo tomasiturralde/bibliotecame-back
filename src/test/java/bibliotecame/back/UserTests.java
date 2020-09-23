@@ -75,13 +75,13 @@ public class UserTests {
 
     @BeforeAll
     void setUp(){
-        userService = new UserService(userRepository);
+        tagService = new TagService(tagRepository);
+        bookService = new BookService(bookRepository, tagService);
+        userService = new UserService(userRepository, bookService);
         userController = new UserController(userService);
         authController = new AuthController(tokenProvider,authProvider,userService);
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
-        tagService = new TagService(tagRepository);
-        bookService = new BookService(bookRepository, tagService);
     }
 
     private void setSecurityContext(UserModel user){

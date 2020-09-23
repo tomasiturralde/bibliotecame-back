@@ -75,7 +75,7 @@ public class BookTests {
         copyService = new CopyService(copyRepository);
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, bookService);
         bookController = new BookController(bookService, tagService, copyService, userService);
 
         authentication = Mockito.mock(Authentication.class);

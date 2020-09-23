@@ -41,11 +41,16 @@ public class LoanController {
 
         BookModel book = bookService.findBookById(bookId);
 
-        List<CopyModel> copies = bookService.getAvailableCopies(book);
+        return checkAndCreateLoan(user, book);
+    }
 
+    public ResponseEntity<LoanModel> checkAndCreateLoan(UserModel user, BookModel book){
+
+        List<CopyModel> copies = bookService.getAvailableCopies(book);
         if(copies.isEmpty()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         CopyModel copyToLoan = copies.get(0);
         copyToLoan.setBooked(true);

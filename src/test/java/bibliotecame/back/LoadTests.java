@@ -83,7 +83,7 @@ public class LoadTests {
         copyService = new CopyService(copyRepository);
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, bookService);
         loanService = new LoanService(loanRepository);
         loanController = new LoanController(loanService, userService, bookService, copyService);
 
@@ -155,23 +155,19 @@ public class LoadTests {
     }
 
     @Test
-    public void testCreateLoanBAD_REQUESTForTooManyLoans(){
+    public void testCreateLoanBAD_REQUESTForRepeatedBook(){
 
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         BookModel bookModel = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
 
         List<CopyModel> copies = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
-            copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
-        }
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
         bookModel.setCopies(copies);
         bookService.saveBook(bookModel);
 
         List<LoanModel> loans = new ArrayList<>();
-        for (int i = 0; i < 5; i++) {
-            loans.add(new LoanModel(copies.get(i), LocalDate.now(), LocalDate.now().plus(Period.ofDays(5))));
-        }
+        loans.add(new LoanModel(copies.get(0), LocalDate.now(), LocalDate.now().plus(Period.ofDays(5))));
         notAdmin.setLoans(loans);
         userService.saveUser(notAdmin);
 
@@ -199,5 +195,65 @@ public class LoadTests {
 
         setSecurityContext(notAdmin);
         assertThat(loanController.createLoan(bookModel.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void testCreateLoanBAD_REQUESTForTooManyLoans(){
+
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        BookModel bookModel1 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        BookModel bookModel2 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        BookModel bookModel3 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        BookModel bookModel4 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        BookModel bookModel5 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        BookModel bookModel6 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        bookService.saveBook(bookModel6);
+
+        List<CopyModel> all = new ArrayList<>();
+
+        List<CopyModel> copies1 = new ArrayList<>();
+        copies1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModel1.setCopies(copies1);
+        bookService.saveBook(bookModel1);
+        all.add(bookModel1.getCopies().get(0));
+
+
+        List<CopyModel> copies2 = new ArrayList<>();
+        copies2.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModel2.setCopies(copies2);
+        bookService.saveBook(bookModel2);
+        all.add(bookModel2.getCopies().get(0));
+
+        List<CopyModel> copies3 = new ArrayList<>();
+        copies3.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModel3.setCopies(copies3);
+        bookService.saveBook(bookModel3);
+        all.add(bookModel3.getCopies().get(0));
+
+        List<CopyModel> copies4 = new ArrayList<>();
+        copies4.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModel4.setCopies(copies4);
+        bookService.saveBook(bookModel4);
+        all.add(bookModel4.getCopies().get(0));
+
+        List<CopyModel> copies5 = new ArrayList<>();
+        copies5.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModel5.setCopies(copies5);
+        bookService.saveBook(bookModel5);
+        all.add(bookModel5.getCopies().get(0));
+
+
+        List<LoanModel> loans = new ArrayList<>();
+        for(CopyModel copy : all){
+            loans.add(new LoanModel(copy, LocalDate.now(), LocalDate.now().plus(Period.ofDays(5))));
+        }
+        notAdmin.setLoans(loans);
+        userService.saveUser(notAdmin);
+
+        setSecurityContext(notAdmin);
+
+        assertThat(loanController.createLoan(bookModel6.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
     }
 }
