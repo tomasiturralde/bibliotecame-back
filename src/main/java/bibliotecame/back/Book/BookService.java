@@ -120,11 +120,11 @@ public class BookService {
         book.setTags(actualTags);
     }
 
-    public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(int page, int size, String toCompare){
-        return bookRepository.findAllByTitleOrAuthorOrPublisherOrTags(PageRequest.of(page, size), toCompare);
+    public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(int page, int size, String search){
+        return bookRepository.findAllByTitleOrAuthorOrPublisherOrTags(PageRequest.of(page, size), search);
     }
 
-    public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(int page, int size, String toCompare){
-        return bookRepository.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(PageRequest.of(page, size), toCompare);
+    public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(int page, int size, String search){
+        return bookRepository.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(PageRequest.of(page, size), search);
     }
 }

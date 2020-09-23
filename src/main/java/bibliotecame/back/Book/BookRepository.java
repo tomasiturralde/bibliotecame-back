@@ -19,20 +19,20 @@ public interface BookRepository extends PagingAndSortingRepository<BookModel, In
     Optional<BookModel> findByTitleAndAuthorAndPublisherAndYear(String title, String author, String publisher, int year);
 
     @Query(value = "select b from BookModel b where" +
-            " b.title like %:toCompare%" +
-            " or b.author like %:toCompare%" +
-            " or b.publisher like %:toCompare%" +
+            " b.title like %:search%" +
+            " or b.author like %:search%" +
+            " or b.publisher like %:search%" +
             " or exists (select t from b.tags t" +
-            " where t.name like %:toCompare%)")
-    Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(Pageable pageable,@Param("toCompare")String title);
+            " where t.name like %:search%)")
+    Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(Pageable pageable,@Param("search")String title);
 
     @Query(value = "select b from BookModel b where" +
             " b.active = True and ( " +
-            " b.title like %:toCompare%" +
-            " or b.author like %:toCompare%" +
-            " or b.publisher like %:toCompare%" +
+            " b.title like %:search%" +
+            " or b.author like %:search%" +
+            " or b.publisher like %:search%" +
             " or exists (select t from b.tags t" +
-            " where t.name like %:toCompare%))")
-    Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(Pageable pageable,@Param("toCompare")String title);
+            " where t.name like %:search%))")
+    Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(Pageable pageable,@Param("search")String title);
 
 }

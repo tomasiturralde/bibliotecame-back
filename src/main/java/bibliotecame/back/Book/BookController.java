@@ -141,17 +141,17 @@ public class BookController {
         return ResponseEntity.ok(this.bookService.findAll());
     }
 
-    @GetMapping(value = "/basicpaged")
+    @GetMapping(value = "/search")
     public ResponseEntity<Page<BookModel>> getAllByTitleOrAuthorOrPublisherOrTag(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-            @Valid @RequestParam(value = "toCompare") String toCompare
+            @Valid @RequestParam(value = "search") String search
     ) {
         if (size == 0) size = 10;
         Page<BookModel> bookPage;
         if(checkAdmin()) {
-            bookPage = bookService.findAllByTitleOrAuthorOrPublisherOrTags(page, size, toCompare);
-        } else bookPage = bookService.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(page,size,toCompare);
+            bookPage = bookService.findAllByTitleOrAuthorOrPublisherOrTags(page, size, search);
+        } else bookPage = bookService.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(page,size,search);
         return ResponseEntity.ok(bookPage);
     }
 
