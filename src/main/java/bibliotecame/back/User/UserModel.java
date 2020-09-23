@@ -5,6 +5,7 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -40,6 +41,7 @@ public class UserModel {
     private List<LoanModel> loans;
 
     public UserModel() {
+        loans = new ArrayList<>();
     }
 
     public UserModel(String email, String password, String firstName, String lastName, String phoneNumber) {
@@ -48,6 +50,7 @@ public class UserModel {
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
+        loans = new ArrayList<>();
     }
 
     public int getId() {

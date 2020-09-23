@@ -48,7 +48,7 @@ public class UserService {
     }
 
     public boolean validUser(UserModel userModel){
-        String passwordRegex = "^[a-zA-Z0-9].{6,}$";
+        String passwordRegex = "^[a-zA-Z0-9]{6,}$";
         String emailRegex = "^[\\w-.]+@([\\w-]+\\.austral.edu.)+[\\w-]{2,4}$";
 
         if(userModel.getPhoneNumber().isEmpty()) return false;
