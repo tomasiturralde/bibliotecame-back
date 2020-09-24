@@ -35,7 +35,6 @@ public class BookModel {
 
     @OneToMany(cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.FALSE)
-
     private List<CopyModel> copies;
 
     @Column
