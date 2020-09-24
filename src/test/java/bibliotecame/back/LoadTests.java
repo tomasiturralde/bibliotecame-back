@@ -145,17 +145,17 @@ public class LoadTests {
     }
 
     @Test
-    public void testCreateLoanBAD_REQUESTForNoCopies(){
+    public void testCreateLoanEPECTATION_FAILEDForNoCopies(){
 
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
 
-        assertThat(loanController.createLoan(theBook.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(loanController.createLoan(theBook.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.EXPECTATION_FAILED);
     }
 
     @Test
-    public void testCreateLoanBAD_REQUESTForRepeatedBook(){
+    public void testCreateLoanNOT_ACCEPTABLEForRepeatedBook(){
 
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
@@ -173,7 +173,7 @@ public class LoadTests {
 
         setSecurityContext(notAdmin);
 
-        assertThat(loanController.createLoan(bookModel.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(loanController.createLoan(bookModel.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.NOT_ACCEPTABLE);
     }
 
     @Test
@@ -198,7 +198,7 @@ public class LoadTests {
     }
 
     @Test
-    public void testCreateLoanBAD_REQUESTForTooManyLoans(){
+    public void testCreateLoanTOO_MANY_REQUESTSForTooManyLoans(){
 
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
@@ -253,7 +253,7 @@ public class LoadTests {
 
         setSecurityContext(notAdmin);
 
-        assertThat(loanController.createLoan(bookModel6.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(loanController.createLoan(bookModel6.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.TOO_MANY_REQUESTS);
 
     }
 }

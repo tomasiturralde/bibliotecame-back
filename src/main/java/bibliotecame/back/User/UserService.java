@@ -101,7 +101,7 @@ public class UserService {
     }
 
     public void addLoan(UserModel user, LoanModel loan){
-        List<LoanModel> previousLoans = user.getLoans();
+        List<LoanModel> previousLoans = new ArrayList<>(user.getLoans());
         previousLoans.add(loan);
         user.setLoans(previousLoans);
 

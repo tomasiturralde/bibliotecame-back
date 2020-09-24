@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -47,10 +48,10 @@ public class LoanController {
     public ResponseEntity<LoanModel> checkAndCreateLoan(UserModel user, BookModel book){
 
         List<CopyModel> copies = bookService.getAvailableCopies(book);
-        if(copies.isEmpty()) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(copies.isEmpty()) return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+        if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
         if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
 
         CopyModel copyToLoan = copies.get(0);
         copyToLoan.setBooked(true);
