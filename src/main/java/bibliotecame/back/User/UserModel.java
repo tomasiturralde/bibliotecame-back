@@ -36,7 +36,7 @@ public class UserModel {
     @Column
     private boolean isAdmin;
 
-    @OneToMany(cascade = CascadeType.REMOVE)
+    @OneToMany(cascade = {CascadeType.REMOVE, CascadeType.MERGE})
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<LoanModel> loans;
 

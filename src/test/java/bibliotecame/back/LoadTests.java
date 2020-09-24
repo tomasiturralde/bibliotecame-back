@@ -208,6 +208,10 @@ public class LoadTests {
         BookModel bookModel4 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
         BookModel bookModel5 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
         BookModel bookModel6 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+
+        List<CopyModel> copies6 = new ArrayList<>();
+        copies6.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModel6.setCopies(copies6);
         bookService.saveBook(bookModel6);
 
         List<CopyModel> all = new ArrayList<>();

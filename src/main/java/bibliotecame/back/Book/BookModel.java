@@ -33,7 +33,7 @@ public class BookModel {
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<TagModel> tags;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<CopyModel> copies;
 

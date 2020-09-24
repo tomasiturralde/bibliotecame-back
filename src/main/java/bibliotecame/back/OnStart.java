@@ -1,7 +1,5 @@
 package bibliotecame.back;
 
-import bibliotecame.back.Auth.AuthController;
-import bibliotecame.back.Auth.LoginForm;
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Copy.CopyModel;
@@ -29,15 +27,13 @@ public class OnStart {
     private final UserService userService;
     private final BookController bookController;
     private final LoanController loanController;
-    private final AuthController authController;
 
     @Autowired
-    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, AuthController authController) {
+    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController) {
         this.userController = userController;
         this.bookController = bookController;
         this.userService = userService;
         this.loanController = loanController;
-        this.authController = authController;
     }
 
     @EventListener
