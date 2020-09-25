@@ -147,6 +147,7 @@ public class BookController {
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
             @Valid @RequestParam(value = "search") String search
     ) {
+        search = search.toLowerCase();
         if (size == 0) size = 10;
         Page<BookModel> bookPage;
         if(checkAdmin()) {
