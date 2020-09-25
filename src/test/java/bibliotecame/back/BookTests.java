@@ -262,6 +262,9 @@ public class BookTests {
         List<GrantedAuthority> auths = new ArrayList<>();
 
         User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+
 
         Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -550,18 +553,18 @@ public class BookTests {
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
 
-        BookModel book = new BookModel("ElSeñorDeLasCopias",2020,"J. R. R. Testien","La comarca del testeo");
+        BookModel book = new BookModel("LaSeñoraDeLasCopiasContraataca",2020,"J. R. R. Testien","La comarca del testeo");
         bookService.saveBook(book);
 
-        ResponseEntity<Page<BookModel>> responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"ElSeñor");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"LaSeñora");
         assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(1);
         book.setActive(false);
         bookService.saveBook(book);
-        responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"ElSeñor");
+        responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"LaSeñora");
         assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(1);
         admin.setAdmin(false);
         userRepository.save(admin);
-        responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"ElSeñor");
+        responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"LaSeñora");
         assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(0);
     }
 }
