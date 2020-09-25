@@ -5,6 +5,8 @@ import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.Tag.TagService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -119,6 +121,14 @@ public class BookService {
         book.setTags(actualTags);
     }
 
+    public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(int page, int size, String search){
+        return bookRepository.findAllByTitleOrAuthorOrPublisherOrTags(PageRequest.of(page, size), search);
+    }
+
+    public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(int page, int size, String search){
+        return bookRepository.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(PageRequest.of(page, size), search);
+    }
+  
     public List<CopyModel> getAvailableCopies(BookModel book){
         List<CopyModel> available = new ArrayList<>();
         for(CopyModel copy : book.getCopies()){
