@@ -1,5 +1,9 @@
 package bibliotecame.back.User;
 
+import bibliotecame.back.Book.BookModel;
+import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -7,15 +11,22 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Transactional
 public class UserService {
 
     private final UserRepository userRepository;
 
+    private final BookService bookService;
+
     @Autowired
-    public UserService(UserRepository userRepository){
+    public UserService(UserRepository userRepository, BookService bookService) {
         this.userRepository = userRepository;
+        this.bookService = bookService;
     }
 
     public UserModel findUserById (int id){
@@ -43,7 +54,7 @@ public class UserService {
     }
 
     public boolean validUser(UserModel userModel){
-        String passwordRegex = "^[a-zA-Z0-9].{6,}$";
+        String passwordRegex = "^[a-zA-Z0-9]{6,}$";
         String emailRegex = "^[\\w-.]+@([\\w-]+\\.austral.edu.)+[\\w-]{2,4}$";
 
         if(userModel.getPhoneNumber().isEmpty()) return false;
@@ -57,6 +68,44 @@ public class UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = ((org.springframework.security.core.userdetails.User) authentication.getPrincipal()).getUsername();
         return findUserByEmail(email);
+    }
+
+    public List<LoanModel> getActiveLoans(UserModel user){
+        List<LoanModel> actives = new ArrayList<>();
+        for(LoanModel loan : user.getLoans()){
+            if(loan.getReturnDate() == null){
+                actives.add(loan);
+            }
+        }
+        return actives;
+    }
+
+    public boolean hasLoanOfBook(UserModel user, BookModel book){
+        List<LoanModel> actives = getActiveLoans(user);
+        for(LoanModel loan : actives){
+            if(bookService.containsCopy(book, loan.getCopy())){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public List<LoanModel> getDelayedLoans(UserModel user){
+        List<LoanModel> delayed = new ArrayList<>();
+        for(LoanModel loan : user.getLoans()){
+            if(loan.getExpirationDate().isBefore(LocalDate.now()) && loan.getReturnDate() == null){
+                delayed.add(loan);
+            }
+        }
+        return delayed;
+    }
+
+    public void addLoan(UserModel user, LoanModel loan){
+        List<LoanModel> previousLoans = new ArrayList<>(user.getLoans());
+        previousLoans.add(loan);
+        user.setLoans(previousLoans);
+
+        userRepository.save(user);
     }
 
     public boolean emailExists(String email) {

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -126,5 +127,15 @@ public class BookService {
 
     public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(int page, int size, String search){
         return bookRepository.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(PageRequest.of(page, size), search);
+    }
+  
+    public List<CopyModel> getAvailableCopies(BookModel book){
+        List<CopyModel> available = new ArrayList<>();
+        for(CopyModel copy : book.getCopies()){
+            if(!copy.getBooked() && copy.getActive()){
+                available.add(copy);
+            }
+        }
+        return available;
     }
 }

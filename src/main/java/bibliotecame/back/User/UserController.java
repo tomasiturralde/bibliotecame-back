@@ -48,7 +48,7 @@ public class UserController {
             return new ResponseEntity<>(id, HttpStatus.UNAUTHORIZED);
         }
 
-        //todo: check prestamos activos, cuando existan.
+        if(!userService.getActiveLoans(user).isEmpty()) return new ResponseEntity<>(id, HttpStatus.BAD_REQUEST);
 
         userService.deleteUser(user);
 

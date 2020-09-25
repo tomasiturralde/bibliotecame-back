@@ -3,6 +3,7 @@ package bibliotecame.back;
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Loan.LoanController;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
@@ -25,12 +26,14 @@ public class OnStart {
     private final UserController userController;
     private final UserService userService;
     private final BookController bookController;
+    private final LoanController loanController;
 
     @Autowired
-    public OnStart(UserController userController, BookController bookController, UserService userService) {
+    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController) {
         this.userController = userController;
         this.bookController = bookController;
         this.userService = userService;
+        this.loanController = loanController;
     }
 
     @EventListener
@@ -44,10 +47,10 @@ public class OnStart {
                     admin.setAdmin(true);
                     userService.saveUser(admin);
                 }
-                userController.createUser(new UserModel("francisca.canton@ing.austral.edu.ar", "franchu123", "Francisca", "Canton", "011 2222 3333"));
-                userController.createUser(new UserModel("esther.reyes@ing.austral.edu.ar", "123qweasd", "Esther", "Reyes", "011 3333 4444"));
-                userController.createUser(new UserModel("marc.ivanov@ing.austral.edu.ar", "iva123456", "Marc", "Ivanov", "011 4444 0987"));
-                userController.createUser(new UserModel("juanluis.llorens@ing.austral.edu.ar", "juan1234", "Juan Luis", "Lorens", "011 1234 5678"));
+                UserModel user1 = userController.createUser(new UserModel("francisca.canton@ing.austral.edu.ar", "franchu123", "Francisca", "Canton", "011 2222 3333")).getBody();
+                UserModel user2 = userController.createUser(new UserModel("esther.reyes@ing.austral.edu.ar", "123qweasd", "Esther", "Reyes", "011 3333 4444")).getBody();
+                UserModel user3 = userController.createUser(new UserModel("marc.ivanov@ing.austral.edu.ar", "iva123456", "Marc", "Ivanov", "011 4444 0987")).getBody();
+                UserModel user4 = userController.createUser(new UserModel("juanluis.llorens@ing.austral.edu.ar", "juan1234", "Juan Luis", "Lorens", "011 1234 5678")).getBody();
 
                 //libros
                 List<TagModel> tags1 = new ArrayList<>();
@@ -160,6 +163,19 @@ public class OnStart {
                 copies10.add(new CopyModel("64ZVJA"));
                 Objects.requireNonNull(book10).setCopies(copies10);
                 bookController.checkAndUpdateBook(book10.getId(), book10);
+
+                //loans
+                loanController.checkAndCreateLoan(user1, book1);
+                loanController.checkAndCreateLoan(user2, book4);
+                loanController.checkAndCreateLoan(user3, book7);
+                loanController.checkAndCreateLoan(user4, book10);
+                loanController.checkAndCreateLoan(user1, book2);
+                loanController.checkAndCreateLoan(user2, book5);
+                loanController.checkAndCreateLoan(user3, book9);
+                loanController.checkAndCreateLoan(user1, book3);
+                loanController.checkAndCreateLoan(user2, book6);
+                loanController.checkAndCreateLoan(user3, book8);
+
 
 
             } catch (Exception ignored) {
