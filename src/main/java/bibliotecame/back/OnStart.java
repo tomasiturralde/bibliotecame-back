@@ -3,6 +3,7 @@ package bibliotecame.back;
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Extension.ExtensionController;
 import bibliotecame.back.Loan.LoanController;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.User.UserController;
@@ -27,13 +28,15 @@ public class OnStart {
     private final UserService userService;
     private final BookController bookController;
     private final LoanController loanController;
+    private final ExtensionController extensionController;
 
     @Autowired
-    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController) {
+    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ExtensionController extensionController) {
         this.userController = userController;
         this.bookController = bookController;
         this.userService = userService;
         this.loanController = loanController;
+        this.extensionController = extensionController;
     }
 
     @EventListener

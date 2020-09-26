@@ -1,6 +1,7 @@
 package bibliotecame.back.Loan;
 
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Extension.ExtensionModel;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -29,6 +30,9 @@ public class LoanModel {
 
     @Column
     private LocalDate expirationDate;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    private ExtensionModel extension;
 
     public LoanModel() {
     }
@@ -81,5 +85,11 @@ public class LoanModel {
 
     public void setExpirationDate(LocalDate expirationDate) {
         this.expirationDate = expirationDate;
+    }
+
+    public ExtensionModel getExtension() { return extension; }
+
+    public void setExtension(ExtensionModel extension) {
+        this.extension = extension;
     }
 }
