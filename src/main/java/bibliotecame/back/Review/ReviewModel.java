@@ -23,25 +23,19 @@ public class ReviewModel {
     @ManyToOne
     private UserModel userModel;
 
-    @Column
-    private boolean active;
-
     public ReviewModel(String description, int value, UserModel userModel) {
         this.description = description;
         this.value = value;
         this.userModel = userModel;
-        this.active = true;
     }
 
     public ReviewModel(int value, UserModel userModel) {
         this.description = "";
         this.value = value;
         this.userModel = userModel;
-        this.active = true;
     }
 
     public ReviewModel() {
-        this.active=true;
     }
 
     public int getId() {
@@ -75,13 +69,5 @@ public class ReviewModel {
 
     public void setUserModel(UserModel userModel) {
         this.userModel = userModel;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
     }
 }

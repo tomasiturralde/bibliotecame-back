@@ -18,6 +18,7 @@ public class ReviewService {
     }
 
     public ReviewModel saveReview(ReviewModel reviewModel){
+        if(reviewModel.getDescription()==null) reviewModel.setDescription("");
         return this.reviewRepository.save(reviewModel);
     }
 

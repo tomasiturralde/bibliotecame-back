@@ -12,8 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/review")
@@ -44,7 +44,7 @@ public class ReviewController {
 
         if(reviewModel.getValue()<0 || reviewModel.getValue()>5) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        if(reviewModel.getUserModel().getId()!=getLogged().getId()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        reviewModel.setUserModel(getLogged());
 
         if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
@@ -58,15 +58,8 @@ public class ReviewController {
 
     private boolean userPreviouslyBookedThisOne(Integer bookId){
         List<LoanModel> loans = getLogged().getLoans();
-        List<CopyModel> copies = bookService.findBookById(bookId).getCopies();
-        List<String> copiesIds = new ArrayList<>();
-        for (int i = 0; i < copies.size() ; i++) {
-            copiesIds.add(copies.get(i).getId());
-        }
-        for (int i = 0; i < loans.size() ; i++) {
-            if(copiesIds.contains(loans.get(i).getCopy().getId())) return true;
-        }
-        return false;
+        List<String> copiesIds = bookService.findBookById(bookId).getCopies().stream().map(CopyModel::getId).collect(Collectors.toList());
+        return loans.stream().map(loanModel -> copiesIds.contains(loanModel.getCopy().getId())).reduce(true, ((aBoolean, aBoolean2) -> aBoolean && aBoolean2));
     }
 
     private UserModel getLogged(){
