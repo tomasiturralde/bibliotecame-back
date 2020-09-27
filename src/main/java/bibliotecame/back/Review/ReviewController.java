@@ -46,6 +46,8 @@ public class ReviewController {
 
         reviewModel.setUserModel(getLogged());
 
+        if(userPreviouslyReviewedThisOne(bookId)) return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
+
         if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         reviewService.saveReview(reviewModel);
@@ -59,7 +61,13 @@ public class ReviewController {
     private boolean userPreviouslyBookedThisOne(Integer bookId){
         List<LoanModel> loans = getLogged().getLoans();
         List<String> copiesIds = bookService.findBookById(bookId).getCopies().stream().map(CopyModel::getId).collect(Collectors.toList());
-        return loans.stream().map(loanModel -> copiesIds.contains(loanModel.getCopy().getId())).reduce(true, ((aBoolean, aBoolean2) -> aBoolean && aBoolean2));
+        return loans.stream().map(loanModel -> copiesIds.contains(loanModel.getCopy().getId())).reduce(false, ((aBoolean, aBoolean2) -> aBoolean || aBoolean2));
+    }
+
+    private boolean userPreviouslyReviewedThisOne(Integer bookId){
+        List<Integer> reviewsIds = reviewService.findAllByUserModel(getLogged()).stream().map(ReviewModel::getId).collect(Collectors.toList());
+        List<ReviewModel> bookReviews = bookService.findBookById(bookId).getReviews();
+        return bookReviews.stream().map(reviewModel -> reviewsIds.contains(reviewModel.getId())).reduce(false, ((aBoolean, aBoolean2) -> aBoolean || aBoolean2));
     }
 
     private UserModel getLogged(){
