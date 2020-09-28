@@ -23,7 +23,7 @@ public interface BookRepository extends PagingAndSortingRepository<BookModel, In
             " or lower(b.author) like %:search%" +
             " or lower(b.publisher) like %:search%" +
             " or exists (select t from b.tags t" +
-            " where lower(t.name) like %:search%)")
+            " where lower(t.name) like %:search%) order by b.title")
     Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(Pageable pageable,@Param("search")String title);
 
     @Query(value = "select b from BookModel b where" +
@@ -32,7 +32,7 @@ public interface BookRepository extends PagingAndSortingRepository<BookModel, In
             " or lower(b.author) like %:search%" +
             " or lower(b.publisher) like %:search% " +
             " or exists (select t from b.tags t" +
-            " where lower(t.name) like %:search%)) ")
+            " where lower(t.name) like %:search%)) order by b.title")
     Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(Pageable pageable,@Param("search")String title);
 
 }
