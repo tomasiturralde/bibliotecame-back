@@ -7,6 +7,9 @@ import bibliotecame.back.Book.BookRepository;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Loan.LoanModel;
+import bibliotecame.back.Sanction.SanctionController;
+import bibliotecame.back.Sanction.SanctionForm;
+import bibliotecame.back.Sanction.SanctionService;
 import bibliotecame.back.Security.jwt.TokenProvider;
 import bibliotecame.back.Tag.TagRepository;
 import bibliotecame.back.Tag.TagService;
@@ -69,6 +72,12 @@ public class UserTests {
     @Autowired
     private TagRepository tagRepository;
 
+    @Autowired
+    private SanctionService sanctionService;
+
+    @Autowired
+    private SanctionController sanctionController;
+
     Authentication authentication;
     SecurityContext securityContext;
 
@@ -79,7 +88,7 @@ public class UserTests {
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
         userController = new UserController(userService);
-        authController = new AuthController(tokenProvider,authProvider,userService);
+        authController = new AuthController(tokenProvider,authProvider,userService, sanctionService);
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
     }
@@ -282,5 +291,24 @@ public class UserTests {
         userController.createUser(user);
         LoginForm loginForm = new LoginForm(user.getEmail(), "test123");
         assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testAuthReturnsUNAUTHORIZED(){
+
+        UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(6)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+
+        assertThat(sanctionController.createSanction(new SanctionForm(user.getEmail(), "reason", LocalDate.now().plus(Period.ofDays(20)))).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+
+        LoginForm loginForm = new LoginForm(user.getEmail(), "test123");
+        assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+
     }
 }
