@@ -6,10 +6,7 @@ import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
-import bibliotecame.back.Loan.LoanController;
-import bibliotecame.back.Loan.LoanModel;
-import bibliotecame.back.Loan.LoanRepository;
-import bibliotecame.back.Loan.LoanService;
+import bibliotecame.back.Loan.*;
 import bibliotecame.back.Tag.TagRepository;
 import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserModel;
@@ -22,7 +19,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -259,5 +258,36 @@ public class LoadTests {
 
         assertThat(loanController.createLoan(bookModel6.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.TOO_MANY_REQUESTS);
 
+    }
+
+
+    @Test
+    void testGetHistory(){
+
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+
+        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+
+        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0);
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(loans.getBody().getTotalElements()).isEqualTo(0);
+
+        loan.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
+        loanService.saveLoan(loan);
+
+        loans = loanController.getAllReturnedLoans(0,0);
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(loans.getBody().getTotalElements()).isEqualTo(1);
     }
 }

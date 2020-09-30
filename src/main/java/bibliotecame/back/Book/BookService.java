@@ -115,6 +115,16 @@ public class BookService {
         return false;
     }
 
+    public BookModel findBookByCopy(CopyModel copy){
+        Iterable<BookModel> books = bookRepository.findAll();
+        for (BookModel book : books){
+            if(containsCopy(book, copy)){
+                return book;
+            }
+        }
+        throw new RuntimeException("Copy with id: " + copy.getId() + "is not associated with any book");
+    }
+
     public void addTags(BookModel book, List<TagModel> tags) {
         List<TagModel> actualTags = findBookById(book.getId()).getTags() ;
         actualTags.addAll(tags);
