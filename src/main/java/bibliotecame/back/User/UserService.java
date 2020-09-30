@@ -2,13 +2,9 @@ package bibliotecame.back.User;
 
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
-import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Loan.LoanDisplay;
 import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -92,12 +88,8 @@ public class UserService {
                 returned.add(loan);
             }
         }
-        returned.sort(new Comparator<LoanModel>() {
-            @Override
-            public int compare(LoanModel l0, LoanModel l1) {
-                return l1.getReturnDate().compareTo(l0.getReturnDate());
-            }
-        });
+        returned.sort((l0, l1) -> l1.getReturnDate().compareTo(l0.getReturnDate()));
+
         int start = page*size;
         int end = Math.min((start + size), returned.size());
         return returned.subList(start, end);

@@ -32,6 +32,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -280,14 +281,15 @@ public class LoadTests {
         ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0);
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(loans.getBody().getTotalElements()).isEqualTo(0);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
 
+        assert loan != null;
         loan.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
         loanService.saveLoan(loan);
 
         loans = loanController.getAllReturnedLoans(0,0);
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(loans.getBody().getTotalElements()).isEqualTo(1);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
     }
 }
