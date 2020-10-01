@@ -6,9 +6,7 @@ import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
-import bibliotecame.back.Extension.ExtensionController;
-import bibliotecame.back.Extension.ExtensionRepository;
-import bibliotecame.back.Extension.ExtensionService;
+import bibliotecame.back.Extension.*;
 import bibliotecame.back.Loan.LoanController;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanRepository;
@@ -84,13 +82,21 @@ public class ExtensionTests {
 
     BookModel book1;
     BookModel book2;
+    BookModel book3;
+    BookModel book4;
 
     UserModel notAdmin1;
     UserModel notAdmin2;
+    UserModel notAdmin3;
     UserModel admin;
 
     LoanModel loan1;
     LoanModel loan2;
+    LoanModel loan3;
+    LoanModel loan4;
+
+    ExtensionModel extensionModel1;
+    ExtensionModel extensionModel2;
 
     @BeforeAll
     void setUp(){
@@ -101,7 +107,7 @@ public class ExtensionTests {
         loanService = new LoanService(loanRepository);
         extensionService = new ExtensionService(extensionRepository, loanService, userService);
         loanController = new LoanController(loanService, userService, bookService, copyService);
-        extensionController = new ExtensionController(extensionService);
+        extensionController = new ExtensionController(extensionService, userService);
 
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
@@ -115,6 +121,8 @@ public class ExtensionTests {
 
         book1 = bookService.saveBook(new BookModel("book 1", 2000, authorForSavedBook, publisherForSavedBook));
         book2 = bookService.saveBook(new BookModel("book 2", 2015, authorForSavedBook, publisherForSavedBook));
+        book3 = bookService.saveBook(new BookModel("book 3", 2015, authorForSavedBook, publisherForSavedBook));
+        book4 = bookService.saveBook(new BookModel("book 4", 2015, authorForSavedBook, publisherForSavedBook));
 
         List<CopyModel> copies1 = new ArrayList<>();
         copies1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
@@ -128,6 +136,19 @@ public class ExtensionTests {
         book2.setCopies(copies2);
         bookService.updateBook(book2.getId(), book2);
 
+
+        List<CopyModel> copies3 = new ArrayList<>();
+        copies3.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+
+        book3.setCopies(copies3);
+        bookService.updateBook(book3.getId(), book3);
+
+        List<CopyModel> copies4 = new ArrayList<>();
+        copies4.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+
+        book4.setCopies(copies4);
+        bookService.updateBook(book4.getId(), book4);
+
         notAdmin1 = new UserModel("facundo@mail.austral.edu.ar", "password", "Facundo", "Bocalandro", "12341234");
         notAdmin1.setAdmin(false);
         userRepository.save(notAdmin1);
@@ -136,12 +157,23 @@ public class ExtensionTests {
         notAdmin2.setAdmin(false);
         userRepository.save(notAdmin2);
 
+        notAdmin3 = new UserModel("someone@mail.austral.edu.ar", "password", "Facundo", "Bocalandro", "12341234");
+        notAdmin3.setAdmin(false);
+        userRepository.save(notAdmin3);
+
 
         setSecurityContext(notAdmin1);
         loan1 = loanController.createLoan(book1.getId()).getBody();
 
         setSecurityContext(notAdmin2);
         loan2 = loanController.createLoan(book2.getId()).getBody();
+
+        setSecurityContext(notAdmin3);
+        loan3 = loanController.createLoan(book3.getId()).getBody();
+        loan4 = loanController.createLoan(book4.getId()).getBody();
+
+        extensionModel1 = extensionController.createExtension(loan3.getId()).getBody();
+        extensionModel2 = extensionController.createExtension(loan4.getId()).getBody();
     }
 
     private void setSecurityContext(UserModel user){
@@ -200,5 +232,67 @@ public class ExtensionTests {
         setSecurityContext(notAdmin2);
 
         assertThat(extensionController.createExtension(loan1.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testModifyExtensionOK(){
+        setSecurityContext(notAdmin3);
+
+        ExtensionModel extension1 = extensionModel1;
+
+        extension1.setStatus(ExtensionStatus.APPROVED);
+
+        ExtensionModel extension2 = extensionModel2;
+
+        extension2.setStatus(ExtensionStatus.REJECTED);
+
+        setSecurityContext(admin);
+
+        assertThat(extensionController.modifyExtension(extension1.getId(), extension1).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(extensionController.modifyExtension(extension2.getId(), extension2).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+    }
+
+    @Test
+    void testModifyExtensionUNAUTHORIZED(){
+
+        setSecurityContext(notAdmin3);
+
+        ExtensionModel extension1 = extensionModel1;
+
+        extension1.setStatus(ExtensionStatus.APPROVED);
+
+        ExtensionModel extension2 = extensionModel2;
+
+        extension2.setStatus(ExtensionStatus.REJECTED);
+
+        assertThat(extensionController.modifyExtension(extension1.getId(), extension1).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+        assertThat(extensionController.modifyExtension(extension2.getId(), extension2).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+
+    }
+
+    @Test
+    void testModifyExtensionBAD_REQUEST(){
+
+        setSecurityContext(notAdmin3);
+
+        ExtensionModel extension1 = extensionModel1;
+
+        extension1.setStatus(ExtensionStatus.PENDING_APPROVAL);
+
+        ExtensionModel extension2 = extensionModel2;
+
+        extension2.setStatus(ExtensionStatus.REJECTED);
+        extensionService.saveExtension(extension2);
+        extension2.setStatus(ExtensionStatus.APPROVED);
+
+        setSecurityContext(admin);
+
+        assertThat(extensionController.modifyExtension(extension1.getId(), extension1).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(extensionController.modifyExtension(extension2.getId(), extension2).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
+        extension2.setStatus(ExtensionStatus.PENDING_APPROVAL);
+        extensionService.saveExtension(extension2);
+
     }
 }
