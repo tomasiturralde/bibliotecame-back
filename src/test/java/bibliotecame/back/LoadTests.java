@@ -15,6 +15,7 @@ import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserRepository;
 import bibliotecame.back.User.UserService;
+import javassist.NotFoundException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -260,4 +261,51 @@ public class LoadTests {
         assertThat(loanController.createLoan(bookModel6.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.TOO_MANY_REQUESTS);
 
     }
+
+    @Test
+    public void assertThatLoansGetCorrectlyModifiedByAnAdmin() throws NotFoundException {
+        UserModel user = new UserModel("khalilConejilloDeIndias@mail.austral.edu.ar","khalil1234","khalil","LoanTester","1111111");
+        userService.saveUser(user);
+        setSecurityContext(user);
+
+        BookModel bookModeltoLoan1 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        bookService.saveBook(bookModeltoLoan1);
+
+        List<CopyModel> copiestoLoan1 = new ArrayList<>();
+        copiestoLoan1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModeltoLoan1.setCopies(copiestoLoan1);
+        bookService.saveBook(bookModeltoLoan1);
+
+        //After all the setup, we create a loan for the user
+
+        loanController.createLoan(bookModeltoLoan1.getId());
+
+        LoanModel loan = userService.findLogged().getLoans().get(0);
+
+        //A regular user can't set a withdraw date (neither a return)
+
+        assertThat(loanController.setWithdrawDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+        UserModel admin = new UserModel("khalilElAdmin@mail.austral.edu.ar","khalil1234","khalil","LoanTester","1111111");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        //Now that we have an admin, it must be able to set the withdraw date.
+
+        assertThat(loanController.setWithdrawDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        loan = loanService.getLoanById(loan.getId()); //We refresh our loanmodel
+
+        //We check that the withdraw date is effectively the same as today
+
+        assertThat(loan.getWithdrawalDate().getDayOfWeek()).isEqualTo(LocalDate.now().getDayOfWeek());
+
+        //Finally, we set the return date, and after that we try to edit it again and get a "BAD_REQUEST"
+
+        assertThat(loanController.setReturnDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        loan = loanService.getLoanById(loan.getId()); //We refresh our loanmodel
+        assertThat(loan.getReturnDate().getDayOfWeek()).isEqualTo(LocalDate.now().getDayOfWeek());
+
+        assertThat(loanController.setReturnDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        }
 }
