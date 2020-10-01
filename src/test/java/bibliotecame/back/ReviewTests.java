@@ -27,6 +27,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -83,6 +84,7 @@ public class ReviewTests {
     SecurityContext securityContext;
 
     UserModel studentUser;
+    UserModel studentUser2;
     BookModel bookModel;
     CopyModel bookModelCopy;
     List<CopyModel> copies;
@@ -102,6 +104,7 @@ public class ReviewTests {
         securityContext = Mockito.mock(SecurityContext.class);
 
         studentUser = new UserModel("BBruno@austral.edu.ar","stickyfingers","Bruno","Bucciarati","1113334444");
+        studentUser2 = new UserModel("facundo@austral.edu.ar","stickyfingers","Facundo","Bocalandro","1113334444");
         bookModel = new BookModel("GioGio's Bizzarre Adventure",1995,"Araki Hirohiko","Weekly Shonen Jump");
         bookModelCopy = new CopyModel("GG-001");
 
@@ -179,6 +182,24 @@ public class ReviewTests {
         assertThat(reviewController.createReview(review,differentBook2.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         ReviewModel review2 = new ReviewModel("It sucked!",-999,userService.findLogged());
         assertThat(reviewController.createReview(review2,differentBook2.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testStudentCanGetItsOwnReview(){
+        setSecurityContext(studentUser);
+        ReviewModel reviewModel = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        ReviewModel review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+        assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testStudentCantGetAnotherStudentsReview(){
+        setSecurityContext(studentUser);
+        ReviewModel reviewModel = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        ReviewModel review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+
+        setSecurityContext(studentUser2);
+        assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
 }

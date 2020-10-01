@@ -6,6 +6,7 @@ import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +33,19 @@ public class ReviewController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ReviewModel> getReviewModel(@PathVariable Integer id){
-        //Este método será ampliado y modificado por quien corresponda cuando se haga la US "Visualizar reseña"
-        return new ResponseEntity<>(this.reviewService.findReviewById(id), HttpStatus.OK);
+        ReviewModel review;
+
+        try {
+            review = this.reviewService.findReviewById(id);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        if (!review.getUserModel().equals(getLogged())){
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        return new ResponseEntity<>(review, HttpStatus.OK);
     }
 
     @PostMapping("/create/{bookId}")
