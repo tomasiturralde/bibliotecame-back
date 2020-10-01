@@ -41,7 +41,7 @@ public class ReviewController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        if (!review.getUserModel().equals(getLogged())){
+        if (!(review.getUserModel().getId() == getLogged().getId())){
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 

@@ -116,6 +116,7 @@ public class ReviewTests {
 
         userService.saveUser(studentUser);
         setSecurityContext(studentUser);
+        userService.saveUser(studentUser2);
 
         copyService.saveCopy(bookModelCopy);
         bookService.saveBook(bookModel);
@@ -187,7 +188,7 @@ public class ReviewTests {
     @Test
     void testStudentCanGetItsOwnReview(){
         setSecurityContext(studentUser);
-        ReviewModel reviewModel = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        ReviewModel reviewModel = new ReviewModel("Great",5,userService.findLogged());
         ReviewModel review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
         assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
