@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RestController
+@RestController("/loan")
 public class LoanController {
 
     private final LoanService loanService;
@@ -41,7 +41,7 @@ public class LoanController {
         this.copyService = copyService;
     }
 
-    @GetMapping(value = "/loans")
+    @GetMapping(value = "/history")
     public ResponseEntity<Page<LoanDisplay>> getAllReturnedLoans(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
@@ -62,7 +62,7 @@ public class LoanController {
         return ResponseEntity.ok(loanPage);
     }
 
-    @PostMapping("loan/{bookId}")
+    @PostMapping("/{bookId}")
     public ResponseEntity<LoanModel> createLoan(@PathVariable Integer bookId){
 
         UserModel user = userService.findLogged();
@@ -94,7 +94,7 @@ public class LoanController {
         return ResponseEntity.ok(savedLoanModel);
     }
 
-    @GetMapping("loan/actives")
+    @GetMapping("/actives")
     public ResponseEntity<List<LoanModel>> getAllActiveLoans(){
         if(getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel -> loanModel.getReturnDate()==null)
