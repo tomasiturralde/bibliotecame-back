@@ -68,7 +68,7 @@ public class LoanController {
         return ResponseEntity.ok(savedLoanModel);
     }
 
-    @GetMapping("loan/active")
+    @GetMapping("loan/actives")
     public ResponseEntity<List<LoanModel>> getAllActiveLoans(){
         if(getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel -> loanModel.getReturnDate()==null)
