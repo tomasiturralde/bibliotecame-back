@@ -9,14 +9,16 @@ import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.Period;
-import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 public class LoanController {
@@ -64,6 +66,19 @@ public class LoanController {
         userService.addLoan(user, savedLoanModel);
 
         return ResponseEntity.ok(savedLoanModel);
+    }
+
+    @GetMapping("loan/actives")
+    public ResponseEntity<List<LoanModel>> getAllActiveLoans(){
+        if(getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel -> loanModel.getReturnDate()==null)
+                .sorted(Comparator.comparing(LoanModel::getExpirationDate))
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(loans,HttpStatus.OK);
+    }
+
+    private UserModel getLogged(){
+        return userService.findLogged();
     }
 
 }
