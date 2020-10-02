@@ -38,6 +38,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -188,19 +189,32 @@ public class ReviewTests {
     @Test
     void testStudentCanGetItsOwnReview(){
         setSecurityContext(studentUser);
-        ReviewModel reviewModel = new ReviewModel("Great",5,userService.findLogged());
-        ReviewModel review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+        ReviewModel review = getStudentFirstReview(studentUser, bookModel);
+        if (review == null) {
+            ReviewModel reviewModel = new ReviewModel("Great", 5, userService.findLogged());
+            review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+        }
+
         assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
     void testStudentCantGetAnotherStudentsReview(){
         setSecurityContext(studentUser);
-        ReviewModel reviewModel = new ReviewModel("It was breathtaking!",5,userService.findLogged());
-        ReviewModel review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+        ReviewModel review = getStudentFirstReview(studentUser, bookModel);
+        if (review == null) {
+            ReviewModel reviewModel = new ReviewModel("It was breathtaking!", 5, userService.findLogged());
+            review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+        }
 
         setSecurityContext(studentUser2);
         assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    ReviewModel getStudentFirstReview(UserModel user, BookModel book){
+        List<Integer> reviewsIds = reviewService.findAllByUserModel(user).stream().map(ReviewModel::getId).collect(Collectors.toList());
+        List<ReviewModel> bookReviews = bookService.findBookById(book.getId()).getReviews();
+        return bookReviews.stream().filter(reviewModel -> reviewsIds.contains(reviewModel.getId())).findFirst().orElse(null);
     }
 
 }
