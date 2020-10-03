@@ -2,7 +2,7 @@ package bibliotecame.back.User;
 
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
-import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Loan.LoanDisplay;
 import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -80,6 +81,20 @@ public class UserService {
         return actives;
     }
 
+    public List<LoanModel> getReturnedLoansPage(int page, int size, UserModel user){
+        List<LoanModel> returned = new ArrayList<>();
+        for(LoanModel loan : user.getLoans()){
+            if(loan.getReturnDate() != null){
+                returned.add(loan);
+            }
+        }
+        returned.sort((l0, l1) -> l1.getReturnDate().compareTo(l0.getReturnDate()));
+
+        int start = page*size;
+        int end = Math.min((start + size), returned.size());
+        return returned.subList(start, end);
+    }
+
     public boolean hasLoanOfBook(UserModel user, BookModel book){
         List<LoanModel> actives = getActiveLoans(user);
         for(LoanModel loan : actives){
@@ -117,4 +132,10 @@ public class UserService {
     }
 
     public boolean userExists(int id) {return this.userRepository.findById(id).isPresent(); }
+
+    public LoanDisplay turnModalToDisplay(LoanModel modal){
+        BookModel book = bookService.findBookByCopy(modal.getCopy());
+        return new LoanDisplay(book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate());
+
+    }
 }

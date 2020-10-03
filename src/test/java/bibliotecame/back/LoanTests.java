@@ -6,10 +6,7 @@ import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
-import bibliotecame.back.Loan.LoanController;
-import bibliotecame.back.Loan.LoanModel;
-import bibliotecame.back.Loan.LoanRepository;
-import bibliotecame.back.Loan.LoanService;
+import bibliotecame.back.Loan.*;
 import bibliotecame.back.Tag.TagRepository;
 import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserModel;
@@ -23,7 +20,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -34,6 +33,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -260,6 +260,83 @@ public class LoanTests {
 
         assertThat(loanController.createLoan(bookModel6.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.TOO_MANY_REQUESTS);
 
+    }
+
+
+    @Test
+    void testGetHistory(){
+
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+
+        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+
+        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0);
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
+
+        assert loan != null;
+        loan.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
+        loanService.saveLoan(loan);
+
+        loans = loanController.getAllReturnedLoans(0,0);
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    public void assertThatLoansGetReturnedInOrderAndReturnedLoansDontAppearOnTheList(){
+        UserModel user = new UserModel("khalilTesteandoLoans@mail.austral.edu.ar","khalil1234","khalil","LoanTester","1111111");
+        userService.saveUser(user);
+        setSecurityContext(user);
+
+        BookModel bookModeltoLoan1 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        BookModel bookModeltoLoan2 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        bookService.saveBook(bookModeltoLoan1);
+        bookService.saveBook(bookModeltoLoan2);
+
+        List<CopyModel> copiestoLoan1 = new ArrayList<>();
+        copiestoLoan1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        List<CopyModel> copiestoLoan2 = new ArrayList<>();
+        copiestoLoan2.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModeltoLoan1.setCopies(copiestoLoan1);
+        bookModeltoLoan2.setCopies(copiestoLoan2);
+        bookService.saveBook(bookModeltoLoan1);
+        bookService.saveBook(bookModeltoLoan2);
+
+        //After all the setup, we create a loan for each book
+
+        loanController.createLoan(bookModeltoLoan1.getId());
+        loanController.createLoan(bookModeltoLoan2.getId());
+
+        LoanModel loan = userService.findLogged().getLoans().get(0);
+        loan.setWithdrawalDate(LocalDate.now());
+        loanService.saveLoan(loan);
+
+        //We edit the first loan, so by default it will be at the END of the list
+        //But as the controller returns it by date, it should still be first
+
+        assertThat(loanController.getAllActiveLoans().getBody().get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
+
+        //It should be returning both loans though, because neither was returned
+
+        assertThat(loanController.getAllActiveLoans().getBody().size()).isEqualTo(2);
+
+        //Finally, if we return one of the loans, it should not be in the active list
+
+        loan.setReturnDate(LocalDate.now());
+        loanService.saveLoan(loan);
+        assertThat(loanController.getAllActiveLoans().getBody().size()).isEqualTo(1);
     }
 
     @Test

@@ -22,7 +22,7 @@ import java.util.Objects;
 @Component
 public class OnStart {
 
-    private static final boolean RUN_ON_START = true;
+    private static final boolean RUN_ON_START = false;
 
     private final UserController userController;
     private final UserService userService;

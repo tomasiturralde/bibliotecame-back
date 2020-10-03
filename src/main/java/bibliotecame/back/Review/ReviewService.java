@@ -1,6 +1,7 @@
 package bibliotecame.back.Review;
 
 import bibliotecame.back.User.UserModel;
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,8 @@ public class ReviewService {
         this.reviewRepository = reviewRepository;
     }
 
-    public ReviewModel findReviewById(int id){
-        return this.reviewRepository.findById(id).orElseThrow(() -> new RuntimeException("Review with id: " + id + " not found!"));
+    public ReviewModel findReviewById(int id) throws NotFoundException {
+        return this.reviewRepository.findById(id).orElseThrow(() -> new NotFoundException("Review with id: " + id + " not found!"));
     }
 
     public ReviewModel saveReview(ReviewModel reviewModel){

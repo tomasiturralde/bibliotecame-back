@@ -1,5 +1,6 @@
 package bibliotecame.back.Auth;
 
+import bibliotecame.back.Sanction.SanctionService;
 import bibliotecame.back.Security.jwt.JWTConfigurer;
 import bibliotecame.back.Security.jwt.JWTToken;
 import bibliotecame.back.Security.jwt.LoginResponse;
@@ -25,16 +26,23 @@ public class AuthController {
     private final TokenProvider tokenProvider;
     private final AuthenticationProvider authenticationProvider;
     private final UserService userService;
+    private final SanctionService sanctionService;
 
     @Autowired
-    public AuthController(TokenProvider tokenProvider, AuthenticationProvider authenticationProvider, UserService userService) {
+    public AuthController(TokenProvider tokenProvider, AuthenticationProvider authenticationProvider, UserService userService, SanctionService sanctionService) {
         this.tokenProvider = tokenProvider;
         this.authenticationProvider = authenticationProvider;
         this.userService = userService;
+        this.sanctionService = sanctionService;
     }
 
     @PostMapping()
     public ResponseEntity authenticate(@Valid @RequestBody LoginForm loginForm) {
+
+        UserModel user = userService.findUserByEmail(loginForm.getEmail());
+
+        if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword());
 
@@ -42,7 +50,7 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.createToken(authentication);
-        UserModel user = userService.findUserByEmail(loginForm.getEmail());
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JWTConfigurer.AUTHORIZATION_HEADER, "Bearer " + jwt);
         return new ResponseEntity<>(new LoginResponse(new JWTToken(jwt), user.isAdmin(), user.getFirstName() + " " + user.getLastName()), httpHeaders, HttpStatus.OK);
