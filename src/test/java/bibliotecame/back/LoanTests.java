@@ -38,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class LoadTests {
+public class LoanTests {
 
 
     @Mock
@@ -291,5 +291,50 @@ public class LoadTests {
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    public void assertThatLoansGetReturnedInOrderAndReturnedLoansDontAppearOnTheList(){
+        UserModel user = new UserModel("khalilTesteandoLoans@mail.austral.edu.ar","khalil1234","khalil","LoanTester","1111111");
+        userService.saveUser(user);
+        setSecurityContext(user);
+
+        BookModel bookModeltoLoan1 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        BookModel bookModeltoLoan2 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1999, authorForSavedBook, publisherForSavedBook);
+        bookService.saveBook(bookModeltoLoan1);
+        bookService.saveBook(bookModeltoLoan2);
+
+        List<CopyModel> copiestoLoan1 = new ArrayList<>();
+        copiestoLoan1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        List<CopyModel> copiestoLoan2 = new ArrayList<>();
+        copiestoLoan2.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModeltoLoan1.setCopies(copiestoLoan1);
+        bookModeltoLoan2.setCopies(copiestoLoan2);
+        bookService.saveBook(bookModeltoLoan1);
+        bookService.saveBook(bookModeltoLoan2);
+
+        //After all the setup, we create a loan for each book
+
+        loanController.createLoan(bookModeltoLoan1.getId());
+        loanController.createLoan(bookModeltoLoan2.getId());
+
+        LoanModel loan = userService.findLogged().getLoans().get(0);
+        loan.setWithdrawalDate(LocalDate.now());
+        loanService.saveLoan(loan);
+
+        //We edit the first loan, so by default it will be at the END of the list
+        //But as the controller returns it by date, it should still be first
+
+        assertThat(loan.getId()).isEqualTo(loanController.getAllActiveLoans().getBody().get(0).getId());
+
+        //It should be returning both loans though, because neither was returned
+
+        assertThat(loanController.getAllActiveLoans().getBody().size()).isEqualTo(2);
+
+        //Finally, if we return one of the loans, it should not be in the active list
+
+        loan.setReturnDate(LocalDate.now());
+        loanService.saveLoan(loan);
+        assertThat(loanController.getAllActiveLoans().getBody().size()).isEqualTo(1);
     }
 }

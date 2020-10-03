@@ -14,6 +14,9 @@ public class SanctionForm {
     @NotNull
     private LocalDate endDate;  //in request MUST be written in format "yyyy-MM-dd"
 
+    public SanctionForm() {
+    }
+
     public SanctionForm(String email, String reason, LocalDate endDate) {
         this.email = email;
         this.reason = reason;

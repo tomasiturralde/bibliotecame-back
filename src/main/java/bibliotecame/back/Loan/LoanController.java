@@ -11,15 +11,22 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/loan")
 public class LoanController {
 
     private final LoanService loanService;
@@ -35,7 +42,7 @@ public class LoanController {
         this.copyService = copyService;
     }
 
-    @GetMapping(value = "/loans")
+    @GetMapping(value = "/history")
     public ResponseEntity<Page<LoanDisplay>> getAllReturnedLoans(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
@@ -56,7 +63,7 @@ public class LoanController {
         return ResponseEntity.ok(loanPage);
     }
 
-    @PostMapping("loan/{bookId}")
+    @PostMapping("/{bookId}")
     public ResponseEntity<LoanModel> createLoan(@PathVariable Integer bookId){
 
         UserModel user = userService.findLogged();
@@ -86,6 +93,19 @@ public class LoanController {
         userService.addLoan(user, savedLoanModel);
 
         return ResponseEntity.ok(savedLoanModel);
+    }
+
+    @GetMapping("/actives")
+    public ResponseEntity<List<LoanModel>> getAllActiveLoans(){
+        if(getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel -> loanModel.getReturnDate()==null)
+                .sorted(Comparator.comparing(LoanModel::getExpirationDate))
+                .collect(Collectors.toList());
+        return new ResponseEntity<>(loans,HttpStatus.OK);
+    }
+
+    private UserModel getLogged(){
+        return userService.findLogged();
     }
 
 }
