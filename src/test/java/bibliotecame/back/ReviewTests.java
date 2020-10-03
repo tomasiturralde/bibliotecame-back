@@ -27,6 +27,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -37,6 +38,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -83,6 +85,7 @@ public class ReviewTests {
     SecurityContext securityContext;
 
     UserModel studentUser;
+    UserModel studentUser2;
     BookModel bookModel;
     CopyModel bookModelCopy;
     List<CopyModel> copies;
@@ -102,6 +105,7 @@ public class ReviewTests {
         securityContext = Mockito.mock(SecurityContext.class);
 
         studentUser = new UserModel("BBruno@austral.edu.ar","stickyfingers","Bruno","Bucciarati","1113334444");
+        studentUser2 = new UserModel("facundo@austral.edu.ar","stickyfingers","Facundo","Bocalandro","1113334444");
         bookModel = new BookModel("GioGio's Bizzarre Adventure",1995,"Araki Hirohiko","Weekly Shonen Jump");
         bookModelCopy = new CopyModel("GG-001");
 
@@ -113,6 +117,7 @@ public class ReviewTests {
 
         userService.saveUser(studentUser);
         setSecurityContext(studentUser);
+        userService.saveUser(studentUser2);
 
         copyService.saveCopy(bookModelCopy);
         bookService.saveBook(bookModel);
@@ -179,6 +184,37 @@ public class ReviewTests {
         assertThat(reviewController.createReview(review,differentBook2.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         ReviewModel review2 = new ReviewModel("It sucked!",-999,userService.findLogged());
         assertThat(reviewController.createReview(review2,differentBook2.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testStudentCanGetItsOwnReview(){
+        setSecurityContext(studentUser);
+        ReviewModel review = getStudentFirstReview(studentUser, bookModel);
+        if (review == null) {
+            ReviewModel reviewModel = new ReviewModel("Great", 5, userService.findLogged());
+            review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+        }
+
+        assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testStudentCantGetAnotherStudentsReview(){
+        setSecurityContext(studentUser);
+        ReviewModel review = getStudentFirstReview(studentUser, bookModel);
+        if (review == null) {
+            ReviewModel reviewModel = new ReviewModel("It was breathtaking!", 5, userService.findLogged());
+            review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+        }
+
+        setSecurityContext(studentUser2);
+        assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    ReviewModel getStudentFirstReview(UserModel user, BookModel book){
+        List<Integer> reviewsIds = reviewService.findAllByUserModel(user).stream().map(ReviewModel::getId).collect(Collectors.toList());
+        List<ReviewModel> bookReviews = bookService.findBookById(book.getId()).getReviews();
+        return bookReviews.stream().filter(reviewModel -> reviewsIds.contains(reviewModel.getId())).findFirst().orElse(null);
     }
 
 }
