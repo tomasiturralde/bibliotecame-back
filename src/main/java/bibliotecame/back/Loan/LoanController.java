@@ -6,6 +6,7 @@ import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -14,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
@@ -117,6 +119,34 @@ public class LoanController {
 
     private UserModel getLogged(){
         return userService.findLogged();
+    }
+
+    @PutMapping("/{id}/withdraw")
+    public ResponseEntity<LoanModel> setWithdrawDate(@PathVariable Integer id){
+        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        LoanModel loanModel;
+        try{
+            loanModel = loanService.getLoanById(id);
+            if(loanModel.getReturnDate()!=null || loanModel.getWithdrawalDate()!=null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            loanModel.setWithdrawalDate( LocalDate.now() );
+            loanService.saveLoan(loanModel);
+            return new ResponseEntity<>(loanModel,HttpStatus.OK);
+        }
+        catch (NotFoundException n) { return new ResponseEntity<>(HttpStatus.BAD_REQUEST); }
+    }
+
+    @PutMapping("/{id}/return")
+    public ResponseEntity<LoanModel> setReturnDate(@PathVariable Integer id){
+        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        LoanModel loanModel;
+        try{
+            loanModel = loanService.getLoanById(id);
+            if(loanModel.getReturnDate()!=null || loanModel.getWithdrawalDate()==null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            loanModel.setReturnDate( LocalDate.now() );
+            loanService.saveLoan(loanModel);
+            return new ResponseEntity<>(loanModel,HttpStatus.OK);
+        }
+        catch (NotFoundException n) { return new ResponseEntity<>(HttpStatus.BAD_REQUEST); }
     }
 
 }
