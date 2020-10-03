@@ -30,6 +30,14 @@ public class ExtensionService {
         this.userService = userService;
     }
 
+    public ExtensionModel findById(int id){
+        return extensionRepository.findById(id).orElseThrow(() -> new RuntimeException("Extension with id: " + id + " doesn't exist"));
+    }
+
+    public ExtensionModel saveExtension(ExtensionModel extensionModel){
+        return extensionRepository.save(extensionModel);
+    }
+
     public ResponseEntity<ExtensionModel> createExtension(int loanId) {
         LoanModel loan;
 
@@ -50,6 +58,7 @@ public class ExtensionService {
         }
 
         final ExtensionModel extension = new ExtensionModel(LocalDate.now());
+        saveExtension(extension);
         loan.setExtension(extension);
         loanService.saveLoan(loan);
 
