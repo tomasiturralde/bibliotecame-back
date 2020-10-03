@@ -236,20 +236,15 @@ public class ExtensionTests {
 
     @Test
     void testModifyExtensionOK(){
-        setSecurityContext(notAdmin3);
 
         ExtensionModel extension1 = extensionModel1;
 
-        extension1.setStatus(ExtensionStatus.APPROVED);
-
         ExtensionModel extension2 = extensionModel2;
-
-        extension2.setStatus(ExtensionStatus.REJECTED);
 
         setSecurityContext(admin);
 
-        assertThat(extensionController.modifyExtension(extension1.getId(), extension1).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(extensionController.modifyExtension(extension2.getId(), extension2).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(extensionController.approveExtension(extension1.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(extensionController.rejectExtension(extension2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
     }
 
@@ -260,36 +255,24 @@ public class ExtensionTests {
 
         ExtensionModel extension1 = extensionModel1;
 
-        extension1.setStatus(ExtensionStatus.APPROVED);
-
         ExtensionModel extension2 = extensionModel2;
 
-        extension2.setStatus(ExtensionStatus.REJECTED);
-
-        assertThat(extensionController.modifyExtension(extension1.getId(), extension1).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
-        assertThat(extensionController.modifyExtension(extension2.getId(), extension2).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+        assertThat(extensionController.approveExtension(extension1.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+        assertThat(extensionController.rejectExtension(extension2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
 
     }
 
     @Test
     void testModifyExtensionBAD_REQUEST(){
 
-        setSecurityContext(notAdmin3);
-
-        ExtensionModel extension1 = extensionModel1;
-
-        extension1.setStatus(ExtensionStatus.PENDING_APPROVAL);
-
         ExtensionModel extension2 = extensionModel2;
 
         extension2.setStatus(ExtensionStatus.REJECTED);
         extensionService.saveExtension(extension2);
-        extension2.setStatus(ExtensionStatus.APPROVED);
 
         setSecurityContext(admin);
 
-        assertThat(extensionController.modifyExtension(extension1.getId(), extension1).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(extensionController.modifyExtension(extension2.getId(), extension2).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(extensionController.approveExtension(extension2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
 
         extension2.setStatus(ExtensionStatus.PENDING_APPROVAL);
         extensionService.saveExtension(extension2);

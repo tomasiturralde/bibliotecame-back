@@ -26,18 +26,26 @@ public class ExtensionController {
         return extensionService.createExtension(loanId);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ExtensionModel> modifyExtension(@PathVariable int id, @Valid @RequestBody ExtensionModel extensionModel){
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<ExtensionModel> approveExtension(@PathVariable int id){
 
         if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-
         ExtensionModel extension = extensionService.findById(id);
+        return modifyExtension(extension, ExtensionStatus.APPROVED);
+    }
 
-        if(!extension.getStatus().equals(ExtensionStatus.PENDING_APPROVAL)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(extensionModel.getStatus().equals(ExtensionStatus.PENDING_APPROVAL)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    @PutMapping("/{id}/reject")
+    public ResponseEntity<ExtensionModel> rejectExtension(@PathVariable int id){
 
-        extension.setStatus(extensionModel.getStatus());
+        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        ExtensionModel extension = extensionService.findById(id);
+        return modifyExtension(extension, ExtensionStatus.REJECTED);
+    }
 
-        return ResponseEntity.ok(extensionService.saveExtension(extension));
+    public ResponseEntity<ExtensionModel> modifyExtension(ExtensionModel extensionModel, ExtensionStatus extensionStatus ){
+
+        if(!extensionModel.getStatus().equals(ExtensionStatus.PENDING_APPROVAL)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        extensionModel.setStatus(extensionStatus);
+        return ResponseEntity.ok(extensionService.saveExtension(extensionModel));
     }
 }
