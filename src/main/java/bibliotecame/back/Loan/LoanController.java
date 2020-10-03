@@ -7,20 +7,26 @@ import bibliotecame.back.Copy.CopyService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("/loan")
 public class LoanController {
 
     private final LoanService loanService;
@@ -36,7 +42,28 @@ public class LoanController {
         this.copyService = copyService;
     }
 
-    @PostMapping("loan/{bookId}")
+    @GetMapping(value = "/history")
+    public ResponseEntity<Page<LoanDisplay>> getAllReturnedLoans(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
+    ) {
+        if (size == 0) size = 10;
+        UserModel user = userService.findLogged();
+
+        Page<LoanDisplay> loanPage;
+        List<LoanModel> loans = userService.getReturnedLoansPage(page, size, user);
+        List<LoanDisplay> loansDisplay = new ArrayList<>();
+
+        for (LoanModel loan : loans){
+            loansDisplay.add(userService.turnModalToDisplay(loan));
+        }
+
+        loanPage = new PageImpl<>(loansDisplay);
+
+        return ResponseEntity.ok(loanPage);
+    }
+
+    @PostMapping("/{bookId}")
     public ResponseEntity<LoanModel> createLoan(@PathVariable Integer bookId){
 
         UserModel user = userService.findLogged();
@@ -68,7 +95,7 @@ public class LoanController {
         return ResponseEntity.ok(savedLoanModel);
     }
 
-    @GetMapping("loan/actives")
+    @GetMapping("/actives")
     public ResponseEntity<List<LoanModel>> getAllActiveLoans(){
         if(getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel -> loanModel.getReturnDate()==null)
