@@ -325,7 +325,7 @@ public class LoanTests {
         //We edit the first loan, so by default it will be at the END of the list
         //But as the controller returns it by date, it should still be first
 
-        assertThat(loan.getId()).isEqualTo(loanController.getAllActiveLoans().getBody().get(0).getId());
+        assertThat(loanController.getAllActiveLoans().getBody().get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
 
         //It should be returning both loans though, because neither was returned
 

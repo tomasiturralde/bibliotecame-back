@@ -96,12 +96,23 @@ public class LoanController {
     }
 
     @GetMapping("/actives")
-    public ResponseEntity<List<LoanModel>> getAllActiveLoans(){
+    public ResponseEntity<List<LoanDisplay>> getAllActiveLoans(){
         if(getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel -> loanModel.getReturnDate()==null)
                 .sorted(Comparator.comparing(LoanModel::getExpirationDate))
                 .collect(Collectors.toList());
-        return new ResponseEntity<>(loans,HttpStatus.OK);
+        List<LoanDisplay> loansDisplay = new ArrayList<>();
+        for (LoanModel loan : loans){
+            LoanDisplay loanDisplay = userService.turnModalToDisplay(loan);
+
+            if(loan.getExtension() != null)loanDisplay.setLoanStatus(LoanStatus.getFromInt(loan.getExtension().getStatus().ordinal()));
+            else if(loan.getExpirationDate().isBefore(LocalDate.now())) loanDisplay.setLoanStatus(LoanStatus.DELAYED);
+            else if(loan.getWithdrawalDate() != null) loanDisplay.setLoanStatus(LoanStatus.WITHDRAWN);
+            else loanDisplay.setLoanStatus(LoanStatus.READY_FOR_WITHDRAWAL);
+
+            loansDisplay.add(loanDisplay);
+        }
+        return new ResponseEntity<>(loansDisplay,HttpStatus.OK);
     }
 
     private UserModel getLogged(){

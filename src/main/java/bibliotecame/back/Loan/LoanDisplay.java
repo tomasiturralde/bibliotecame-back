@@ -2,18 +2,29 @@ package bibliotecame.back.Loan;
 
 import java.time.LocalDate;
 
+@SuppressWarnings("unused")
 public class LoanDisplay {
 
     private String bookTitle;
     private String bookAuthor;
     private LocalDate expectedReturnDate;
     private LocalDate returnDate;
+    private LoanStatus loanStatus;
 
     public LoanDisplay(String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate) {
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;
         this.expectedReturnDate = expectedReturnDate;
         this.returnDate = returnDate;
+        loanStatus = null;
+    }
+
+    public LoanDisplay(String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, LoanStatus loanStatus) {
+        this.bookTitle = bookTitle;
+        this.bookAuthor = bookAuthor;
+        this.expectedReturnDate = expectedReturnDate;
+        this.returnDate = returnDate;
+        this.loanStatus = loanStatus;
     }
 
     public String getBookTitle() {
@@ -46,5 +57,13 @@ public class LoanDisplay {
 
     public void setReturnDate(LocalDate returnDate) {
         this.returnDate = returnDate;
+    }
+
+    public LoanStatus getLoanStatus() {
+        return loanStatus;
+    }
+
+    public void setLoanStatus(LoanStatus loanStatus) {
+        this.loanStatus = loanStatus;
     }
 }
