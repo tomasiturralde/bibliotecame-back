@@ -25,7 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RestController("/loan")
+@RestController
+@RequestMapping("/loan")
 public class LoanController {
 
     private final LoanService loanService;
