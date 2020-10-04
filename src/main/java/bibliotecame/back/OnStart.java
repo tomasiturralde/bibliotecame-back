@@ -50,10 +50,10 @@ public class OnStart {
                     admin.setAdmin(true);
                     userService.saveUser(admin);
                 }
-                UserModel user1 = userController.createUser(new UserModel("francisca.canton@ing.austral.edu.ar", "franchu123", "Francisca", "Canton", "011 2222 3333")).getBody();
-                UserModel user2 = userController.createUser(new UserModel("esther.reyes@ing.austral.edu.ar", "123qweasd", "Esther", "Reyes", "011 3333 4444")).getBody();
-                UserModel user3 = userController.createUser(new UserModel("marc.ivanov@ing.austral.edu.ar", "iva123456", "Marc", "Ivanov", "011 4444 0987")).getBody();
-                UserModel user4 = userController.createUser(new UserModel("juanluis.llorens@ing.austral.edu.ar", "juan1234", "Juan Luis", "Lorens", "011 1234 5678")).getBody();
+                UserModel user1 = (UserModel) userController.createUser(new UserModel("francisca.canton@ing.austral.edu.ar", "franchu123", "Francisca", "Canton", "011 2222 3333")).getBody();
+                UserModel user2 = (UserModel) userController.createUser(new UserModel("esther.reyes@ing.austral.edu.ar", "123qweasd", "Esther", "Reyes", "011 3333 4444")).getBody();
+                UserModel user3 = (UserModel) userController.createUser(new UserModel("marc.ivanov@ing.austral.edu.ar", "iva123456", "Marc", "Ivanov", "011 4444 0987")).getBody();
+                UserModel user4 = (UserModel) userController.createUser(new UserModel("juanluis.llorens@ing.austral.edu.ar", "juan1234", "Juan Luis", "Lorens", "011 1234 5678")).getBody();
 
                 //libros
                 List<TagModel> tags1 = new ArrayList<>();

@@ -41,11 +41,11 @@ public class BookController {
     @GetMapping("/{id}")
     public ResponseEntity getBookModel(@PathVariable Integer id){
         if(!bookService.exists(id)){
-            return new ResponseEntity<>("¡El libro solicitado no existe!",HttpStatus.BAD_REQUEST);
+            return unexistingBookError();
         }
         BookModel book = this.bookService.findBookById(id);
         if(!book.isActive() && !checkAdmin()){
-            return new ResponseEntity<>("¡No estás autorizado a ver este libro!",HttpStatus.UNAUTHORIZED);
+            return unauthorizedActionError();
         }
         return new ResponseEntity<>(this.bookService.findBookById(id), HttpStatus.OK);
     }
@@ -53,9 +53,8 @@ public class BookController {
     @PostMapping()
     public ResponseEntity createBook(@Valid @RequestBody BookModel bookModel){
         if(!checkAdmin()){
-            return new ResponseEntity<>("¡No estás autorizado a crear un libro!",HttpStatus.UNAUTHORIZED);
+            return unauthorizedActionError();
         }
-
         return checkAndCreateBook(bookModel);
     }
 
@@ -77,7 +76,7 @@ public class BookController {
     @PutMapping("/{id}")
     public ResponseEntity updateBook(@PathVariable Integer id, @Valid @RequestBody BookModel book) {
         if (!checkAdmin()) {
-            return new ResponseEntity<>("¡No estás autorizado a actualizar este libro!",HttpStatus.UNAUTHORIZED);
+            return unauthorizedActionError();
         }
 
         return checkAndUpdateBook(id, book);
@@ -110,10 +109,10 @@ public class BookController {
     @PostMapping("/{id}/deactivate")
     public ResponseEntity deactivateBook(@PathVariable Integer id) {
         if (!checkAdmin()) {
-            return new ResponseEntity<>("¡No estás autorizado a desactivar este libro!",HttpStatus.UNAUTHORIZED);
+            return unauthorizedActionError();
         }
         if (!bookService.exists(id)) {
-            return new ResponseEntity<>("¡El libro solicitado no existe!",HttpStatus.UNAUTHORIZED);
+            return unexistingBookError();
         }
         BookModel bookModel = bookService.findBookById(id);
         bookModel.setActive(false);
@@ -123,10 +122,10 @@ public class BookController {
     @PostMapping("/{id}/activate")
     public ResponseEntity activateBook(@PathVariable Integer id){
         if(!checkAdmin()){
-            return new ResponseEntity<>("¡No estás autorizado a activar este libro!",HttpStatus.UNAUTHORIZED);
+            return unauthorizedActionError();
         }
         if(!bookService.exists(id)){
-            return new ResponseEntity<>("¡El libro solicitado no existe!",HttpStatus.UNAUTHORIZED);
+            return unexistingBookError();
         }
         BookModel bookModel = bookService.findBookById(id);
         bookModel.setActive(true);
@@ -158,6 +157,15 @@ public class BookController {
 
     private boolean checkAdmin(){
         return userService.findLogged().isAdmin();
+    }
+
+
+    private ResponseEntity unauthorizedActionError(){
+        return new ResponseEntity<>("¡No estás autorizado a realizar esta acción!",HttpStatus.UNAUTHORIZED);
+    }
+
+    private ResponseEntity unexistingBookError(){
+        return new ResponseEntity<>("¡El libro solicitado no existe!",HttpStatus.BAD_REQUEST);
     }
 
 }
