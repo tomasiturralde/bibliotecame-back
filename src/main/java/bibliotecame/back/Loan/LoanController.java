@@ -66,23 +66,23 @@ public class LoanController {
     }
 
     @PostMapping("/{bookId}")
-    public ResponseEntity<LoanModel> createLoan(@PathVariable Integer bookId){
+    public ResponseEntity createLoan(@PathVariable Integer bookId){
 
         UserModel user = userService.findLogged();
-        if(user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        if(user.isAdmin()) return new ResponseEntity<>("¡Debe ser un alumno para poder solicitar un prestamo!",HttpStatus.UNAUTHORIZED);
 
         BookModel book = bookService.findBookById(bookId);
 
         return checkAndCreateLoan(user, book);
     }
 
-    public ResponseEntity<LoanModel> checkAndCreateLoan(UserModel user, BookModel book){
+    public ResponseEntity checkAndCreateLoan(UserModel user, BookModel book){
 
         List<CopyModel> copies = bookService.getAvailableCopies(book);
-        if(copies.isEmpty()) return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
-        if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
-        if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        if(copies.isEmpty()) return new ResponseEntity<>("¡Lo sentimos! ¡Este libro ya no tiene ejemplates disponibles!",HttpStatus.EXPECTATION_FAILED);
+        if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>("¡No se pudo realizar el préstamo ya que tiene demasiados prestamos activos!",HttpStatus.TOO_MANY_REQUESTS);
+        if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>("¡Debe devolver sus prestamos atrasados antes de solicitar nuevos!",HttpStatus.BAD_REQUEST);
+        if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>("¡Usted ya tiene solicitado un prestamo de este libro!",HttpStatus.NOT_ACCEPTABLE);
 
         CopyModel copyToLoan = copies.get(0);
         copyToLoan.setBooked(true);
