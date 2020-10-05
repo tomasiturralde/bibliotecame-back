@@ -399,26 +399,32 @@ public class LoanTests {
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+        loanController.createLoan(interBook.getId()).getBody();
 
         UserModel admin = new UserModel( "holamundo@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         admin.setAdmin(true);
         userRepository.save(admin);
         setSecurityContext(admin);
 
-        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllLoansAdmin(0,0, "");
+        ResponseEntity<Object> loans = loanController.getAllLoansAdmin(0,0, "");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+        Page<LoanDisplay> display = (Page<LoanDisplay>) loans.getBody();
+        assert display != null;
+        assertThat(display.getTotalElements()).isEqualTo(1);
 
         loans = loanController.getAllLoansAdmin(0,0, "new");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+        display = (Page<LoanDisplay>) loans.getBody();
+        assert display != null;
+        assertThat(display.getTotalElements()).isEqualTo(1);
 
         loans = loanController.getAllLoansAdmin(0,0, "other not here");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
+        display = (Page<LoanDisplay>) loans.getBody();
+        assert display != null;
+        assertThat(display.getTotalElements()).isEqualTo(0);
     }
 }

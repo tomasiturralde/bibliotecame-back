@@ -1,9 +1,9 @@
 package bibliotecame.back.Loan;
 
 public enum LoanStatus {
-    PENDING_EXTENSION(0, "Prorroga Pend."),
-    APPROVED_EXTENSION(1, "Prorroga Acp."),
-    REJECTED_EXTENSION(2, "Prorroga Rech."),
+    PENDING_EXTENSION(0, "Prórroga Pend."),
+    APPROVED_EXTENSION(1, "Prórroga Acp."),
+    REJECTED_EXTENSION(2, "Prórroga Rech."),
     DELAYED(3, "Atrasado"),
     WITHDRAWN(4, "Retirado"),
     READY_FOR_WITHDRAWAL(5, "No Retirado"),

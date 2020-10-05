@@ -2,7 +2,6 @@ package bibliotecame.back.User;
 
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
-import bibliotecame.back.Loan.LoanDisplay;
 import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -13,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
