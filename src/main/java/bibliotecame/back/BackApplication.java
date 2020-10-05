@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ComponentScan("bibliotecame.back.Loan")
 @ComponentScan("bibliotecame.back.Sanction")
 @ComponentScan("bibliotecame.back.Extension")
+@ComponentScan("bibliotecame.back.Review")
 public class BackApplication {
 
 	public static void main(String[] args) {

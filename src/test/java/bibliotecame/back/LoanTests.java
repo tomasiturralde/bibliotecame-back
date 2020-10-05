@@ -85,7 +85,7 @@ public class LoanTests {
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
-        loanService = new LoanService(loanRepository);
+        loanService = new LoanService(loanRepository, bookService, userService);
         loanController = new LoanController(loanService, userService, bookService, copyService);
 
         authentication = Mockito.mock(Authentication.class);
@@ -326,7 +326,7 @@ public class LoanTests {
         //We edit the first loan, so by default it will be at the END of the list
         //But as the controller returns it by date, it should still be first
 
-        assertThat(loanController.getAllActiveLoans().getBody().get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
+        assertThat(Objects.requireNonNull(loanController.getAllActiveLoans().getBody()).get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
 
         //It should be returning both loans though, because neither was returned
 
@@ -385,4 +385,40 @@ public class LoanTests {
 
         assertThat(loanController.setReturnDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
+
+    @Test
+    void testGetLoansByAdmin(){
+        UserModel notAdmin = new UserModel( "noAdmin@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel interBook = bookService.saveBook(new BookModel("new Book", 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+
+        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+
+        UserModel admin = new UserModel( "holamundo@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        admin.setAdmin(true);
+        userRepository.save(admin);
+        setSecurityContext(admin);
+
+        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllLoansAdmin(0,0, "");
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+
+        loans = loanController.getAllLoansAdmin(0,0, "new");
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+
+        loans = loanController.getAllLoansAdmin(0,0, "other not here");
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
+    }
 }

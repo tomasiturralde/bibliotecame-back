@@ -133,9 +133,23 @@ public class UserService {
 
     public boolean userExists(int id) {return this.userRepository.findById(id).isPresent(); }
 
-    public LoanDisplay turnModalToDisplay(LoanModel modal){
-        BookModel book = bookService.findBookByCopy(modal.getCopy());
-        return new LoanDisplay(book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate());
-
+    public boolean loanIsOfUser(UserModel user, LoanModel loan){
+        for(LoanModel l : user.getLoans()){
+            if(loan.getId() == l.getId()){
+                return true;
+            }
+        }
+        return false;
     }
+
+    public UserModel getUserFromLoan(LoanModel loan){
+        List<UserModel> users = (List<UserModel>) userRepository.findAll();
+        for(UserModel user : users){
+            if(loanIsOfUser(user, loan)){
+                return user;
+            }
+        }
+        throw new RuntimeException("Loan has no user.");
+    }
+
 }

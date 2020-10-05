@@ -25,6 +25,7 @@ import java.time.Period;
 import java.util.Comparator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -57,7 +58,7 @@ public class LoanController {
         List<LoanDisplay> loansDisplay = new ArrayList<>();
 
         for (LoanModel loan : loans){
-            loansDisplay.add(userService.turnModalToDisplay(loan));
+            loansDisplay.add(loanService.turnLoanModalToDisplay(loan, Optional.empty(), false));
         }
 
         loanPage = new PageImpl<>(loansDisplay);
@@ -105,16 +106,25 @@ public class LoanController {
                 .collect(Collectors.toList());
         List<LoanDisplay> loansDisplay = new ArrayList<>();
         for (LoanModel loan : loans){
-            LoanDisplay loanDisplay = userService.turnModalToDisplay(loan);
+            LoanDisplay loanDisplay = loanService.turnLoanModalToDisplay(loan, Optional.empty(), true);
 
-            if(loan.getExtension() != null)loanDisplay.setLoanStatus(LoanStatus.getFromInt(loan.getExtension().getStatus().ordinal()));
-            else if(loan.getExpirationDate().isBefore(LocalDate.now())) loanDisplay.setLoanStatus(LoanStatus.DELAYED);
-            else if(loan.getWithdrawalDate() != null) loanDisplay.setLoanStatus(LoanStatus.WITHDRAWN);
-            else loanDisplay.setLoanStatus(LoanStatus.READY_FOR_WITHDRAWAL);
-
-            loansDisplay.add(loanDisplay);
+            loansDisplay.add(loanService.setLoanDisplayStatus(loan, loanDisplay));
         }
         return new ResponseEntity<>(loansDisplay,HttpStatus.OK);
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<Object> getAllLoansAdmin(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search") String search
+    ){
+        if (size == 0) size = 10;
+        if(!getLogged().isAdmin()) return new ResponseEntity<>("No esta autorizado a esta vista",HttpStatus.UNAUTHORIZED);
+
+        List<LoanDisplay> loans = loanService.getLoansPage(page, size, search);
+
+        return new ResponseEntity<>(new PageImpl<>(loans),HttpStatus.OK);
     }
 
     private UserModel getLogged(){

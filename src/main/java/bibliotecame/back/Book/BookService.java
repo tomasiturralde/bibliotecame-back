@@ -1,6 +1,8 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Loan.LoanDisplay;
+import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.Tag.TagService;
 import javassist.NotFoundException;
@@ -122,7 +124,7 @@ public class BookService {
                 return book;
             }
         }
-        throw new RuntimeException("Copy with id: " + copy.getId() + "is not associated with any book");
+        throw new RuntimeException("Copy with id: " + copy.getId() + " is not associated with any book");
     }
 
     public void addTags(BookModel book, List<TagModel> tags) {
