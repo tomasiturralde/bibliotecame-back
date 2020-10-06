@@ -104,7 +104,7 @@ public class ExtensionTests {
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
-        loanService = new LoanService(loanRepository);
+        loanService = new LoanService(loanRepository, bookService, userService);
         extensionService = new ExtensionService(extensionRepository, loanService, userService);
         loanController = new LoanController(loanService, userService, bookService, copyService);
         extensionController = new ExtensionController(extensionService, userService);

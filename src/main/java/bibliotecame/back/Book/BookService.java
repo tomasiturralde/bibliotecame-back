@@ -122,7 +122,7 @@ public class BookService {
                 return book;
             }
         }
-        throw new RuntimeException("Copy with id: " + copy.getId() + "is not associated with any book");
+        throw new RuntimeException("Copy with id: " + copy.getId() + " is not associated with any book");
     }
 
     public void addTags(BookModel book, List<TagModel> tags) {
