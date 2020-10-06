@@ -46,13 +46,14 @@ public class LoanService {
 
         List<LoanDisplay> filtered = new ArrayList<>();
         if(!search.isEmpty()){
+            String lookFor = search.toLowerCase();
             for (LoanModel loanModel : list) {
                 if (filtered.size() == (page * size + size)) break;
                 LoanDisplay display = turnLoanModalToDisplay(loanModel, Optional.of(userService.getUserFromLoan(loanModel)), true);
-                if (display.getBookAuthor().contains(search) ||
-                     display.getBookTitle().contains(search) ||
-                     display.getUserEmail().contains(search) ||
-                     display.getLoanStatus().getLabel().contains(search)) filtered.add(display);
+                if (display.getBookAuthor().toLowerCase().contains(lookFor) ||
+                     display.getBookTitle().toLowerCase().contains(lookFor) ||
+                     display.getUserEmail().toLowerCase().contains(lookFor) ||
+                     display.getLoanStatus().getLabel().toLowerCase().contains(lookFor)) filtered.add(display);
             }
         } else{
             for (int i = 0; i <= page*size +size && i < list.size(); i++) {
@@ -67,8 +68,8 @@ public class LoanService {
 
     public LoanDisplay turnLoanModalToDisplay(LoanModel modal, Optional<UserModel> user, boolean withStatus){
         BookModel book = bookService.findBookByCopy(modal.getCopy());
-        LoanDisplay display = user.map(userModel -> new LoanDisplay(book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), userModel.getEmail()))
-                .orElseGet(() -> new LoanDisplay(book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate()));
+        LoanDisplay display = user.map(userModel -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), userModel.getEmail()))
+                .orElseGet(() -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate()));
         return withStatus? setLoanDisplayStatus(modal, display) : display;
     }
 

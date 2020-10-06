@@ -114,13 +114,13 @@ public class LoanController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<Object> getAllLoansAdmin(
+    public ResponseEntity<Page<LoanDisplay>> getAllLoansAdmin(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
             @Valid @RequestParam(value = "search") String search
     ){
         if (size == 0) size = 10;
-        if(!getLogged().isAdmin()) return new ResponseEntity<>("No esta autorizado a esta vista",HttpStatus.UNAUTHORIZED);
+        if(!getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
 
         List<LoanDisplay> loans = loanService.getLoansPage(page, size, search);
 

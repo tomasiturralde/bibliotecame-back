@@ -5,6 +5,7 @@ import java.time.LocalDate;
 @SuppressWarnings("unused")
 public class LoanDisplay {
 
+    private int id;
     private String bookTitle;
     private String bookAuthor;
     private LocalDate expectedReturnDate;
@@ -12,7 +13,8 @@ public class LoanDisplay {
     private LoanStatus loanStatus;
     private String userEmail;
 
-    public LoanDisplay(String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate) {
+    public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate) {
+        this.id = id;
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;
         this.expectedReturnDate = expectedReturnDate;
@@ -21,7 +23,8 @@ public class LoanDisplay {
         userEmail = null;
     }
 
-    public LoanDisplay(String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, LoanStatus loanStatus) {
+    public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, LoanStatus loanStatus) {
+        this.id = id;
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;
         this.expectedReturnDate = expectedReturnDate;
@@ -30,13 +33,22 @@ public class LoanDisplay {
         userEmail = null;
     }
 
-    public LoanDisplay(String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, String userEmail) {
+    public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, String userEmail) {
+        this.id = id;
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;
         this.expectedReturnDate = expectedReturnDate;
         this.returnDate = returnDate;
         this.userEmail = userEmail;
         loanStatus = null;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getBookTitle() {

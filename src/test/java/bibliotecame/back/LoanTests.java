@@ -406,25 +406,19 @@ public class LoanTests {
         userRepository.save(admin);
         setSecurityContext(admin);
 
-        ResponseEntity<Object> loans = loanController.getAllLoansAdmin(0,0, "");
+        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllLoansAdmin(0,0, "");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        Page<LoanDisplay> display = (Page<LoanDisplay>) loans.getBody();
-        assert display != null;
-        assertThat(display.getTotalElements()).isEqualTo(1);
+        assertThat(loans.getBody().getTotalElements()).isGreaterThan(0);
 
         loans = loanController.getAllLoansAdmin(0,0, "new");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        display = (Page<LoanDisplay>) loans.getBody();
-        assert display != null;
-        assertThat(display.getTotalElements()).isEqualTo(1);
+        assertThat(loans.getBody().getTotalElements()).isEqualTo(1);
 
         loans = loanController.getAllLoansAdmin(0,0, "other not here");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        display = (Page<LoanDisplay>) loans.getBody();
-        assert display != null;
-        assertThat(display.getTotalElements()).isEqualTo(0);
+        assertThat(loans.getBody().getTotalElements()).isEqualTo(0);
     }
 }
