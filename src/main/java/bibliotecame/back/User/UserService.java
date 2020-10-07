@@ -38,8 +38,7 @@ public class UserService {
 
     public List<UserModel> getAllByEmailSearch(String search){
 
-        search = search.toLowerCase();
-        return this.userRepository.findAllByEmail(search);
+        return this.userRepository.findAllByEmail(search.toLowerCase());
     }
 
 
