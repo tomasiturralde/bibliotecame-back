@@ -4,13 +4,11 @@ import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.support.Querydsl;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.querydsl.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -40,6 +38,7 @@ public class UserService {
 
     public List<UserModel> getAllByEmailSearch(String search){
 
+        search = search.toLowerCase();
         return this.userRepository.findAllByEmail(search);
     }
 
