@@ -174,14 +174,11 @@ public class BookController {
         if(searchForm.tags.isEmpty()) return ResponseEntity.ok(bookPage);
 
         List<TagModel> tags = new ArrayList<>();
-        for (int i = 0; i < searchForm.tags.size() ; i++) {
-            if(tagService.isPresent(searchForm.tags.get(i).getName())){
-                tags.add(tagService.findTagByName(searchForm.tags.get(i).getName()));
-            } else {
-                tags.add(searchForm.tags.get(i));
-            }
-        }
-        List<BookModel> list = bookPage.stream().filter(bookModel -> bookModel.getTags().containsAll(tags)).collect(Collectors.toList());
+        searchForm.tags.forEach(t -> tags
+                        .add((tagService.isPresent(t.getName())) ? tagService.findTagByName(t.getName()) : t));
+
+        List<BookModel> list = bookPage.stream().filter(bookModel -> bookModel.getTags().containsAll(tags))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(new PageImpl<>(list));
 
     }
