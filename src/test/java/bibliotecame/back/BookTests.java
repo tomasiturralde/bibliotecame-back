@@ -1,9 +1,6 @@
 package bibliotecame.back;
 
-import bibliotecame.back.Book.BookController;
-import bibliotecame.back.Book.BookModel;
-import bibliotecame.back.Book.BookRepository;
-import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Book.*;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
@@ -566,5 +563,79 @@ public class BookTests {
         userRepository.save(admin);
         responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"LaSeñora");
         assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    public void testAdvancedSearch() {
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        BookModel book = new BookModel("libroAAA",2020,"J. R. R. Testien","La comarca del testeo");
+        bookService.saveBook(book);
+        BookModel book2 = new BookModel("libroBBB",2019,"J. R. R. Pepe","La comarca del testing");
+        bookService.saveBook(book2);
+        BookModel book3 = new BookModel("libroCCC",1980,"J. R. R. Pepe","La comarca del testeo");
+        bookService.saveBook(book3);
+        BookModel book4 = new BookModel("libroDDD",1920,"J. R. R. Testien","La comarca del testing");
+        bookService.saveBook(book4);
+
+        testAdvancedByYear();
+        testAdvancedByAuthor();
+        testAdvancedMixingParameters();
+
+
+        tagService.saveTag(new TagModel("H"));
+        List<TagModel> tags = new ArrayList<>();
+        tags.add(tagService.findTagByName("H"));
+        book3.setTags(tags);
+        bookService.saveBook(book3);
+
+        testAdvancedWithTags();
+    }
+
+    private void testAdvancedByYear(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setYear("19");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(3);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroBBB");
+        assertThat(responseEntity.getBody().getContent().get(2).getTitle()).isEqualTo("libroDDD");
+    }
+
+    private void testAdvancedByAuthor(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setAuthor("Pepe");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(2);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroBBB");
+        assertThat(responseEntity.getBody().getContent().get(1).getTitle()).isEqualTo("libroCCC");
+    }
+
+    private void testAdvancedMixingParameters(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setAuthor("Pepe");
+        searchForm.setPublisher("Testeo");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(1);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroCCC");
+    }
+
+    private void testAdvancedWithTags(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setTitle("libroCCC");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().get(0).getTags().get(0).getName()).isEqualTo("H");
+        searchForm.setTitle("");
+        List<TagModel> tags = new ArrayList<>();
+        tags.add(tagService.findTagByName("H"));
+        searchForm.setTags(tags);
+        responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(1);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroCCC");
     }
 }

@@ -138,7 +138,15 @@ public class BookService {
     public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(int page, int size, String search){
         return bookRepository.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(PageRequest.of(page, size), search);
     }
-  
+
+    public Page<BookModel> findAllByTitleAndAuthorAndPublisherAndYear(int page, int size, BookSearchForm searchForm){
+        return bookRepository.findAllByTitleAndAuthorAndPublisherAndYear(PageRequest.of(page, size), searchForm.title, searchForm.author, searchForm.publisher,searchForm.year);
+    }
+
+    public Page<BookModel> findAllByTitleAndAuthorAndPublisherAndYearAndActive(int page, int size, BookSearchForm searchForm){
+        return bookRepository.findAllByTitleAndAuthorAndPublisherAndYearAndActive(PageRequest.of(page, size), searchForm.title, searchForm.author, searchForm.publisher, searchForm.year);
+    }
+
     public List<CopyModel> getAvailableCopies(BookModel book){
         List<CopyModel> available = new ArrayList<>();
         for(CopyModel copy : book.getCopies()){

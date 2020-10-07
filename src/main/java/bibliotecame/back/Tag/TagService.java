@@ -33,6 +33,10 @@ public class TagService {
         return this.tagRepository.findByName(name);
     }
 
+    public boolean isPresent(String name){
+        return this.tagRepository.findByName(name).isPresent();
+    }
+
     public List<TagModel> validate(List<TagModel> tags) {
         List<TagModel> newTags = new ArrayList<>();
         if(tags != null){
