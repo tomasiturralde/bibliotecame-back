@@ -29,12 +29,13 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -106,7 +107,7 @@ public class ExtensionTests {
         userService = new UserService(userRepository, bookService);
         loanService = new LoanService(loanRepository, bookService, userService);
         extensionService = new ExtensionService(extensionRepository, loanService, userService);
-        loanController = new LoanController(loanService, userService, bookService, copyService);
+        loanController = new LoanController(loanService, userService, bookService, copyService, extensionService);
         extensionController = new ExtensionController(extensionService, userService);
 
         authentication = Mockito.mock(Authentication.class);
@@ -278,4 +279,5 @@ public class ExtensionTests {
         extensionService.saveExtension(extension2);
 
     }
+
 }
