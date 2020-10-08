@@ -36,6 +36,11 @@ public class UserService {
         return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User with email: " + email + " not found!"));
     }
 
+    public List<UserModel> getAllByEmailSearch(String search){
+
+        return this.userRepository.findAllByEmail(search.toLowerCase());
+    }
+
 
     public UserModel saveUser(UserModel userModel){
         userModel.setPassword(BCrypt.hashpw(userModel.getPassword(), BCrypt.gensalt()));

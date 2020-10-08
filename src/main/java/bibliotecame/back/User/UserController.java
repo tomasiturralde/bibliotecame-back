@@ -1,16 +1,11 @@
 package bibliotecame.back.User;
 
-import bibliotecame.back.Loan.LoanDisplay;
-import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -26,6 +21,12 @@ public class UserController {
     @GetMapping("user/{id}")
     public ResponseEntity<UserModel> getUserModel(@PathVariable Integer id){
         return new ResponseEntity<>(this.userService.findUserById(id), HttpStatus.OK);
+    }
+
+    @GetMapping("users")
+    public ResponseEntity<List<UserModel>> getUsers(@Valid @RequestParam(value = "search") String search){
+        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(this.userService.getAllByEmailSearch(search), HttpStatus.OK);
     }
 
     @PostMapping(value = "/signup")
