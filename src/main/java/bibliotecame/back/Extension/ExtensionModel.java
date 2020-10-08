@@ -19,12 +19,18 @@ public class ExtensionModel {
     @Column
     private LocalDate creationDate;
 
+    @Column
+    private boolean active;
+
     public ExtensionModel(LocalDate creationDate) {
         this.status = ExtensionStatus.PENDING_APPROVAL;
         this.creationDate = creationDate;
+        this.active = true;
     }
 
-    public ExtensionModel() {}
+    public ExtensionModel() {
+        this.active = true;
+    }
 
     public int getId() {
         return id;
@@ -39,4 +45,12 @@ public class ExtensionModel {
     }
 
     public void setStatus(ExtensionStatus status) { this.status = status; }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

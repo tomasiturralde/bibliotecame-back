@@ -6,6 +6,7 @@ import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.Extension.*;
 import bibliotecame.back.Loan.*;
 import bibliotecame.back.Tag.TagRepository;
 import bibliotecame.back.Tag.TagService;
@@ -36,6 +37,8 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -69,6 +72,13 @@ public class LoanTests {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ExtensionRepository extensionRepository;
+    @Mock
+    private ExtensionService extensionService;
+    @Mock
+    private ExtensionController extensionController;
+
     String authorForSavedBook;
     String publisherForSavedBook;
 
@@ -86,7 +96,9 @@ public class LoanTests {
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
         loanService = new LoanService(loanRepository, bookService, userService);
-        loanController = new LoanController(loanService, userService, bookService, copyService);
+        extensionService = new ExtensionService(extensionRepository,loanService,userService);
+        loanController = new LoanController(loanService, userService, bookService, copyService,extensionService);
+        extensionController = new ExtensionController(extensionService,userService);
 
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
@@ -420,5 +432,41 @@ public class LoanTests {
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(loans.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    void testDisableExtensionOnLoanReturn(){
+        UserModel user = new UserModel("khalilDandoDeBajaExtensiones@mail.austral.edu.ar","khalil1234","khalil","LoanTester","1111111");
+        userService.saveUser(user);
+        setSecurityContext(user);
+
+        BookModel bookModeltoLoan1 = new BookModel(RandomStringGenerator.getAlphabeticString(7), 1969, authorForSavedBook, publisherForSavedBook);
+        bookService.saveBook(bookModeltoLoan1);
+
+        List<CopyModel> copiestoLoan1 = new ArrayList<>();
+        copiestoLoan1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        bookModeltoLoan1.setCopies(copiestoLoan1);
+        bookService.saveBook(bookModeltoLoan1);
+
+        loanController.createLoan(bookModeltoLoan1.getId());
+
+        LoanModel loan = userService.findLogged().getLoans().get(0);
+
+        //Up to here we created a Loan succesfully
+
+        ExtensionModel extensionModel = extensionController.createExtension(loan.getId()).getBody();
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(loan.getId());
+        extensionModel = extensionController.approveExtension(extensionModel.getId()).getBody();
+
+        //Here we created and approved an extension
+
+        assertTrue(extensionService.findById(extensionModel.getId()).isActive());
+        loanController.setReturnDate(loan.getId());
+        assertFalse(extensionService.findById(extensionModel.getId()).isActive());
+
+        //We check if it is active before returning the loan, and if after returning the loan it is no longer active.
+
     }
 }
