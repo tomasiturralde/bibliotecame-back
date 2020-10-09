@@ -85,4 +85,27 @@ public class LoanService {
         else display.setLoanStatus(LoanStatus.READY_FOR_WITHDRAWAL);
         return display;
     }
+
+    public void deleteEveryExpiredLoan(){
+        for(UserModel user : userService.getUsersWithLoans()){
+            deleteExpirationLoansOfUsers(user);
+        }
+    }
+
+    public void deleteExpirationLoansOfUsers(UserModel user){
+        List<LoanModel> remainingLoans = new ArrayList<>();
+        List<LoanModel> deletingLoans = new ArrayList<>();
+        for(LoanModel loan: user.getLoans()){
+            if(loan.getExpirationDate().isBefore(LocalDate.now()) && loan.getWithdrawalDate() == null){
+                deletingLoans.add(loan);
+            } else {
+                remainingLoans.add(loan);
+            }
+        }
+        user.setLoans(remainingLoans);
+        userService.saveUser(user);
+        for(LoanModel loan: deletingLoans){
+            loanRepository.delete(loan);
+        }
+    }
 }

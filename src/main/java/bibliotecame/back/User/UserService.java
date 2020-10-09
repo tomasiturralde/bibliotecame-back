@@ -155,4 +155,14 @@ public class UserService {
         throw new RuntimeException("Loan has no user.");
     }
 
+    public List<UserModel> getUsersWithLoans(){
+        List<UserModel> users = new ArrayList<>();
+        for(UserModel user : userRepository.findAll()){
+            if(!user.getLoans().isEmpty()){
+                users.add(user);
+            }
+        }
+        return users;
+    }
+
 }

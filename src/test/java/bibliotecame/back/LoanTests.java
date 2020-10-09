@@ -108,7 +108,7 @@ public class LoanTests {
 
         theBook = bookService.saveBook(new BookModel("theBook", 2000, authorForSavedBook, publisherForSavedBook));
 
-        admin = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
+        admin = new UserModel(RandomStringGenerator.getAlphaNumericString(30) + "@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
         admin.setAdmin(true);
         userRepository.save(admin);
 
@@ -421,17 +421,17 @@ public class LoanTests {
         ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllLoansAdmin(0,0, "");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(loans.getBody().getTotalElements()).isGreaterThan(0);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isGreaterThan(0);
 
         loans = loanController.getAllLoansAdmin(0,0, "new");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(loans.getBody().getTotalElements()).isEqualTo(1);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
 
         loans = loanController.getAllLoansAdmin(0,0, "other not here");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(loans.getBody().getTotalElements()).isEqualTo(0);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
     }
 
     @Test
@@ -469,4 +469,122 @@ public class LoanTests {
         //We check if it is active before returning the loan, and if after returning the loan it is no longer active.
 
     }
+
+    @Test
+    void testClearExpiredLoansUserOK(){
+
+        //creation of loan
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+
+        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+
+        //change expiration date
+        assert loan != null;
+        loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
+        loanService.saveLoan(loan);
+
+        //clear
+        assertThat(loanController.expiredLoansClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+    }
+
+    @Test
+    void testClearExpiredLoansUserUNAUTHORIZED(){
+        //creation of loan
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+
+        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+
+        //change expiration date
+        assert loan != null;
+        loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
+        loanService.saveLoan(loan);
+
+        setSecurityContext(admin);
+
+        //clear
+        assertThat(loanController.expiredLoansClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testClearExpiredLoansAdminOK(){
+        //creation of loan
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(40) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+
+        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+
+        //change expiration date
+        assert loan != null;
+        loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
+        loanService.saveLoan(loan);
+
+        setSecurityContext(admin);
+
+        //clear
+        assertThat(loanController.everyExpiredLoanClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testClearExpiredLoansAdminUNAUTHORIZED(){
+        //creation of loan
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+
+        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+
+        //change expiration date
+        assert loan != null;
+        loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
+        loanService.saveLoan(loan);
+
+        //clear
+        assertThat(loanController.everyExpiredLoanClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+
+
+
 }

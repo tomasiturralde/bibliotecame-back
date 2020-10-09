@@ -113,7 +113,7 @@ public class ExtensionTests {
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
 
-        admin = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
+        admin = new UserModel(RandomStringGenerator.getAlphaNumericString(20)+"@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
         admin.setAdmin(true);
         userRepository.save(admin);
 
