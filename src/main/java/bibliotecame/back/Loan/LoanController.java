@@ -161,4 +161,26 @@ public class LoanController {
         catch (NotFoundException n) { return new ResponseEntity<>(HttpStatus.BAD_REQUEST); }
     }
 
+    @DeleteMapping("/user/clear")
+    public ResponseEntity<Object> expiredLoansClearer(){
+
+        UserModel user = userService.findLogged();
+        if(user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        loanService.deleteExpirationLoansOfUsers(user);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/admin/clear")
+    public ResponseEntity<Object> everyExpiredLoanClearer(){
+
+        UserModel user = userService.findLogged();
+        if(!user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        loanService.deleteEveryExpiredLoan();
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
 }
