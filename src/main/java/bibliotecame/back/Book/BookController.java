@@ -2,12 +2,10 @@ package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
-import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 //import bibliotecame.back.User.UserModel;
 //import org.springframework.security.core.Authentication;
@@ -171,16 +168,7 @@ public class BookController {
         if(checkAdmin()) {
             bookPage = bookService.findAllByTitleAndAuthorAndPublisherAndYear(page, size, searchForm);
         } else bookPage = bookService.findAllByTitleAndAuthorAndPublisherAndYearAndActive(page,size,searchForm);
-        if(searchForm.tags.isEmpty()) return ResponseEntity.ok(bookPage);
-
-        List<TagModel> tags = new ArrayList<>();
-        searchForm.tags.forEach(t -> tags
-                        .add((tagService.isPresent(t.getName())) ? tagService.findTagByName(t.getName()) : t));
-
-        List<BookModel> list = bookPage.stream().filter(bookModel -> bookModel.getTags().containsAll(tags))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(new PageImpl<>(list));
-
+        return ResponseEntity.ok(bookPage);
     }
 
 

@@ -631,8 +631,8 @@ public class BookTests {
         ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
         assertThat(responseEntity.getBody().getContent().get(0).getTags().get(0).getName()).isEqualTo("H");
         searchForm.setTitle("");
-        List<TagModel> tags = new ArrayList<>();
-        tags.add(tagService.findTagByName("H"));
+        List<String> tags = new ArrayList<>();
+        tags.add("H");
         searchForm.setTags(tags);
         responseEntity = bookController.advancedSearch(0,10,searchForm);
         assertThat(responseEntity.getBody().getContent().size()).isEqualTo(1);
