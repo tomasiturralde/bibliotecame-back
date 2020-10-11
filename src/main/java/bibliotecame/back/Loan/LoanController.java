@@ -4,6 +4,7 @@ import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.Extension.ExtensionService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import javassist.NotFoundException;
@@ -12,19 +13,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.Comparator;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -35,13 +32,15 @@ public class LoanController {
     private final UserService userService;
     private final BookService bookService;
     private final CopyService copyService;
+    private final ExtensionService extensionService;
 
     @Autowired
-    public LoanController(LoanService loanService, UserService userService, BookService bookService, CopyService copyService) {
+    public LoanController(LoanService loanService, UserService userService, BookService bookService, CopyService copyService, ExtensionService extensionService) {
         this.loanService = loanService;
         this.userService = userService;
         this.bookService = bookService;
         this.copyService = copyService;
+        this.extensionService = extensionService;
     }
 
     @GetMapping(value = "/history")
@@ -57,7 +56,7 @@ public class LoanController {
         List<LoanDisplay> loansDisplay = new ArrayList<>();
 
         for (LoanModel loan : loans){
-            loansDisplay.add(userService.turnModalToDisplay(loan));
+            loansDisplay.add(loanService.turnLoanModalToDisplay(loan, Optional.empty(), false));
         }
 
         loanPage = new PageImpl<>(loansDisplay);
@@ -105,16 +104,25 @@ public class LoanController {
                 .collect(Collectors.toList());
         List<LoanDisplay> loansDisplay = new ArrayList<>();
         for (LoanModel loan : loans){
-            LoanDisplay loanDisplay = userService.turnModalToDisplay(loan);
+            LoanDisplay loanDisplay = loanService.turnLoanModalToDisplay(loan, Optional.empty(), true);
 
-            if(loan.getExtension() != null)loanDisplay.setLoanStatus(LoanStatus.getFromInt(loan.getExtension().getStatus().ordinal()));
-            else if(loan.getExpirationDate().isBefore(LocalDate.now())) loanDisplay.setLoanStatus(LoanStatus.DELAYED);
-            else if(loan.getWithdrawalDate() != null) loanDisplay.setLoanStatus(LoanStatus.WITHDRAWN);
-            else loanDisplay.setLoanStatus(LoanStatus.READY_FOR_WITHDRAWAL);
-
-            loansDisplay.add(loanDisplay);
+            loansDisplay.add(loanService.setLoanDisplayStatus(loan, loanDisplay));
         }
         return new ResponseEntity<>(loansDisplay,HttpStatus.OK);
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<Page<LoanDisplay>> getAllLoansAdmin(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search") String search
+    ){
+        if (size == 0) size = 10;
+        if(!getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        List<LoanDisplay> loans = loanService.getLoansPage(page, size, search);
+
+        return new ResponseEntity<>(new PageImpl<>(loans),HttpStatus.OK);
     }
 
     private UserModel getLogged(){
@@ -145,6 +153,10 @@ public class LoanController {
             if(loanModel.getReturnDate()!=null) return new ResponseEntity<>("¡Este prestamo ya fué devuelto!",HttpStatus.BAD_REQUEST);
             if(loanModel.getWithdrawalDate()==null) return new ResponseEntity<>("¡Este prestamo aún no fué retirado!",HttpStatus.BAD_REQUEST);
             loanModel.setReturnDate( LocalDate.now() );
+            if(loanModel.getExtension()!=null){
+                loanModel.getExtension().setActive(false);
+                extensionService.saveExtension(loanModel.getExtension());
+            }
             loanService.saveLoan(loanModel);
             return new ResponseEntity<>(loanModel,HttpStatus.OK);
         }
@@ -157,6 +169,28 @@ public class LoanController {
 
     private ResponseEntity unexistingLoanError(){
         return new ResponseEntity<>("¡El prestamo solicitado no existe!",HttpStatus.BAD_REQUEST);
+    }
+
+    @DeleteMapping("/user/clear")
+    public ResponseEntity<Object> expiredLoansClearer(){
+
+        UserModel user = userService.findLogged();
+        if(user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        loanService.deleteExpirationLoansOfUsers(user);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/admin/clear")
+    public ResponseEntity<Object> everyExpiredLoanClearer(){
+
+        UserModel user = userService.findLogged();
+        if(!user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
+        loanService.deleteEveryExpiredLoan();
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }

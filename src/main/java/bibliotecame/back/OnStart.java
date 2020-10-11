@@ -22,7 +22,7 @@ import java.util.Objects;
 @Component
 public class OnStart {
 
-    private static final boolean RUN_ON_START = false;
+    private static final boolean RUN_ON_START = true;
 
     private final UserController userController;
     private final UserService userService;
@@ -227,7 +227,7 @@ public class OnStart {
                 List<CopyModel> copies11 = new ArrayList<>();
                 copies11.add(new CopyModel("C3DF9M"));
                 Objects.requireNonNull(book11).setCopies(copies11);
-                bookController.checkAndUpdateBook(book1.getId(), book11);
+                bookController.checkAndUpdateBook(book11.getId(), book11);
 
                 List<CopyModel> copies12 = new ArrayList<>();
                 copies12.add(new CopyModel("PP737J"));

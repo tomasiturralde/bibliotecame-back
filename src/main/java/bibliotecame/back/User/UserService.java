@@ -2,7 +2,6 @@ package bibliotecame.back.User;
 
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
-import bibliotecame.back.Loan.LoanDisplay;
 import bibliotecame.back.Loan.LoanModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -13,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -36,6 +34,11 @@ public class UserService {
 
     public UserModel findUserByEmail(String email){
         return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User with email: " + email + " not found!"));
+    }
+
+    public List<UserModel> getAllByEmailSearch(String search){
+
+        return this.userRepository.findAllByEmail(search.toLowerCase());
     }
 
 
@@ -133,9 +136,33 @@ public class UserService {
 
     public boolean userExists(int id) {return this.userRepository.findById(id).isPresent(); }
 
-    public LoanDisplay turnModalToDisplay(LoanModel modal){
-        BookModel book = bookService.findBookByCopy(modal.getCopy());
-        return new LoanDisplay(book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate());
-
+    public boolean loanIsOfUser(UserModel user, LoanModel loan){
+        for(LoanModel l : user.getLoans()){
+            if(loan.getId() == l.getId()){
+                return true;
+            }
+        }
+        return false;
     }
+
+    public UserModel getUserFromLoan(LoanModel loan){
+        List<UserModel> users = (List<UserModel>) userRepository.findAll();
+        for(UserModel user : users){
+            if(loanIsOfUser(user, loan)){
+                return user;
+            }
+        }
+        throw new RuntimeException("Loan has no user.");
+    }
+
+    public List<UserModel> getUsersWithLoans(){
+        List<UserModel> users = new ArrayList<>();
+        for(UserModel user : userRepository.findAll()){
+            if(!user.getLoans().isEmpty()){
+                users.add(user);
+            }
+        }
+        return users;
+    }
+
 }

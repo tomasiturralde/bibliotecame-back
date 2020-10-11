@@ -98,7 +98,7 @@ public class ReviewTests {
         userService = new UserService(userRepository, bookService);
         bookController = new BookController(bookService, tagService, copyService, userService);
         reviewService = new ReviewService(reviewRepository);
-        loanService = new LoanService(loanRepository);
+        loanService = new LoanService(loanRepository, bookService, userService);
         reviewController = new ReviewController(reviewService,userService,bookService);
 
         authentication = Mockito.mock(Authentication.class);
