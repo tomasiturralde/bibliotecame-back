@@ -1,5 +1,6 @@
 package bibliotecame.back.Auth;
 
+import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Sanction.SanctionService;
 import bibliotecame.back.Security.jwt.JWTConfigurer;
 import bibliotecame.back.Security.jwt.JWTToken;
@@ -41,7 +42,7 @@ public class AuthController {
 
         UserModel user = userService.findUserByEmail(loginForm.getEmail());
 
-        if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(new ErrorMessage("¡Usted está sancionado!"),HttpStatus.UNAUTHORIZED);
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword());

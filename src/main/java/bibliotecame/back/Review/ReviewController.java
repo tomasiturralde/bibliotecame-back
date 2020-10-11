@@ -3,6 +3,7 @@ package bibliotecame.back.Review;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
@@ -54,13 +55,13 @@ public class ReviewController {
 
         if(checkAdmin()) return unauthorizedActionError();
 
-        if(reviewModel.getValue()<0 || reviewModel.getValue()>5) return new ResponseEntity<>("¡El valor de la reseña debe estar entre 0 y 5!",HttpStatus.BAD_REQUEST);
+        if(reviewModel.getValue()<0 || reviewModel.getValue()>5) return new ResponseEntity<>(new ErrorMessage("¡El valor de la reseña debe estar entre 0 y 5!"),HttpStatus.BAD_REQUEST);
 
         reviewModel.setUserModel(getLogged());
 
-        if(userPreviouslyReviewedThisOne(bookId)) return new ResponseEntity<>("¡Usted ya escribió una reseña para este libro, modifiquela en lugar de crear una nueva!",HttpStatus.TOO_MANY_REQUESTS);
+        if(userPreviouslyReviewedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted ya escribió una reseña para este libro, modifiquela en lugar de crear una nueva!"),HttpStatus.TOO_MANY_REQUESTS);
 
-        if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>("¡Usted no puede escribir una reseña de un libro que no haya retirado previamente!",HttpStatus.BAD_REQUEST);
+        if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted no puede escribir una reseña de un libro que no haya retirado previamente!"),HttpStatus.BAD_REQUEST);
 
         reviewService.saveReview(reviewModel);
         BookModel bookToUpdate = bookService.findBookById(bookId);
@@ -91,14 +92,14 @@ public class ReviewController {
     }
 
     private ResponseEntity unauthorizedActionError(){
-        return new ResponseEntity<>("¡No estás autorizado a realizar esta acción!",HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
 
     private ResponseEntity unexistingBookError(){
-        return new ResponseEntity<>("¡El libro solicitado no existe!",HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorMessage("¡El libro solicitado no existe!"),HttpStatus.BAD_REQUEST);
     }
 
     private ResponseEntity unexistingReviewError(){
-        return new ResponseEntity<>("¡La reseña solicitada no existe!",HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorMessage("¡La reseña solicitada no existe!"),HttpStatus.BAD_REQUEST);
     }
 }

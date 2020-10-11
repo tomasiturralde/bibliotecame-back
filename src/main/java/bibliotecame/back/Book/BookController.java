@@ -2,6 +2,7 @@ package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,10 +61,10 @@ public class BookController {
 
     public ResponseEntity checkAndCreateBook(BookModel bookModel){
         if(!bookService.hasTitle(bookModel) || !bookService.hasAuthor(bookModel) || !bookService.validYear(bookModel) || !bookService.hasPublisher(bookModel)){
-            return new ResponseEntity<>("¡El libro recibido no es valido, verifique los campos!",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorMessage("¡El libro recibido no es valido, verifique los campos!"),HttpStatus.BAD_REQUEST);
         }
         if(bookService.exists(bookModel.getTitle(), bookModel.getAuthor(), bookModel.getPublisher(), bookModel.getYear())){
-            return new ResponseEntity<>("¡El libro ya existe!",HttpStatus.NOT_ACCEPTABLE);
+            return new ResponseEntity<>(new ErrorMessage("¡El libro ya existe!"),HttpStatus.NOT_ACCEPTABLE);
         }
 
         if(bookModel.getTags()!= null || !bookModel.getTags().isEmpty()){
@@ -87,11 +88,11 @@ public class BookController {
         List<CopyModel> savedCopies = new ArrayList<>();
 
         if(copies!=null && !copies.isEmpty()){
-            if(copies.size()>=100) return new ResponseEntity<>("¡El libro ya tiene demasiados ejemplares!",HttpStatus.BAD_REQUEST);
+            if(copies.size()>=100) return new ResponseEntity<>(new ErrorMessage("¡El libro ya tiene demasiados ejemplares!"),HttpStatus.BAD_REQUEST);
 
             for(CopyModel copy : copies){
                 if(copyService.exists(copy.getId())){
-                    if ((copy.getBooked() && !copy.getActive())) return new ResponseEntity<>("¡No puedes desactivar un ejemplar reservado!",HttpStatus.BAD_REQUEST);
+                    if ((copy.getBooked() && !copy.getActive())) return new ResponseEntity<>(new ErrorMessage("¡No puedes desactivar un ejemplar reservado!"),HttpStatus.BAD_REQUEST);
                     savedCopies.add(copyService.saveCopy(copy));
                 }
                 else {
@@ -161,11 +162,11 @@ public class BookController {
 
 
     private ResponseEntity unauthorizedActionError(){
-        return new ResponseEntity<>("¡No estás autorizado a realizar esta acción!",HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
 
     private ResponseEntity unexistingBookError(){
-        return new ResponseEntity<>("¡El libro solicitado no existe!",HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorMessage("¡El libro solicitado no existe!"),HttpStatus.BAD_REQUEST);
     }
 
 }

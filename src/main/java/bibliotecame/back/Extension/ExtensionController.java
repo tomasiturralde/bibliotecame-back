@@ -1,5 +1,6 @@
 package bibliotecame.back.Extension;
 
+import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,12 +43,12 @@ public class ExtensionController {
 
     public ResponseEntity modifyExtension(ExtensionModel extensionModel, ExtensionStatus extensionStatus ){
 
-        if(!extensionModel.getStatus().equals(ExtensionStatus.PENDING_APPROVAL)) return new ResponseEntity<>("¡Esta prorroga ya fué modificada!",HttpStatus.BAD_REQUEST);
+        if(!extensionModel.getStatus().equals(ExtensionStatus.PENDING_APPROVAL)) return new ResponseEntity<>(new ErrorMessage("¡Esta prorroga ya fué modificada!"),HttpStatus.BAD_REQUEST);
         extensionModel.setStatus(extensionStatus);
         return ResponseEntity.ok(extensionService.saveExtension(extensionModel));
     }
 
     private ResponseEntity unauthorizedActionError(){
-        return new ResponseEntity("¡Usted no está autorizado a realizar esta acción!",HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
 }
