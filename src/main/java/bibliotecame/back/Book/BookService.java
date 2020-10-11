@@ -166,6 +166,7 @@ public class BookService {
         List<BookModel> result = new ArrayList<>();
         findAll().iterator().forEachRemaining(result::add);
         result.sort(Comparator.comparing(BookModel::getTitle));
+        result = result.stream().filter(BookModel::isActive).collect(Collectors.toList());
         result = result.stream().filter(searchForm::matches).collect(Collectors.toList());
         int total = result.size();
         int start = toIntExact(pageable.getOffset());
