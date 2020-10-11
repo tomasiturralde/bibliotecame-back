@@ -47,6 +47,10 @@ public class UserService {
         return this.userRepository.save(userModel);
     }
 
+    public UserModel saveWithoutEncryption(UserModel userModel){
+        return this.userRepository.save(userModel);
+    }
+
     public UserModel updateUser(UserModel userModel,int id){
         userModel.setPassword(BCrypt.hashpw(userModel.getPassword(), BCrypt.gensalt()));
         UserModel userToUpdate = findUserById(id);
