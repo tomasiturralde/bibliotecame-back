@@ -1,12 +1,12 @@
 package bibliotecame.back.User;
 
+import bibliotecame.back.ErrorMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 @RestController
 public class UserController {
@@ -19,22 +19,23 @@ public class UserController {
     }
 
     @GetMapping("user/{id}")
-    public ResponseEntity<UserModel> getUserModel(@PathVariable Integer id){
+    public ResponseEntity getUserModel(@PathVariable Integer id){
+        if(!userService.userExists(id)) return new ResponseEntity<>(new ErrorMessage("¡El usuario no existe!"),HttpStatus.BAD_REQUEST);
         return new ResponseEntity<>(this.userService.findUserById(id), HttpStatus.OK);
     }
 
     @GetMapping("users")
-    public ResponseEntity<List<UserModel>> getUsers(@Valid @RequestParam(value = "search") String search){
-        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    public ResponseEntity getUsers(@Valid @RequestParam(value = "search") String search){
+        if(!userService.findLogged().isAdmin()) return new ResponseEntity(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
         return new ResponseEntity<>(this.userService.getAllByEmailSearch(search), HttpStatus.OK);
     }
 
     @PostMapping(value = "/signup")
-    public ResponseEntity<UserModel> createUser(@Valid @RequestBody UserModel userModel){
+    public ResponseEntity createUser(@Valid @RequestBody UserModel userModel){
 
-        if(!userService.validUser(userModel))return new ResponseEntity<>(userModel, HttpStatus.BAD_REQUEST);
+        if(!userService.validUser(userModel))return new ResponseEntity<>(new ErrorMessage("¡Por favor, verifique los datos enviados!"), HttpStatus.BAD_REQUEST);
 
-        if(userService.emailExists(userModel.getEmail())) return new ResponseEntity<>(userModel, HttpStatus.BAD_REQUEST);
+        if(userService.emailExists(userModel.getEmail())) return new ResponseEntity<>(new ErrorMessage("¡Usted ya está registrado!"), HttpStatus.BAD_REQUEST);
         userModel.setAdmin(false);
 
         return ResponseEntity.ok(userService.saveUser(userModel));
@@ -42,20 +43,20 @@ public class UserController {
     }
 
     @DeleteMapping("deleteUser/{id}")
-    public ResponseEntity<Integer> deleteUser(@PathVariable Integer id){
+    public ResponseEntity deleteUser(@PathVariable Integer id){
 
         UserModel user;
         try {
             user = this.userService.findLogged();
         } catch (RuntimeException e){
-            return new ResponseEntity<>(id, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorMessage("¡El usuario que quiere eliminar no existe!"), HttpStatus.BAD_REQUEST);
         }
 
         if(user.getId() != id){
-            return new ResponseEntity<>(id, HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("¡Usted no puede eliminar la cuenta de otro usuario!"), HttpStatus.UNAUTHORIZED);
         }
 
-        if(!userService.getActiveLoans(user).isEmpty()) return new ResponseEntity<>(id, HttpStatus.BAD_REQUEST);
+        if(!userService.getActiveLoans(user).isEmpty()) return new ResponseEntity<>(new ErrorMessage("¡No puede eliminar su cuenta teniendo prestamos activos!"), HttpStatus.BAD_REQUEST);
 
         userService.deleteUser(user);
 
@@ -63,19 +64,19 @@ public class UserController {
     }
 
     @GetMapping("user/getLogged")
-    public ResponseEntity<UserModel> getLoggedUser(){
+    public ResponseEntity getLoggedUser(){
         UserModel userModel;
         try{
             userModel=userService.findLogged();
         }
         catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("¡Debes iniciar sesión primero!"),HttpStatus.UNAUTHORIZED);
         }
         return new ResponseEntity<>(userModel,HttpStatus.OK);
     }
 
     @PutMapping("user/{id}/update")
-    public ResponseEntity<UserModel> updateUser(@PathVariable Integer id, @RequestBody UserModel userModel){
+    public ResponseEntity updateUser(@PathVariable Integer id, @RequestBody UserModel userModel){
 
         UserModel loggedUser;
 
@@ -83,21 +84,22 @@ public class UserController {
         try {
             loggedUser = userService.findLogged();
         } catch (NullPointerException e) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("¡Por favor, inicie sesión para poder modificar sus datos!"),HttpStatus.UNAUTHORIZED);
         }
 
         //It mustn't work if the Id from loggedUser differs from the one to modify, or if it tries to change its Id
         if(loggedUser.getId() != id){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("¡Usted no puede modificar los datos de otro usuario!"),HttpStatus.UNAUTHORIZED);
         }
 
         //A user isn't allowed to modify its email
         if(!loggedUser.getEmail().equals(userModel.getEmail())){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("¡Usted no puede modificar su correo electrónico!"),HttpStatus.UNAUTHORIZED);
         }
 
-        if(!userService.validUser(userModel))return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(!userService.validUser(userModel))return new ResponseEntity<>(new ErrorMessage("¡Por favor, verifique los datos ingresados!"),HttpStatus.BAD_REQUEST);
 
         return ResponseEntity.ok(userService.updateUser(userModel,id));
     }
+
 }

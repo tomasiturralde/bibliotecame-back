@@ -1,5 +1,6 @@
 package bibliotecame.back.Extension;
 
+import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanService;
 import bibliotecame.back.User.UserModel;
@@ -38,23 +39,23 @@ public class ExtensionService {
         return extensionRepository.save(extensionModel);
     }
 
-    public ResponseEntity<ExtensionModel> createExtension(int loanId) {
+    public ResponseEntity createExtension(int loanId) {
         LoanModel loan;
 
         try {
             loan = this.loanService.getLoanById(loanId);
         } catch (NotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ErrorMessage("¡El prestamo solicitado no existe!"),HttpStatus.NOT_FOUND);
         }
 
 
         UserModel user = userService.findLogged();
 
         if (user.isAdmin()){
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
         }
         if (!loanIsValid(loan) || !userCanMakeExtension(user, loan)){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorMessage("¡Hay un problema con los datos del prestamo!"),HttpStatus.BAD_REQUEST);
         }
 
         final ExtensionModel extension = new ExtensionModel(LocalDate.now());

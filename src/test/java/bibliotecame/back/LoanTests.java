@@ -207,7 +207,7 @@ public class LoanTests {
         userService.saveUser(notAdmin);
 
         setSecurityContext(notAdmin);
-        assertThat(loanController.createLoan(bookModel.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(loanController.createLoan(bookModel.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.NOT_ACCEPTABLE);
     }
 
     @Test
@@ -289,7 +289,7 @@ public class LoanTests {
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
         ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0);
 
@@ -338,17 +338,17 @@ public class LoanTests {
         //We edit the first loan, so by default it will be at the END of the list
         //But as the controller returns it by date, it should still be first
 
-        assertThat(Objects.requireNonNull(loanController.getAllActiveLoans().getBody()).get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
+        assertThat(Objects.requireNonNull((List<LoanDisplay>)loanController.getAllActiveLoans().getBody()).get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
 
         //It should be returning both loans though, because neither was returned
 
-        assertThat(loanController.getAllActiveLoans().getBody().size()).isEqualTo(2);
+        assertThat(((List<LoanDisplay>)loanController.getAllActiveLoans().getBody()).size()).isEqualTo(2);
 
         //Finally, if we return one of the loans, it should not be in the active list
 
         loan.setReturnDate(LocalDate.now());
         loanService.saveLoan(loan);
-        assertThat(loanController.getAllActiveLoans().getBody().size()).isEqualTo(1);
+        assertThat(((List<LoanDisplay>)loanController.getAllActiveLoans().getBody()).size()).isEqualTo(1);
     }
 
     @Test
@@ -454,11 +454,11 @@ public class LoanTests {
 
         //Up to here we created a Loan succesfully
 
-        ExtensionModel extensionModel = extensionController.createExtension(loan.getId()).getBody();
+        ExtensionModel extensionModel = (ExtensionModel)extensionController.createExtension(loan.getId()).getBody();
 
         setSecurityContext(admin);
         loanController.setWithdrawDate(loan.getId());
-        extensionModel = extensionController.approveExtension(extensionModel.getId()).getBody();
+        extensionModel = (ExtensionModel) extensionController.approveExtension(extensionModel.getId()).getBody();
 
         //Here we created and approved an extension
 
@@ -487,7 +487,7 @@ public class LoanTests {
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
         //change expiration date
         assert loan != null;
@@ -515,7 +515,7 @@ public class LoanTests {
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+        LoanModel loan = (LoanModel) loanController.createLoan(interBook.getId()).getBody();
 
         //change expiration date
         assert loan != null;
@@ -544,7 +544,7 @@ public class LoanTests {
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
         //change expiration date
         assert loan != null;
@@ -573,7 +573,7 @@ public class LoanTests {
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = loanController.createLoan(interBook.getId()).getBody();
+        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
         //change expiration date
         assert loan != null;

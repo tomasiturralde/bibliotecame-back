@@ -1,12 +1,11 @@
 package bibliotecame.back.Extension;
 
+import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/extension")
@@ -22,30 +21,45 @@ public class ExtensionController {
     }
 
     @PostMapping("/{loanId}")
-    public ResponseEntity<ExtensionModel> createExtension(@PathVariable int loanId){
-        return extensionService.createExtension(loanId);
+    public ResponseEntity createExtension(@PathVariable int loanId){
+            return extensionService.createExtension(loanId);
     }
 
     @PutMapping("/{id}/approve")
-    public ResponseEntity<ExtensionModel> approveExtension(@PathVariable int id){
+    public ResponseEntity approveExtension(@PathVariable int id){
 
-        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        ExtensionModel extension = extensionService.findById(id);
-        return modifyExtension(extension, ExtensionStatus.APPROVED);
+        if(!userService.findLogged().isAdmin()) return unauthorizedActionError();
+        try{
+            ExtensionModel extension = extensionService.findById(id);
+            return modifyExtension(extension, ExtensionStatus.APPROVED);
+        }
+        catch (RuntimeException e) {
+            return new ResponseEntity(new ErrorMessage("¡La extensión solicitada no existe!"),HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     @PutMapping("/{id}/reject")
-    public ResponseEntity<ExtensionModel> rejectExtension(@PathVariable int id){
+    public ResponseEntity rejectExtension(@PathVariable int id){
 
-        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        ExtensionModel extension = extensionService.findById(id);
-        return modifyExtension(extension, ExtensionStatus.REJECTED);
+        if(!userService.findLogged().isAdmin()) return unauthorizedActionError();
+        try{
+            ExtensionModel extension = extensionService.findById(id);
+            return modifyExtension(extension, ExtensionStatus.REJECTED);
+        }catch (RuntimeException e){
+            return new ResponseEntity(new ErrorMessage("¡La extensión solicitada no existe!"),HttpStatus.BAD_REQUEST);
+        }
+
     }
 
-    public ResponseEntity<ExtensionModel> modifyExtension(ExtensionModel extensionModel, ExtensionStatus extensionStatus ){
+    public ResponseEntity modifyExtension(ExtensionModel extensionModel, ExtensionStatus extensionStatus ){
 
-        if(!extensionModel.getStatus().equals(ExtensionStatus.PENDING_APPROVAL)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(!extensionModel.getStatus().equals(ExtensionStatus.PENDING_APPROVAL)) return new ResponseEntity<>(new ErrorMessage("¡Esta prorroga ya fué modificada!"),HttpStatus.BAD_REQUEST);
         extensionModel.setStatus(extensionStatus);
         return ResponseEntity.ok(extensionService.saveExtension(extensionModel));
+    }
+
+    private ResponseEntity unauthorizedActionError(){
+        return new ResponseEntity(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
 }

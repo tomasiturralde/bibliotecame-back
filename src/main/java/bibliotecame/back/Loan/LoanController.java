@@ -4,6 +4,7 @@ import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Extension.ExtensionService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
@@ -65,23 +66,23 @@ public class LoanController {
     }
 
     @PostMapping("/{bookId}")
-    public ResponseEntity<LoanModel> createLoan(@PathVariable Integer bookId){
+    public ResponseEntity createLoan(@PathVariable Integer bookId){
 
         UserModel user = userService.findLogged();
-        if(user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        if(user.isAdmin()) return unauthorizedActionError();
 
         BookModel book = bookService.findBookById(bookId);
 
         return checkAndCreateLoan(user, book);
     }
 
-    public ResponseEntity<LoanModel> checkAndCreateLoan(UserModel user, BookModel book){
+    public ResponseEntity checkAndCreateLoan(UserModel user, BookModel book){
 
         List<CopyModel> copies = bookService.getAvailableCopies(book);
-        if(copies.isEmpty()) return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
-        if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(HttpStatus.TOO_MANY_REQUESTS);
-        if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+        if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(new ErrorMessage("¡Usted ya tiene solicitado un prestamo de este libro!"),HttpStatus.NOT_ACCEPTABLE);
+        if(copies.isEmpty()) return new ResponseEntity<>(new ErrorMessage("¡Lo sentimos! ¡Este libro ya no tiene ejemplates disponibles!"),HttpStatus.EXPECTATION_FAILED);
+        if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(new ErrorMessage("¡No se pudo realizar el préstamo ya que tiene demasiados prestamos activos!"),HttpStatus.TOO_MANY_REQUESTS);
+        if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>(new ErrorMessage("¡Debe devolver sus prestamos atrasados antes de solicitar nuevos!"),HttpStatus.BAD_REQUEST);
 
         CopyModel copyToLoan = copies.get(0);
         copyToLoan.setBooked(true);
@@ -97,8 +98,8 @@ public class LoanController {
     }
 
     @GetMapping("/actives")
-    public ResponseEntity<List<LoanDisplay>> getAllActiveLoans(){
-        if(getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    public ResponseEntity getAllActiveLoans(){
+        if(getLogged().isAdmin()) return unauthorizedActionError();
         List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel -> loanModel.getReturnDate()==null)
                 .sorted(Comparator.comparing(LoanModel::getExpirationDate))
                 .collect(Collectors.toList());
@@ -118,7 +119,7 @@ public class LoanController {
             @Valid @RequestParam(value = "search") String search
     ){
         if (size == 0) size = 10;
-        if(!getLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        if(!getLogged().isAdmin()) return unauthorizedActionError();
 
         List<LoanDisplay> loans = loanService.getLoansPage(page, size, search);
 
@@ -130,26 +131,28 @@ public class LoanController {
     }
 
     @PutMapping("/{id}/withdraw")
-    public ResponseEntity<LoanModel> setWithdrawDate(@PathVariable Integer id){
-        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    public ResponseEntity setWithdrawDate(@PathVariable Integer id){
+        if(!getLogged().isAdmin()) return unauthorizedActionError();
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
-            if(loanModel.getReturnDate()!=null || loanModel.getWithdrawalDate()!=null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if(loanModel.getReturnDate()!=null) return new ResponseEntity<>(new ErrorMessage("¡Este prestamo ya fué devuelto!"),HttpStatus.BAD_REQUEST);
+            if(loanModel.getWithdrawalDate()!=null) return new ResponseEntity<>(new ErrorMessage("¡Este prestamo ya fué retirado!"),HttpStatus.BAD_REQUEST);
             loanModel.setWithdrawalDate( LocalDate.now() );
             loanService.saveLoan(loanModel);
             return new ResponseEntity<>(loanModel,HttpStatus.OK);
         }
-        catch (NotFoundException n) { return new ResponseEntity<>(HttpStatus.BAD_REQUEST); }
+        catch (NotFoundException n) { return unexistingLoanError(); }
     }
 
     @PutMapping("/{id}/return")
-    public ResponseEntity<LoanModel> setReturnDate(@PathVariable Integer id){
-        if(!userService.findLogged().isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+    public ResponseEntity setReturnDate(@PathVariable Integer id){
+        if(!getLogged().isAdmin()) return unauthorizedActionError();
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
-            if(loanModel.getReturnDate()!=null || loanModel.getWithdrawalDate()==null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if(loanModel.getReturnDate()!=null) return new ResponseEntity<>(new ErrorMessage("¡Este prestamo ya fué devuelto!"),HttpStatus.BAD_REQUEST);
+            if(loanModel.getWithdrawalDate()==null) return new ResponseEntity<>(new ErrorMessage("¡Este prestamo aún no fué retirado!"),HttpStatus.BAD_REQUEST);
             loanModel.setReturnDate( LocalDate.now() );
             if(loanModel.getExtension()!=null){
                 loanModel.getExtension().setActive(false);
@@ -158,14 +161,22 @@ public class LoanController {
             loanService.saveLoan(loanModel);
             return new ResponseEntity<>(loanModel,HttpStatus.OK);
         }
-        catch (NotFoundException n) { return new ResponseEntity<>(HttpStatus.BAD_REQUEST); }
+        catch (NotFoundException n) { return unexistingLoanError(); }
+    }
+
+    private ResponseEntity unauthorizedActionError(){
+        return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
+    }
+
+    private ResponseEntity unexistingLoanError(){
+        return new ResponseEntity<>(new ErrorMessage("¡El prestamo solicitado no existe!"),HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/user/clear")
-    public ResponseEntity<Object> expiredLoansClearer(){
+    public ResponseEntity expiredLoansClearer(){
 
         UserModel user = userService.findLogged();
-        if(user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        if(user.isAdmin()) return unauthorizedActionError();
 
         loanService.deleteExpirationLoansOfUsers(user);
 
@@ -173,10 +184,10 @@ public class LoanController {
     }
 
     @DeleteMapping("/admin/clear")
-    public ResponseEntity<Object> everyExpiredLoanClearer(){
+    public ResponseEntity everyExpiredLoanClearer(){
 
         UserModel user = userService.findLogged();
-        if(!user.isAdmin()) return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        if(!user.isAdmin()) return unauthorizedActionError();
 
         loanService.deleteEveryExpiredLoan();
 
