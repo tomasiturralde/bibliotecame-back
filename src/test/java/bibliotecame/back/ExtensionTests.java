@@ -173,8 +173,8 @@ public class ExtensionTests {
         loan3 = (LoanModel)loanController.createLoan(book3.getId()).getBody();
         loan4 = (LoanModel)loanController.createLoan(book4.getId()).getBody();
 
-        extensionModel1 = extensionController.createExtension(loan3.getId()).getBody();
-        extensionModel2 = extensionController.createExtension(loan4.getId()).getBody();
+        extensionModel1 = (ExtensionModel)extensionController.createExtension(loan3.getId()).getBody();
+        extensionModel2 = (ExtensionModel)extensionController.createExtension(loan4.getId()).getBody();
     }
 
     private void setSecurityContext(UserModel user){

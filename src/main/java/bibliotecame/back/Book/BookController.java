@@ -79,6 +79,9 @@ public class BookController {
         if (!checkAdmin()) {
             return unauthorizedActionError();
         }
+        if(!bookService.exists(id)){
+            return unexistingBookError();
+        }
 
         return checkAndUpdateBook(id, book);
     }

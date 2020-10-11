@@ -207,7 +207,7 @@ public class LoanTests {
         userService.saveUser(notAdmin);
 
         setSecurityContext(notAdmin);
-        assertThat(loanController.createLoan(bookModel.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(loanController.createLoan(bookModel.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.NOT_ACCEPTABLE);
     }
 
     @Test
@@ -454,7 +454,7 @@ public class LoanTests {
 
         //Up to here we created a Loan succesfully
 
-        ExtensionModel extensionModel = extensionController.createExtension(loan.getId()).getBody();
+        ExtensionModel extensionModel = (ExtensionModel)extensionController.createExtension(loan.getId()).getBody();
 
         setSecurityContext(admin);
         loanController.setWithdrawDate(loan.getId());

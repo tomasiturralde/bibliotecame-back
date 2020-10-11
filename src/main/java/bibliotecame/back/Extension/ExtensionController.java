@@ -21,24 +21,35 @@ public class ExtensionController {
     }
 
     @PostMapping("/{loanId}")
-    public ResponseEntity<ExtensionModel> createExtension(@PathVariable int loanId){
-        return extensionService.createExtension(loanId);
+    public ResponseEntity createExtension(@PathVariable int loanId){
+            return extensionService.createExtension(loanId);
     }
 
     @PutMapping("/{id}/approve")
     public ResponseEntity approveExtension(@PathVariable int id){
 
         if(!userService.findLogged().isAdmin()) return unauthorizedActionError();
-        ExtensionModel extension = extensionService.findById(id);
-        return modifyExtension(extension, ExtensionStatus.APPROVED);
+        try{
+            ExtensionModel extension = extensionService.findById(id);
+            return modifyExtension(extension, ExtensionStatus.APPROVED);
+        }
+        catch (RuntimeException e) {
+            return new ResponseEntity(new ErrorMessage("¡La extensión solicitada no existe!"),HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     @PutMapping("/{id}/reject")
     public ResponseEntity rejectExtension(@PathVariable int id){
 
         if(!userService.findLogged().isAdmin()) return unauthorizedActionError();
-        ExtensionModel extension = extensionService.findById(id);
-        return modifyExtension(extension, ExtensionStatus.REJECTED);
+        try{
+            ExtensionModel extension = extensionService.findById(id);
+            return modifyExtension(extension, ExtensionStatus.REJECTED);
+        }catch (RuntimeException e){
+            return new ResponseEntity(new ErrorMessage("¡La extensión solicitada no existe!"),HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     public ResponseEntity modifyExtension(ExtensionModel extensionModel, ExtensionStatus extensionStatus ){
