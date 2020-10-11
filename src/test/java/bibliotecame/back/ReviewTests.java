@@ -27,7 +27,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -88,6 +87,7 @@ public class ReviewTests {
     UserModel studentUser2;
     BookModel bookModel;
     CopyModel bookModelCopy;
+    CopyModel bookModelCopy2;
     List<CopyModel> copies;
 
     @BeforeAll
@@ -108,11 +108,13 @@ public class ReviewTests {
         studentUser2 = new UserModel("facundo@austral.edu.ar","stickyfingers","Facundo","Bocalandro","1113334444");
         bookModel = new BookModel("GioGio's Bizzarre Adventure",1995,"Araki Hirohiko","Weekly Shonen Jump");
         bookModelCopy = new CopyModel("GG-001");
+        bookModelCopy2 = new CopyModel("GG-002");
 
         bookService.saveBook(bookModel);
 
         copies = new ArrayList<>();
         copies.add(bookModelCopy);
+        copies.add(bookModelCopy2);
         bookModel.setCopies(copies);
 
         userService.saveUser(studentUser);
@@ -120,6 +122,7 @@ public class ReviewTests {
         userService.saveUser(studentUser2);
 
         copyService.saveCopy(bookModelCopy);
+        copyService.saveCopy(bookModelCopy2);
         bookService.saveBook(bookModel);
 
             bookModelCopy.setBooked(true);
@@ -129,6 +132,11 @@ public class ReviewTests {
             LoanModel savedLoanModel = loanService.saveLoan(loan);
             userService.addLoan(studentUser, savedLoanModel);
 
+        bookModelCopy2.setBooked(true);
+        copyService.saveCopy(bookModelCopy2);
+        LoanModel loan2 = new LoanModel(bookModelCopy, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel2 = loanService.saveLoan(loan2);
+        userService.addLoan(studentUser2, savedLoanModel2);
     }
 
     private void setSecurityContext(UserModel user){
@@ -151,7 +159,6 @@ public class ReviewTests {
         setSecurityContext(studentUser);
         ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
         assertThat(reviewController.createReview(review,bookModel.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(bookRepository.findById(bookModel.getId()).get().getReviews().size()).isEqualTo(1);
     }
 
     @Test
@@ -192,7 +199,7 @@ public class ReviewTests {
         ReviewModel review = getStudentFirstReview(studentUser, bookModel);
         if (review == null) {
             ReviewModel reviewModel = new ReviewModel("Great", 5, userService.findLogged());
-            review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+            review = (ReviewModel) reviewController.createReview(reviewModel, bookModel.getId()).getBody();
         }
 
         assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -200,14 +207,14 @@ public class ReviewTests {
 
     @Test
     void testStudentCantGetAnotherStudentsReview(){
-        setSecurityContext(studentUser);
+        setSecurityContext(studentUser2);
         ReviewModel review = getStudentFirstReview(studentUser, bookModel);
         if (review == null) {
             ReviewModel reviewModel = new ReviewModel("It was breathtaking!", 5, userService.findLogged());
-            review = reviewController.createReview(reviewModel, bookModel.getId()).getBody();
+            review = (ReviewModel)reviewController.createReview(reviewModel, bookModel.getId()).getBody();
         }
 
-        setSecurityContext(studentUser2);
+        setSecurityContext(studentUser);
         assertThat(reviewController.getReviewModel(review.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 

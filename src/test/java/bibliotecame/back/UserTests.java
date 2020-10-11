@@ -32,7 +32,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -40,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -161,20 +159,20 @@ public class UserTests {
     @Test
     //test delete user
     void testDeleteUser(){
-        UserModel user = userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
 
         assert user != null;
         setSecurityContext(user);
 
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        assertThrows(RuntimeException.class, () -> userController.getUserModel(user.getId()));
+        assertThat(((ErrorMessage)userController.getUserModel(user.getId()).getBody()).getMessage()).isEqualTo("¡El usuario no existe!");
     }
 
     @Test
     void testDeleteUserWithBadRequest(){
 
-        UserModel user = userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user = (UserModel) userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
 
         assert user != null;
         setSecurityContext(user);
@@ -203,7 +201,7 @@ public class UserTests {
     @Test
     //test failure for not logged in
     void testFailureNotLoggedOnDelete(){
-        UserModel user = userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
 
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
@@ -211,8 +209,8 @@ public class UserTests {
     @Test
     //test failure for deleting some other account
     void testFailureWrongAccountOnDelete(){
-        UserModel user = userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
-        UserModel user2 = userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user2 = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
 
         assert user != null;
         setSecurityContext(user);
@@ -280,9 +278,7 @@ public class UserTests {
         setSecurityContext(user);
 
         user.setPassword("estaesmassegura1432");
-        assertThat(userController.getUserModel(user.getId()).getBody().getPassword()).isEqualTo("test123");
         assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(userController.getUserModel(user.getId()).getBody().getPassword()).isEqualTo("estaesmassegura1432");
     }
 
     @Test

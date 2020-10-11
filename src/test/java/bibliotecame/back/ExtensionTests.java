@@ -164,14 +164,14 @@ public class ExtensionTests {
 
 
         setSecurityContext(notAdmin1);
-        loan1 = loanController.createLoan(book1.getId()).getBody();
+        loan1 = (LoanModel)loanController.createLoan(book1.getId()).getBody();
 
         setSecurityContext(notAdmin2);
-        loan2 = loanController.createLoan(book2.getId()).getBody();
+        loan2 = (LoanModel)loanController.createLoan(book2.getId()).getBody();
 
         setSecurityContext(notAdmin3);
-        loan3 = loanController.createLoan(book3.getId()).getBody();
-        loan4 = loanController.createLoan(book4.getId()).getBody();
+        loan3 = (LoanModel)loanController.createLoan(book3.getId()).getBody();
+        loan4 = (LoanModel)loanController.createLoan(book4.getId()).getBody();
 
         extensionModel1 = extensionController.createExtension(loan3.getId()).getBody();
         extensionModel2 = extensionController.createExtension(loan4.getId()).getBody();
