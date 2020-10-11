@@ -6,7 +6,9 @@ import bibliotecame.back.Tag.TagService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.lang.Math.toIntExact;
 
 @Service
 public class BookService {
@@ -138,7 +144,39 @@ public class BookService {
     public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTagsAndActive(int page, int size, String search){
         return bookRepository.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(PageRequest.of(page, size), search);
     }
-  
+
+    public Page<BookModel> findAllByTitleAndAuthorAndPublisherAndYear(int page, int size, BookSearchForm searchForm){
+        Pageable pageable = PageRequest.of(page, size);
+        List<BookModel> result = new ArrayList<>();
+        findAll().iterator().forEachRemaining(result::add);
+        result.sort(Comparator.comparing(BookModel::getTitle));
+        result = result.stream().filter(searchForm::matches).collect(Collectors.toList());
+        int total = result.size();
+        int start = toIntExact(pageable.getOffset());
+        int end = Math.min((start + pageable.getPageSize()), total);
+        List<BookModel> output = new ArrayList<>();
+        if (start <= end) {
+            output = result.subList(start, end);
+        }
+        return new PageImpl<>(output, pageable, result.size());
+    }
+    
+    public Page<BookModel> findAllByTitleAndAuthorAndPublisherAndYearAndActive(int page, int size, BookSearchForm searchForm){
+        Pageable pageable = PageRequest.of(page, size);
+        List<BookModel> result = new ArrayList<>();
+        findAll().iterator().forEachRemaining(result::add);
+        result.sort(Comparator.comparing(BookModel::getTitle));
+        result = result.stream().filter(BookModel::isActive).filter(searchForm::matches).collect(Collectors.toList());
+        int total = result.size();
+        int start = toIntExact(pageable.getOffset());
+        int end = Math.min((start + pageable.getPageSize()), total);
+        List<BookModel> output = new ArrayList<>();
+        if (start <= end) {
+            output = result.subList(start, end);
+        }
+        return new PageImpl<>(output, pageable, result.size());
+    }
+
     public List<CopyModel> getAvailableCopies(BookModel book){
         List<CopyModel> available = new ArrayList<>();
         for(CopyModel copy : book.getCopies()){

@@ -159,6 +159,23 @@ public class BookController {
         return ResponseEntity.ok(bookPage);
     }
 
+    @GetMapping(value = "/advancedSearch")
+    public ResponseEntity<Page<BookModel>> advancedSearch(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @RequestBody BookSearchForm searchForm
+    ) {
+        searchForm.lowerCase();
+        if (size == 0) size = 10;
+        Page<BookModel> bookPage;
+        if(checkAdmin()) {
+            bookPage = bookService.findAllByTitleAndAuthorAndPublisherAndYear(page, size, searchForm);
+        } else bookPage = bookService.findAllByTitleAndAuthorAndPublisherAndYearAndActive(page,size,searchForm);
+        return ResponseEntity.ok(bookPage);
+    }
+
+
+
     private boolean checkAdmin(){
         return userService.findLogged().isAdmin();
     }
