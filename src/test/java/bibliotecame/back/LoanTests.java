@@ -423,7 +423,7 @@ public class LoanTests {
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isGreaterThan(0);
 
-        loans = loanController.getAllLoansAdmin(0,0, "new");
+        loans = loanController.getAllLoansAdmin(0,0, "new Book");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
@@ -478,6 +478,8 @@ public class LoanTests {
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
 
+        String password = notAdmin.getPassword();
+
         BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
 
         List<CopyModel> copies = new ArrayList<>();
@@ -496,6 +498,8 @@ public class LoanTests {
 
         //clear
         assertThat(loanController.expiredLoansClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+        assertThat(password).isEqualTo(notAdmin.getPassword());
 
     }
 

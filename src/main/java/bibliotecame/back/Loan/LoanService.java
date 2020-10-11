@@ -103,7 +103,7 @@ public class LoanService {
             }
         }
         user.setLoans(remainingLoans);
-        userService.saveUser(user);
+        userService.saveWithoutEncryption(user);
         for(LoanModel loan: deletingLoans){
             loanRepository.delete(loan);
         }
