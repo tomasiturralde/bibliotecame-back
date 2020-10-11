@@ -42,7 +42,7 @@ public class AuthController {
 
         UserModel user = userService.findUserByEmail(loginForm.getEmail());
 
-        if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(new ErrorMessage("¡Usted está sancionado!"),HttpStatus.UNAUTHORIZED);
+        if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(new ErrorMessage("¡Usted está sancionado, por favor comuniquese con administración!"),HttpStatus.UNAUTHORIZED);
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword());
