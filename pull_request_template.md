@@ -6,6 +6,7 @@
 > Link here
 ## Checklist
 - [ ] I've created and run successfully the related unit tests
+- [ ] I've run successfully every test in the repo
 - [ ] I've test the related endpoints with Postman
 - [ ] This pull request has 'sprint_x' as the base branch
 - [ ] This pull request has a descriptive title and description
