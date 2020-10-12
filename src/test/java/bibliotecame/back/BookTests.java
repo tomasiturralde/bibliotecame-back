@@ -589,9 +589,9 @@ public class BookTests {
         testAdvancedMixingParameters();
 
 
-        tagService.saveTag(new TagModel("H"));
+        tagService.saveTag(new TagModel("TagTesteada"));
         List<TagModel> tags = new ArrayList<>();
-        tags.add(tagService.findTagByName("H"));
+        tags.add(tagService.findTagByName("TagTesteada"));
         book3.setTags(tags);
         bookService.saveBook(book3);
 
@@ -601,6 +601,7 @@ public class BookTests {
     private void testAdvancedByYear(){
         BookSearchForm searchForm = new BookSearchForm();
         searchForm.setYear("19");
+        searchForm.setTitle("libro");
         ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
         assertThat(responseEntity.getBody().getContent().size()).isEqualTo(3);
         assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroBBB");
@@ -629,10 +630,10 @@ public class BookTests {
         BookSearchForm searchForm = new BookSearchForm();
         searchForm.setTitle("libroCCC");
         ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
-        assertThat(responseEntity.getBody().getContent().get(0).getTags().get(0).getName()).isEqualTo("H");
+        assertThat(responseEntity.getBody().getContent().get(0).getTags().get(0).getName()).isEqualTo("TagTesteada");
         searchForm.setTitle("");
         List<String> tags = new ArrayList<>();
-        tags.add("H");
+        tags.add("TagTesteada");
         searchForm.setTags(tags);
         responseEntity = bookController.advancedSearch(0,10,searchForm);
         assertThat(responseEntity.getBody().getContent().size()).isEqualTo(1);
