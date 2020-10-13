@@ -96,4 +96,18 @@ public class SanctionTest {
         assertThat(sanctionController.createSanction(new SanctionForm("mail2@mail.austral.edu.ar", "reason", LocalDate.now().minus(Period.ofDays(20)))).getStatusCode()).isEqualByComparingTo(HttpStatus.EXPECTATION_FAILED);
         assertThat(sanctionController.createSanction(new SanctionForm("mail2@mail.austral.edu.ar", "reason", LocalDate.now().plus(Period.ofMonths(4)))).getStatusCode()).isEqualByComparingTo(HttpStatus.EXPECTATION_FAILED);
     }
+
+    @Test
+    public void tryingToSanctionAnotherAdminThrowsBAD_REQUEST(){
+        UserModel admin = new UserModel("adminVengativo" + RandomStringGenerator.getAlphabeticString(6)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        UserModel admin2 = new UserModel("adminBuenaOnda" + RandomStringGenerator.getAlphabeticString(6)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin2.setAdmin(true);
+        userService.saveUser(admin2);
+        setSecurityContext(admin);
+        SanctionForm sanction = new SanctionForm(admin2.getEmail(), "Porque si.", LocalDate.now().plus(Period.ofDays(10)));
+        assertThat(((ErrorMessage)sanctionController.createSanction(sanction).getBody()).getMessage()).isEqualTo("¡No puede sancionar a un administrador!");
+
+    }
 }

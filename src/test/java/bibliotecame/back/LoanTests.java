@@ -589,6 +589,16 @@ public class LoanTests {
     }
 
 
+    @Test
+    public void testCreatingALoanForAnUnexistingBook(){
+
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        assertThat(((ErrorMessage)loanController.createLoan(-11111).getBody()).getMessage()).isEqualTo("¡El libro solicitado no existe!");
+    }
+
 
 
 }
