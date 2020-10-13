@@ -45,8 +45,8 @@ public class OnStart {
 
             try {
                 // users
-                if (!userService.emailExists("salvador.fortes@mail.austral.edu.ar")) {
-                    UserModel admin = new UserModel("salvador.fortes@mail.austral.edu.ar", "contraseña", "Salvador", "Fortes", "011 5555 1234");
+                if(!userService.emailExists("admin@ing.austral.edu.ar")) {
+                    UserModel admin = new UserModel("admin@ing.austral.edu.ar", "admin123", "admin", "admin", "111111111");
                     admin.setAdmin(true);
                     userService.saveUser(admin);
                 }
@@ -82,7 +82,9 @@ public class OnStart {
                 tags6.add(new TagModel("Ingeniería"));
                 BookModel book6 = (BookModel)bookController.checkAndCreateBook(new BookModel("Ciencia E Ingenieria De Materiales", 1995, "William Castiller", "Reverté", tags6)).getBody();
 
-                BookModel book7 = (BookModel)bookController.checkAndCreateBook(new BookModel("Inteligencia Artificial - Con Aplicaciones A La Ingenia", 2010, "Pedro Ponce Cruz", "Alfaomega", tags6)).getBody();
+                List<TagModel> tags7 = new ArrayList<>();
+                tags7.add(new TagModel("Ingeniería"));
+                BookModel book7 = (BookModel)bookController.checkAndCreateBook(new BookModel("Inteligencia Artificial - Con Aplicaciones A La Ingenia", 2010, "Pedro Ponce Cruz", "Alfaomega", tags7)).getBody();
 
                 List<TagModel> tags8 = new ArrayList<>();
                 tags8.add(new TagModel("Política"));
@@ -218,12 +220,9 @@ public class OnStart {
                 loanController.checkAndCreateLoan(user1, book2);
                 loanController.checkAndCreateLoan(user2, book5);
                 loanController.checkAndCreateLoan(user3, book9);
-                loanController.checkAndCreateLoan(user1, book3);
-                loanController.checkAndCreateLoan(user2, book6);
-                loanController.checkAndCreateLoan(user3, book8);
+                loanController.checkAndCreateLoan(user4, book3);
 
-
-                //tanda 2 de ejemplates
+                //tanda 2 de ejemplares
                 List<CopyModel> copies11 = new ArrayList<>();
                 copies11.add(new CopyModel("C3DF9M"));
                 Objects.requireNonNull(book11).setCopies(copies11);
@@ -276,17 +275,14 @@ public class OnStart {
 
 
                 //loans
-                loanController.checkAndCreateLoan(user1, book1);
-                loanController.checkAndCreateLoan(user2, book4);
-                loanController.checkAndCreateLoan(user3, book7);
-                loanController.checkAndCreateLoan(user4, book10);
-                loanController.checkAndCreateLoan(user1, book2);
-                loanController.checkAndCreateLoan(user2, book5);
-                loanController.checkAndCreateLoan(user3, book9);
-                loanController.checkAndCreateLoan(user1, book3);
-                loanController.checkAndCreateLoan(user2, book6);
-                loanController.checkAndCreateLoan(user3, book8);
-
+                loanController.checkAndCreateLoan(user1, book11);
+                loanController.checkAndCreateLoan(user2, book14);
+                loanController.checkAndCreateLoan(user3, book17);
+                loanController.checkAndCreateLoan(user4, book20);
+                loanController.checkAndCreateLoan(user1, book12);
+                loanController.checkAndCreateLoan(user2, book15);
+                loanController.checkAndCreateLoan(user3, book19);
+                loanController.checkAndCreateLoan(user4, book13);
 
 
             } catch (Exception ignored) {
