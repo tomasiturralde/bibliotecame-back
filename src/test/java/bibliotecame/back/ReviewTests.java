@@ -224,4 +224,57 @@ public class ReviewTests {
         return bookReviews.stream().filter(reviewModel -> reviewsIds.contains(reviewModel.getId())).findFirst().orElse(null);
     }
 
+    @Test
+    public void userCanUpdateAReviewItDid(){
+        setSecurityContext(studentUser);
+        BookModel bookModelII = new BookModel("GioGio's Bizzarre Adventure Part II",1999,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyII = new CopyModel("GG2-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelII);
+
+        copies.add(bookModelCopyII);
+        bookModelII.setCopies(copies);
+        bookService.saveBook(bookModelII);
+
+        bookModelCopyII.setBooked(true);
+        copyService.saveCopy(bookModelCopyII);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyII, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        assertThat(reviewController.createReview(review,bookModelII.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        review.setDescription("It was even better than just breathtaking!");
+        assertThat(reviewController.updateReview(review.getId(),review).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void userCantUpdateAReviewItDidntPost(){
+        setSecurityContext(studentUser);
+        BookModel bookModelIII = new BookModel("GioGio's Bizzarre Adventure Part III",2003,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyIII = new CopyModel("GG3-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelIII);
+
+        copies.add(bookModelCopyIII);
+        bookModelIII.setCopies(copies);
+        bookService.saveBook(bookModelIII);
+
+        bookModelCopyIII.setBooked(true);
+        copyService.saveCopy(bookModelCopyIII);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyIII, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        assertThat(reviewController.createReview(review,bookModelIII.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        review.setDescription("It was even better than just breathtaking!");
+        setSecurityContext(studentUser2);
+        assertThat(((ErrorMessage)reviewController.updateReview(review.getId(),review).getBody()).getMessage()).isEqualTo("¡No puedes modificar una reseña escrita por otro alumno!");
+    }
+
 }
