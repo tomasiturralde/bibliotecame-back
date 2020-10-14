@@ -61,7 +61,7 @@ public class ReviewController {
 
         if(userPreviouslyReviewedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted ya escribió una reseña para este libro, modifiquela en lugar de crear una nueva!"),HttpStatus.TOO_MANY_REQUESTS);
 
-        if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted no puede escribir una reseña de un libro que no haya retirado previamente!"),HttpStatus.BAD_REQUEST);
+        if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted no puede escribir una reseña de un libro que no haya retirado y devuelto previamente!"),HttpStatus.BAD_REQUEST);
 
         reviewService.saveReview(reviewModel);
         BookModel bookToUpdate = bookService.findBookById(bookId);
@@ -93,7 +93,7 @@ public class ReviewController {
     }
 
     private boolean userPreviouslyBookedThisOne(Integer bookId){
-        List<LoanModel> loans = getLogged().getLoans();
+        List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel ->  loanModel.getReturnDate()!=null).collect(Collectors.toList());
         List<String> copiesIds = bookService.findBookById(bookId).getCopies().stream().map(CopyModel::getId).collect(Collectors.toList());
         return loans.stream().map(loanModel -> copiesIds.contains(loanModel.getCopy().getId())).reduce(false, ((aBoolean, aBoolean2) -> aBoolean || aBoolean2));
     }
