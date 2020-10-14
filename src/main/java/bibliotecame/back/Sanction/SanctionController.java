@@ -33,7 +33,6 @@ public class SanctionController {
         if(!checkAdmin()){
             return unauthorizedActionError();
         }
-
         return checkAndCreateSanction(sanctionForm);
     }
 
@@ -44,6 +43,8 @@ public class SanctionController {
         if(!userService.emailExists(sanctionForm.getEmail())) return new ResponseEntity<>(new ErrorMessage("¡El email que ingresó no corresponde a ningún usuario!"),HttpStatus.BAD_REQUEST);
 
         user = userService.findUserByEmail(sanctionForm.getEmail());
+
+        if(user.isAdmin()) return new ResponseEntity(new ErrorMessage("¡No puede sancionar a un administrador!"),HttpStatus.BAD_REQUEST);
 
         if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(new ErrorMessage("¡El usuario ya esta sancionado!"),HttpStatus.UNPROCESSABLE_ENTITY);
 

@@ -71,6 +71,7 @@ public class LoanController {
         UserModel user = userService.findLogged();
         if(user.isAdmin()) return unauthorizedActionError();
 
+        if(!bookService.exists(bookId)) return unexistingBookError();
         BookModel book = bookService.findBookById(bookId);
 
         return checkAndCreateLoan(user, book);
@@ -170,6 +171,10 @@ public class LoanController {
 
     private ResponseEntity unexistingLoanError(){
         return new ResponseEntity<>(new ErrorMessage("¡El prestamo solicitado no existe!"),HttpStatus.BAD_REQUEST);
+    }
+
+    private ResponseEntity unexistingBookError(){
+        return new ResponseEntity<>(new ErrorMessage("¡El libro solicitado no existe!"),HttpStatus.BAD_REQUEST);
     }
 
     @DeleteMapping("/user/clear")
