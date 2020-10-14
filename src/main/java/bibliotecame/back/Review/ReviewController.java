@@ -85,6 +85,8 @@ public class ReviewController {
             return unexistingReviewError();
         }
 
+        if(reviewModel.getId()!=id) return new ResponseEntity(new ErrorMessage("¡No puedes modificar una reseña a través de otra!"),HttpStatus.BAD_REQUEST);
+
         if(reviewModel.getValue()<1 || reviewModel.getValue()>5) return illegalValueError();
 
         reviewModel.setUserModel(userService.findLogged());
