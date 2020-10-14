@@ -639,4 +639,29 @@ public class BookTests {
         assertThat(responseEntity.getBody().getContent().size()).isEqualTo(1);
         assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroCCC");
     }
+
+    @Test
+    public void testUpdatingABookToTurnItIntoAnotherExistingBook(){
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        BookModel book1 = new BookModel("LibroQueVaASerClonado",2020,"Clon","Clonadores de libros");
+        bookService.saveBook(book1);
+        BookModel book2 = new BookModel("LibroQueVaAVolverseElOtro",2020,"Alguien poco original","Ladrones de ideas");
+        bookService.saveBook(book2);
+
+        book2 = bookService.findByAttributeCombination(book2.getTitle(),book2.getAuthor(),book2.getPublisher(),book2.getYear());
+        //Le colocamos los atributos del book1, si este nuevo book2 fuera guardado, tendríamos "dos veces" al book1 en la db.
+        book2.setAuthor(book1.getAuthor());
+        book2.setPublisher(book1.getPublisher());
+        book2.setYear(book1.getYear());
+        book2.setTitle(book1.getTitle());
+        assertThat(((ErrorMessage)bookController.updateBook(book2.getId(),book2).getBody()).getMessage()).isEqualTo("¡Ya existe un libro con esos datos en el sistema!");
+
+    }
 }

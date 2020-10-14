@@ -82,6 +82,12 @@ public class BookController {
         if(!bookService.exists(id)){
             return unexistingBookError();
         }
+        if(book.getId()!=id){
+            return new ResponseEntity(new ErrorMessage("¡Está intentando modificar un libro a través de otro!"),HttpStatus.BAD_REQUEST);
+        }
+        if(bookService.exists(book.getTitle(),book.getAuthor(),book.getPublisher(),book.getYear()) && bookService.findByAttributeCombination(book.getTitle(),book.getAuthor(),book.getPublisher(),book.getYear()).getId()!=id){
+                return new ResponseEntity(new ErrorMessage("¡Ya existe un libro con esos datos en el sistema!"),HttpStatus.BAD_REQUEST);
+        }
 
         return checkAndUpdateBook(id, book);
     }

@@ -120,7 +120,7 @@ public class UserTests {
         assertThat(userController.createUser(new UserModel("name.austral.edu.ar", "123abcABC", "Name",
                 "LastName", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("", "123abc", "Name",
+        assertThat(userController.createUser(new UserModel("", "123abcd", "Name",
                 "LastName", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
@@ -139,10 +139,10 @@ public class UserTests {
     @Test
     //asserts failure for: empty first name, empty last name
     void testFailureOnInvalidName(){
-        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abc", "",
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abcd", "",
                 "LastName", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abc", "Name",
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abcd", "Name",
                 "", "+54 (911) 1234 5678"))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
@@ -150,7 +150,7 @@ public class UserTests {
     @Test
     //asserts failure for empty phone number
     void testFailureOnInvalidPhoneNumber(){
-        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abc", "Name",
+        assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abcd", "Name",
                 "LastName", ""))
                 .getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
@@ -159,7 +159,7 @@ public class UserTests {
     @Test
     //test delete user
     void testDeleteUser(){
-        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
 
         assert user != null;
         setSecurityContext(user);
@@ -172,8 +172,7 @@ public class UserTests {
     @Test
     void testDeleteUserWithBadRequest(){
 
-        UserModel user = (UserModel) userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
-
+        UserModel user = (UserModel) userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
         assert user != null;
         setSecurityContext(user);
 
@@ -201,7 +200,7 @@ public class UserTests {
     @Test
     //test failure for not logged in
     void testFailureNotLoggedOnDelete(){
-        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
 
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
@@ -209,8 +208,8 @@ public class UserTests {
     @Test
     //test failure for deleting some other account
     void testFailureWrongAccountOnDelete(){
-        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
-        UserModel user2 = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abc", "name", "surname", "123456789")).getBody();
+        UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
+        UserModel user2 = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
 
         assert user != null;
         setSecurityContext(user);
