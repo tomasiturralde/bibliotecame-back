@@ -125,6 +125,6 @@ public class ReviewController {
     }
 
     private ResponseEntity illegalValueError(){
-        return new ResponseEntity<>(new ErrorMessage("¡El valor de la reseña debe estar entre 0 y 5!"),HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorMessage("¡El valor de la reseña debe estar entre 1 y 5!"),HttpStatus.BAD_REQUEST);
     }
 }
