@@ -55,13 +55,13 @@ public class ReviewController {
 
         if(checkAdmin()) return unauthorizedActionError();
 
-        if(reviewModel.getValue()<0 || reviewModel.getValue()>5) return new ResponseEntity<>(new ErrorMessage("¡El valor de la reseña debe estar entre 0 y 5!"),HttpStatus.BAD_REQUEST);
+        if(reviewModel.getValue()<1 || reviewModel.getValue()>5) return illegalValueError();
 
         reviewModel.setUserModel(getLogged());
 
         if(userPreviouslyReviewedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted ya escribió una reseña para este libro, modifiquela en lugar de crear una nueva!"),HttpStatus.TOO_MANY_REQUESTS);
 
-        if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted no puede escribir una reseña de un libro que no haya retirado previamente!"),HttpStatus.BAD_REQUEST);
+        if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted no puede escribir una reseña de un libro que no haya retirado y devuelto previamente!"),HttpStatus.BAD_REQUEST);
 
         reviewService.saveReview(reviewModel);
         BookModel bookToUpdate = bookService.findBookById(bookId);
@@ -71,8 +71,31 @@ public class ReviewController {
         return new ResponseEntity<>(reviewModel,HttpStatus.OK);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity updateReview(@PathVariable Integer id, @Valid @RequestBody ReviewModel reviewModel) {
+        if (checkAdmin()) {
+            return unauthorizedActionError();
+        }
+
+        try{
+            if(reviewService.findReviewById(id).getUserModel().getId()!=userService.findLogged().getId()){
+                return new ResponseEntity(new ErrorMessage("¡No puedes modificar una reseña escrita por otro alumno!"),HttpStatus.UNAUTHORIZED);
+            }
+        }catch (NotFoundException e){
+            return unexistingReviewError();
+        }
+
+        if(reviewModel.getId()!=id) return new ResponseEntity(new ErrorMessage("¡No puedes modificar una reseña a través de otra!"),HttpStatus.BAD_REQUEST);
+
+        if(reviewModel.getValue()<1 || reviewModel.getValue()>5) return illegalValueError();
+
+        reviewModel.setUserModel(userService.findLogged());
+
+        return new ResponseEntity(reviewService.saveReview(reviewModel),HttpStatus.OK);
+    }
+
     private boolean userPreviouslyBookedThisOne(Integer bookId){
-        List<LoanModel> loans = getLogged().getLoans();
+        List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel ->  loanModel.getReturnDate()!=null).collect(Collectors.toList());
         List<String> copiesIds = bookService.findBookById(bookId).getCopies().stream().map(CopyModel::getId).collect(Collectors.toList());
         return loans.stream().map(loanModel -> copiesIds.contains(loanModel.getCopy().getId())).reduce(false, ((aBoolean, aBoolean2) -> aBoolean || aBoolean2));
     }
@@ -101,5 +124,9 @@ public class ReviewController {
 
     private ResponseEntity unexistingReviewError(){
         return new ResponseEntity<>(new ErrorMessage("¡La reseña solicitada no existe!"),HttpStatus.BAD_REQUEST);
+    }
+
+    private ResponseEntity illegalValueError(){
+        return new ResponseEntity<>(new ErrorMessage("¡El valor de la reseña debe estar entre 1 y 5!"),HttpStatus.BAD_REQUEST);
     }
 }

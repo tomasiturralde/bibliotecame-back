@@ -59,7 +59,6 @@ public class ReviewModel {
     }
 
     public void setValue(int value) {
-        if (value < 0 || value > 5) throw new RuntimeException("Invalid review value!");
         this.value = value;
     }
 

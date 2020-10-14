@@ -7,6 +7,8 @@ import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.Extension.ExtensionService;
+import bibliotecame.back.Loan.LoanController;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanRepository;
 import bibliotecame.back.Loan.LoanService;
@@ -78,11 +80,17 @@ public class ReviewTests {
     private LoanService loanService;
     @Autowired
     private LoanRepository loanRepository;
+    @Mock
+    private LoanController loanController;
+
+    @Mock
+    private ExtensionService extensionService;
 
 
     Authentication authentication;
     SecurityContext securityContext;
 
+    UserModel admin;
     UserModel studentUser;
     UserModel studentUser2;
     BookModel bookModel;
@@ -100,9 +108,14 @@ public class ReviewTests {
         reviewService = new ReviewService(reviewRepository);
         loanService = new LoanService(loanRepository, bookService, userService);
         reviewController = new ReviewController(reviewService,userService,bookService);
+        loanController = new LoanController(loanService,userService,bookService,copyService,extensionService);
 
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
+
+        admin = new UserModel("admin@austral.edu.ar","admin123","admin","admin","1113334444");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
 
         studentUser = new UserModel("BBruno@austral.edu.ar","stickyfingers","Bruno","Bucciarati","1113334444");
         studentUser2 = new UserModel("facundo@austral.edu.ar","stickyfingers","Facundo","Bocalandro","1113334444");
@@ -132,11 +145,21 @@ public class ReviewTests {
             LoanModel savedLoanModel = loanService.saveLoan(loan);
             userService.addLoan(studentUser, savedLoanModel);
 
+
+
         bookModelCopy2.setBooked(true);
         copyService.saveCopy(bookModelCopy2);
         LoanModel loan2 = new LoanModel(bookModelCopy, today, today.plus(Period.ofDays(5)));
         LoanModel savedLoanModel2 = loanService.saveLoan(loan2);
         userService.addLoan(studentUser2, savedLoanModel2);
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(loan.getId());
+        loanController.setReturnDate(loan.getId());
+        loanController.setWithdrawDate(loan2.getId());
+        loanController.setReturnDate(loan2.getId());
+        setSecurityContext(studentUser);
+
     }
 
     private void setSecurityContext(UserModel user){
@@ -222,6 +245,71 @@ public class ReviewTests {
         List<Integer> reviewsIds = reviewService.findAllByUserModel(user).stream().map(ReviewModel::getId).collect(Collectors.toList());
         List<ReviewModel> bookReviews = bookService.findBookById(book.getId()).getReviews();
         return bookReviews.stream().filter(reviewModel -> reviewsIds.contains(reviewModel.getId())).findFirst().orElse(null);
+    }
+
+    @Test
+    public void userCanUpdateAReviewItDid(){
+        setSecurityContext(studentUser);
+        BookModel bookModelII = new BookModel("GioGio's Bizzarre Adventure Part II",1999,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyII = new CopyModel("GG2-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelII);
+
+        copies.add(bookModelCopyII);
+        bookModelII.setCopies(copies);
+        bookService.saveBook(bookModelII);
+
+        bookModelCopyII.setBooked(true);
+        copyService.saveCopy(bookModelCopyII);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyII, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(savedLoanModel.getId());
+        loanController.setReturnDate(savedLoanModel.getId());
+        setSecurityContext(studentUser);
+
+
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        assertThat(reviewController.createReview(review,bookModelII.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        review.setDescription("It was even better than just breathtaking!");
+        assertThat(reviewController.updateReview(review.getId(),review).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void userCantUpdateAReviewItDidntPost(){
+        setSecurityContext(studentUser);
+        BookModel bookModelIII = new BookModel("GioGio's Bizzarre Adventure Part III",2003,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyIII = new CopyModel("GG3-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelIII);
+
+        copies.add(bookModelCopyIII);
+        bookModelIII.setCopies(copies);
+        bookService.saveBook(bookModelIII);
+
+        bookModelCopyIII.setBooked(true);
+        copyService.saveCopy(bookModelCopyIII);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyIII, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(savedLoanModel.getId());
+        loanController.setReturnDate(savedLoanModel.getId());
+        setSecurityContext(studentUser);
+
+        assertThat(reviewController.createReview(review,bookModelIII.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        review.setDescription("It was even better than just breathtaking!");
+        setSecurityContext(studentUser2);
+        assertThat(((ErrorMessage)reviewController.updateReview(review.getId(),review).getBody()).getMessage()).isEqualTo("¡No puedes modificar una reseña escrita por otro alumno!");
     }
 
 }
