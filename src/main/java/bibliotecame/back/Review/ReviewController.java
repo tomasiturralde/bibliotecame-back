@@ -55,7 +55,7 @@ public class ReviewController {
 
         if(checkAdmin()) return unauthorizedActionError();
 
-        if(reviewModel.getValue()<0 || reviewModel.getValue()>5) return illegalValueError();
+        if(reviewModel.getValue()<1 || reviewModel.getValue()>5) return illegalValueError();
 
         reviewModel.setUserModel(getLogged());
 
@@ -85,7 +85,7 @@ public class ReviewController {
             return unexistingReviewError();
         }
 
-        if(reviewModel.getValue()<0 || reviewModel.getValue()>5) return illegalValueError();
+        if(reviewModel.getValue()<1 || reviewModel.getValue()>5) return illegalValueError();
 
         reviewModel.setUserModel(userService.findLogged());
 
