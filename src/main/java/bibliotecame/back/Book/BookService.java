@@ -65,7 +65,7 @@ public class BookService {
     }
 
     public boolean validYear(BookModel bookModel){
-        return bookModel.getYear() > 800 && bookModel.getYear() <= LocalDate.now().getYear();
+        return bookModel.getYear() >= 800 && bookModel.getYear() <= LocalDate.now().getYear();
     }
 
     public BookModel findByAttributeCombination(String title, String author, String publisher, int year){
