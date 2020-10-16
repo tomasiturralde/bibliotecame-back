@@ -1,7 +1,9 @@
 package bibliotecame.back.Extension;
 
 import bibliotecame.back.ErrorMessage;
+import bibliotecame.back.Loan.LoanService;
 import bibliotecame.back.User.UserService;
+import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,11 +15,13 @@ public class ExtensionController {
 
     private final ExtensionService extensionService;
     private final UserService userService;
+    private final LoanService loanService;
 
     @Autowired
-    public ExtensionController(ExtensionService extensionService, UserService userService) {
+    public ExtensionController(ExtensionService extensionService, UserService userService, LoanService loanService) {
         this.extensionService = extensionService;
         this.userService = userService;
+        this.loanService = loanService;
     }
 
     @PostMapping("/{loanId}")
@@ -25,28 +29,30 @@ public class ExtensionController {
             return extensionService.createExtension(loanId);
     }
 
-    @PutMapping("/{id}/approve")
-    public ResponseEntity approveExtension(@PathVariable int id){
+    @PutMapping("/{loanId}/approve")
+    public ResponseEntity approveExtension(@PathVariable int loanId){
 
         if(!userService.findLogged().isAdmin()) return unauthorizedActionError();
         try{
-            ExtensionModel extension = extensionService.findById(id);
+            ExtensionModel extension = loanService.getLoanById(loanId).getExtension();
+            if(extension==null) throw new NotFoundException("loan has no extension");
             return modifyExtension(extension, ExtensionStatus.APPROVED);
         }
-        catch (RuntimeException e) {
+        catch (NotFoundException e) {
             return new ResponseEntity(new ErrorMessage("¡La extensión solicitada no existe!"),HttpStatus.BAD_REQUEST);
         }
 
     }
 
-    @PutMapping("/{id}/reject")
-    public ResponseEntity rejectExtension(@PathVariable int id){
+    @PutMapping("/{loanId}/reject")
+    public ResponseEntity rejectExtension(@PathVariable int loanId){
 
         if(!userService.findLogged().isAdmin()) return unauthorizedActionError();
         try{
-            ExtensionModel extension = extensionService.findById(id);
+            ExtensionModel extension = loanService.getLoanById(loanId).getExtension();
+            if(extension==null) throw new NotFoundException("loan has no extension");
             return modifyExtension(extension, ExtensionStatus.REJECTED);
-        }catch (RuntimeException e){
+        }catch (NotFoundException e){
             return new ResponseEntity(new ErrorMessage("¡La extensión solicitada no existe!"),HttpStatus.BAD_REQUEST);
         }
 
