@@ -98,7 +98,7 @@ public class LoanTests {
         loanService = new LoanService(loanRepository, bookService, userService);
         extensionService = new ExtensionService(extensionRepository,loanService,userService);
         loanController = new LoanController(loanService, userService, bookService, copyService,extensionService);
-        extensionController = new ExtensionController(extensionService,userService);
+        extensionController = new ExtensionController(extensionService,userService, loanService);
 
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
@@ -458,7 +458,7 @@ public class LoanTests {
 
         setSecurityContext(admin);
         loanController.setWithdrawDate(loan.getId());
-        extensionModel = (ExtensionModel) extensionController.approveExtension(extensionModel.getId()).getBody();
+        extensionModel = (ExtensionModel) extensionController.approveExtension(loan.getId()).getBody();
 
         //Here we created and approved an extension
 

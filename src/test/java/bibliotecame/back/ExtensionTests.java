@@ -108,7 +108,7 @@ public class ExtensionTests {
         loanService = new LoanService(loanRepository, bookService, userService);
         extensionService = new ExtensionService(extensionRepository, loanService, userService);
         loanController = new LoanController(loanService, userService, bookService, copyService, extensionService);
-        extensionController = new ExtensionController(extensionService, userService);
+        extensionController = new ExtensionController(extensionService, userService, loanService);
 
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
@@ -238,14 +238,10 @@ public class ExtensionTests {
     @Test
     void testModifyExtensionOK(){
 
-        ExtensionModel extension1 = extensionModel1;
-
-        ExtensionModel extension2 = extensionModel2;
-
         setSecurityContext(admin);
 
-        assertThat(extensionController.approveExtension(extension1.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(extensionController.rejectExtension(extension2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(extensionController.approveExtension(loan3.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(extensionController.rejectExtension(loan4.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
     }
 
@@ -254,12 +250,8 @@ public class ExtensionTests {
 
         setSecurityContext(notAdmin3);
 
-        ExtensionModel extension1 = extensionModel1;
-
-        ExtensionModel extension2 = extensionModel2;
-
-        assertThat(extensionController.approveExtension(extension1.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
-        assertThat(extensionController.rejectExtension(extension2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+        assertThat(extensionController.approveExtension(loan3.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+        assertThat(extensionController.rejectExtension(loan4.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
 
     }
 
