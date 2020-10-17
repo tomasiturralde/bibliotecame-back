@@ -2,6 +2,8 @@ package bibliotecame.back.Loan;
 
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Review.ReviewModel;
+import bibliotecame.back.Review.ReviewService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import javassist.NotFoundException;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.toIntExact;
+import java.util.stream.Collectors;
 
 @Service
 public class LoanService {
@@ -26,12 +29,14 @@ public class LoanService {
     private final LoanRepository loanRepository;
     private final BookService bookService;
     private final UserService userService;
+    private final ReviewService reviewService;
 
     @Autowired
-    public LoanService(LoanRepository loanRepository, BookService bookService, UserService userService) {
+    public LoanService(LoanRepository loanRepository, BookService bookService, UserService userService, ReviewService reviewService) {
         this.loanRepository = loanRepository;
         this.bookService = bookService;
         this.userService = userService;
+        this.reviewService = reviewService;
     }
 
     public LoanModel saveLoan(LoanModel loanModel){
@@ -74,9 +79,16 @@ public class LoanService {
 
     public LoanDisplay turnLoanModalToDisplay(LoanModel modal, Optional<UserModel> user, boolean withStatus){
         BookModel book = bookService.findBookByCopy(modal.getCopy());
-        LoanDisplay display = user.map(userModel -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), userModel.getEmail()))
+        LoanDisplay display = user.map(userModel -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), userModel.getEmail(), getReviewByBook(book.getId())))
                 .orElseGet(() -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate()));
         return withStatus? setLoanDisplayStatus(modal, display) : display;
+    }
+
+    private Integer getReviewByBook(Integer bookId){
+        List<ReviewModel> userReviews = reviewService.findAllByUserModel(userService.findLogged());
+        List<ReviewModel> bookReviews = bookService.findBookById(bookId).getReviews();
+        List<ReviewModel> intersection = userReviews.stream().distinct().filter(bookReviews::contains).collect(Collectors.toList());
+        return intersection.size() > 0 ? intersection.get(0).getId() : null;
     }
 
     public List<LoanModel> findAll(){
