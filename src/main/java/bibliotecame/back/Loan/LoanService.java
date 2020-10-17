@@ -74,7 +74,7 @@ public class LoanService {
     public LoanDisplay turnLoanModalToDisplay(LoanModel modal, Optional<UserModel> user, boolean withStatus){
         BookModel book = bookService.findBookByCopy(modal.getCopy());
         LoanDisplay display = user.map(userModel -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), userModel.getEmail()))
-                .orElseGet(() -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), getReviewByBook(book.getId())));
+                .orElseGet(() -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), getReviewByBook(book.getId()), book.getId()));
         return withStatus? setLoanDisplayStatus(modal, display) : display;
     }
 
