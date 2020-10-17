@@ -11,6 +11,8 @@ import bibliotecame.back.Loan.LoanController;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanRepository;
 import bibliotecame.back.Loan.LoanService;
+import bibliotecame.back.Review.ReviewRepository;
+import bibliotecame.back.Review.ReviewService;
 import bibliotecame.back.Tag.TagRepository;
 import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserModel;
@@ -75,6 +77,11 @@ public class ExtensionTests {
     @Autowired
     private UserRepository userRepository;
 
+    @Mock
+    public ReviewService reviewService;
+    @Autowired
+    private ReviewRepository reviewRepository;
+
     Authentication authentication;
     SecurityContext securityContext;
 
@@ -105,7 +112,8 @@ public class ExtensionTests {
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
-        loanService = new LoanService(loanRepository, bookService, userService);
+        reviewService = new ReviewService(reviewRepository);
+        loanService = new LoanService(loanRepository, bookService, userService, reviewService);
         extensionService = new ExtensionService(extensionRepository, loanService, userService);
         loanController = new LoanController(loanService, userService, bookService, copyService, extensionService);
         extensionController = new ExtensionController(extensionService, userService, loanService);

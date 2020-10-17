@@ -12,8 +12,9 @@ public class LoanDisplay {
     private LocalDate returnDate;
     private LoanStatus loanStatus;
     private String userEmail;
+    private Integer reviewId;
 
-    public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate) {
+    public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, Integer reviewId) {
         this.id = id;
         this.bookTitle = bookTitle;
         this.bookAuthor = bookAuthor;
@@ -21,6 +22,7 @@ public class LoanDisplay {
         this.returnDate = returnDate;
         loanStatus = null;
         userEmail = null;
+        this.reviewId = reviewId;
     }
 
     public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, LoanStatus loanStatus) {
@@ -31,6 +33,7 @@ public class LoanDisplay {
         this.returnDate = returnDate;
         this.loanStatus = loanStatus;
         userEmail = null;
+        reviewId = null;
     }
 
     public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, String userEmail) {
@@ -41,6 +44,7 @@ public class LoanDisplay {
         this.returnDate = returnDate;
         this.userEmail = userEmail;
         loanStatus = null;
+        reviewId = null;
     }
 
     public int getId() {
@@ -97,5 +101,9 @@ public class LoanDisplay {
 
     public void setUserEmail(String userEmail) {
         this.userEmail = userEmail;
+    }
+
+    public Integer getReviewId() {
+        return reviewId;
     }
 }

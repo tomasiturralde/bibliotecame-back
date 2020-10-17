@@ -106,7 +106,7 @@ public class ReviewTests {
         userService = new UserService(userRepository, bookService);
         bookController = new BookController(bookService, tagService, copyService, userService);
         reviewService = new ReviewService(reviewRepository);
-        loanService = new LoanService(loanRepository, bookService, userService);
+        loanService = new LoanService(loanRepository, bookService, userService, reviewService);
         reviewController = new ReviewController(reviewService,userService,bookService);
         loanController = new LoanController(loanService,userService,bookService,copyService,extensionService);
 
