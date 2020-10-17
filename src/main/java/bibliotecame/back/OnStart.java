@@ -44,7 +44,7 @@ public class OnStart {
         if(RUN_ON_START) {
 
             try {
-                // users
+                // usersfica 
                 if(!userService.emailExists("admin@ing.austral.edu.ar")) {
                     UserModel admin = new UserModel("admin@ing.austral.edu.ar", "admin123", "admin", "admin", "111111111");
                     admin.setAdmin(true);

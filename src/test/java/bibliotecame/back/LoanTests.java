@@ -8,6 +8,8 @@ import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
 import bibliotecame.back.Extension.*;
 import bibliotecame.back.Loan.*;
+import bibliotecame.back.Review.ReviewRepository;
+import bibliotecame.back.Review.ReviewService;
 import bibliotecame.back.Tag.TagRepository;
 import bibliotecame.back.Tag.TagService;
 import bibliotecame.back.User.UserModel;
@@ -79,6 +81,11 @@ public class LoanTests {
     @Mock
     private ExtensionController extensionController;
 
+    @Mock
+    public ReviewService reviewService;
+    @Autowired
+    private ReviewRepository reviewRepository;
+
     String authorForSavedBook;
     String publisherForSavedBook;
 
@@ -95,7 +102,8 @@ public class LoanTests {
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
-        loanService = new LoanService(loanRepository, bookService, userService);
+        reviewService = new ReviewService(reviewRepository);
+        loanService = new LoanService(loanRepository, bookService, userService, reviewService);
         extensionService = new ExtensionService(extensionRepository,loanService,userService);
         loanController = new LoanController(loanService, userService, bookService, copyService,extensionService);
         extensionController = new ExtensionController(extensionService,userService, loanService);
