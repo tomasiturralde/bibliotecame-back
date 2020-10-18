@@ -165,7 +165,7 @@ public class BookController {
         return ResponseEntity.ok(bookPage);
     }
 
-    @GetMapping(value = "/advancedSearch")
+    @PutMapping(value = "/advancedSearch")
     public ResponseEntity<Page<BookModel>> advancedSearch(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
