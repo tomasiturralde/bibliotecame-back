@@ -8,12 +8,20 @@ import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.lang.Math.toIntExact;
+import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,35 +48,34 @@ public class LoanService {
         return this.loanRepository.findById(loanId).orElseThrow(() -> new NotFoundException("Loan not found"));
     }
 
-    public List<LoanDisplay> getLoansPage(int page, int size, String search){
+    public Page<LoanDisplay> getLoansPage(int page, int size, String search){
+        Pageable pageable = PageRequest.of(page, size);
         List<LoanModel> list = findAll();
-
         list.sort((l1, l2) -> {
             if(l1.getReturnDate() == null && l2.getReturnDate() != null) return -1;
             if(l1.getReturnDate() != null && l2.getReturnDate() == null) return 1;
             return l1.getExpirationDate().compareTo(l2.getExpirationDate());
         });
-
-        List<LoanDisplay> filtered = new ArrayList<>();
-        if(!search.isEmpty()){
-            String lookFor = search.toLowerCase();
-            for (LoanModel loanModel : list) {
-                if (filtered.size() == (page * size + size)) break;
-                LoanDisplay display = turnLoanModalToDisplay(loanModel, Optional.of(userService.getUserFromLoan(loanModel)), true);
-                if (display.getBookAuthor().toLowerCase().contains(lookFor) ||
-                     display.getBookTitle().toLowerCase().contains(lookFor) ||
-                     display.getUserEmail().toLowerCase().contains(lookFor) ||
-                     display.getLoanStatus().getLabel().toLowerCase().contains(lookFor)) filtered.add(display);
-            }
-        } else{
-            for (int i = 0; i <= page*size +size && i < list.size(); i++) {
-                filtered.add(turnLoanModalToDisplay(list.get(i), Optional.of(userService.getUserFromLoan(list.get(i))), true));
-            }
+        List<LoanDisplay> result = new ArrayList<>();
+        List<LoanDisplay> finalResult = result;
+        list.forEach(loanModel -> finalResult.add(turnLoanModalToDisplay(loanModel, Optional.of(userService.getUserFromLoan(loanModel)),true)));
+        result = finalResult.stream().filter(loanDisplay -> loanDisplayMatches(loanDisplay,search)).collect(Collectors.toList());
+        int total = result.size();
+        int start = toIntExact(pageable.getOffset());
+        int end = Math.min((start + pageable.getPageSize()), total);
+        List<LoanDisplay> output = new ArrayList<>();
+        if (start <= end) {
+            output = result.subList(start, end);
         }
+        return new PageImpl<>(output, pageable, result.size());
+    }
 
-        int start = page*size;
-        int end = Math.min((start + size), filtered.size());
-        return filtered.subList(start, end);
+    private boolean loanDisplayMatches(LoanDisplay display, String lookFor){
+        if (display.getBookAuthor().toLowerCase().contains(lookFor) ||
+                display.getBookTitle().toLowerCase().contains(lookFor) ||
+                display.getUserEmail().toLowerCase().contains(lookFor) ||
+                display.getLoanStatus().getLabel().toLowerCase().contains(lookFor)) return true;
+        return false;
     }
 
     public LoanDisplay turnLoanModalToDisplay(LoanModel modal, Optional<UserModel> user, boolean withStatus){

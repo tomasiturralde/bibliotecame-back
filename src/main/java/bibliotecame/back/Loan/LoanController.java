@@ -121,10 +121,9 @@ public class LoanController {
     ){
         if (size == 0) size = 10;
         if(!getLogged().isAdmin()) return unauthorizedActionError();
-
-        List<LoanDisplay> loans = loanService.getLoansPage(page, size, search);
-
-        return new ResponseEntity<>(new PageImpl<>(loans),HttpStatus.OK);
+        search=search.toLowerCase();
+        Page<LoanDisplay> loans = loanService.getLoansPage(page,size,search);
+        return new ResponseEntity<>(loans,HttpStatus.OK);
     }
 
     private UserModel getLogged(){
