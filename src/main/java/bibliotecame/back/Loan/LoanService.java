@@ -98,8 +98,8 @@ public class LoanService {
 
     public LoanDisplay setLoanDisplayStatus(LoanModel model, LoanDisplay display){
         if(model.getReturnDate() != null) display.setLoanStatus(LoanStatus.RETURNED);
-        else if(model.getExtension() != null) display.setLoanStatus(LoanStatus.getFromInt(model.getExtension().getStatus().ordinal()));
         else if(model.getExpirationDate().isBefore(LocalDate.now())) display.setLoanStatus(LoanStatus.DELAYED);
+        else if(model.getExtension() != null) display.setLoanStatus(LoanStatus.getFromInt(model.getExtension().getStatus().ordinal()));
         else if(model.getWithdrawalDate() != null) display.setLoanStatus(LoanStatus.WITHDRAWN);
         else display.setLoanStatus(LoanStatus.READY_FOR_WITHDRAWAL);
         return display;
