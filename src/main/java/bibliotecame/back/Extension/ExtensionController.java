@@ -1,6 +1,7 @@
 package bibliotecame.back.Extension;
 
 import bibliotecame.back.ErrorMessage;
+import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanService;
 import bibliotecame.back.User.UserService;
 import javassist.NotFoundException;
@@ -34,14 +35,22 @@ public class ExtensionController {
 
         if(!userService.findLogged().isAdmin()) return unauthorizedActionError();
         try{
-            ExtensionModel extension = loanService.getLoanById(loanId).getExtension();
+            LoanModel loan = loanService.getLoanById(loanId);
+            ExtensionModel extension = loan.getExtension();
             if(extension==null) throw new NotFoundException("loan has no extension");
-            return modifyExtension(extension, ExtensionStatus.APPROVED);
+            ResponseEntity response = modifyExtension(extension, ExtensionStatus.APPROVED);
+            if (response.getStatusCode() == HttpStatus.OK) modifyLoanExpirationDate(loan);
+            return response;
         }
         catch (NotFoundException e) {
             return new ResponseEntity(new ErrorMessage("¡La extensión solicitada no existe!"),HttpStatus.BAD_REQUEST);
         }
 
+    }
+
+    private void modifyLoanExpirationDate(LoanModel loan) {
+        loan.setExpirationDate(loan.getExpirationDate().plusDays(3));
+        loanService.saveLoan(loan);
     }
 
     @PutMapping("/{loanId}/reject")
