@@ -158,6 +158,8 @@ public class LoanController {
                 loanModel.getExtension().setActive(false);
                 extensionService.saveExtension(loanModel.getExtension());
             }
+            loanModel.getCopy().setBooked(false);
+            copyService.saveCopy(loanModel.getCopy());
             loanService.saveLoan(loanModel);
             return new ResponseEntity<>(loanModel,HttpStatus.OK);
         }

@@ -2,6 +2,7 @@ package bibliotecame.back.Loan;
 
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Copy.CopyService;
 import bibliotecame.back.Review.ReviewModel;
 import bibliotecame.back.Review.ReviewService;
 import bibliotecame.back.User.UserModel;
@@ -21,8 +22,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.toIntExact;
-import java.util.stream.Collectors;
-import java.util.stream.Collectors;
 
 @Service
 public class LoanService {
@@ -31,13 +30,15 @@ public class LoanService {
     private final BookService bookService;
     private final UserService userService;
     private final ReviewService reviewService;
+    private final CopyService copyService;
 
     @Autowired
-    public LoanService(LoanRepository loanRepository, BookService bookService, UserService userService, ReviewService reviewService) {
+    public LoanService(LoanRepository loanRepository, BookService bookService, UserService userService, ReviewService reviewService, CopyService copyService) {
         this.loanRepository = loanRepository;
         this.bookService = bookService;
         this.userService = userService;
         this.reviewService = reviewService;
+        this.copyService = copyService;
     }
 
     public LoanModel saveLoan(LoanModel loanModel){
@@ -124,6 +125,8 @@ public class LoanService {
         user.setLoans(remainingLoans);
         userService.saveWithoutEncryption(user);
         for(LoanModel loan: deletingLoans){
+            loan.getCopy().setBooked(false);
+            copyService.saveCopy(loan.getCopy());
             loanRepository.delete(loan);
         }
     }
