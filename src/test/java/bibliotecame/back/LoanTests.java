@@ -103,7 +103,7 @@ public class LoanTests {
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
         reviewService = new ReviewService(reviewRepository);
-        loanService = new LoanService(loanRepository, bookService, userService, reviewService);
+        loanService = new LoanService(loanRepository, bookService, userService, reviewService, copyService);
         extensionService = new ExtensionService(extensionRepository,loanService,userService);
         loanController = new LoanController(loanService, userService, bookService, copyService,extensionService);
         extensionController = new ExtensionController(extensionService,userService, loanService);
@@ -605,6 +605,31 @@ public class LoanTests {
         setSecurityContext(notAdmin);
 
         assertThat(((ErrorMessage)loanController.createLoan(-11111).getBody()).getMessage()).isEqualTo("¡El libro solicitado no existe!");
+    }
+
+    @Test
+    public void testAReturnedLoanCopyShouldBeActive() throws NotFoundException {
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel bookToTest = new BookModel("Like a phoenix",1969,"I get returned","To be loaned again");
+        bookService.saveBook(bookToTest);
+        CopyModel copyToTest = new CopyModel("PH03N1X");
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(copyToTest);
+        bookToTest.setCopies(copies);
+        bookService.saveBook(bookToTest);
+
+        LoanModel loan = (LoanModel) loanController.createLoan(bookToTest.getId()).getBody();
+
+        setSecurityContext(admin);
+
+        loanController.setWithdrawDate(loan.getId());
+        assertTrue(loanService.getLoanById(loan.getId()).getCopy().getBooked());
+        loanController.setReturnDate(loan.getId());
+        assertFalse(loanService.getLoanById(loan.getId()).getCopy().getBooked());
+
     }
 
 
