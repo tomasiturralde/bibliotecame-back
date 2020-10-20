@@ -3,8 +3,10 @@ package bibliotecame.back;
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Copy.CopyModel;
-import bibliotecame.back.Extension.ExtensionController;
 import bibliotecame.back.Loan.LoanController;
+import bibliotecame.back.Loan.LoanModel;
+import bibliotecame.back.Review.ReviewController;
+import bibliotecame.back.Review.ReviewModel;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
@@ -14,6 +16,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,15 +31,15 @@ public class OnStart {
     private final UserService userService;
     private final BookController bookController;
     private final LoanController loanController;
-    private final ExtensionController extensionController;
+    private final ReviewController reviewController;
 
     @Autowired
-    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ExtensionController extensionController) {
+    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ReviewController reviewController) {
         this.userController = userController;
         this.bookController = bookController;
         this.userService = userService;
         this.loanController = loanController;
-        this.extensionController = extensionController;
+        this.reviewController = reviewController;
     }
 
     @EventListener
@@ -45,7 +48,7 @@ public class OnStart {
 
             try {
                 if(!userService.emailExists("admin@ing.austral.edu.ar")) {
-                    UserModel admin = new UserModel("admin@ing.austral.edu.ar", "admin123", "admin", "admin", "111111111");
+                    UserModel admin = new UserModel("admin@ing.austral.edu.ar", "admin123", "Liliana", "admin", "111111111");
                     admin.setAdmin(true);
                     userService.saveUser(admin);
                 }
@@ -274,14 +277,57 @@ public class OnStart {
 
 
                 //loans
-                loanController.checkAndCreateLoan(user1, book11);
-                loanController.checkAndCreateLoan(user2, book14);
-                loanController.checkAndCreateLoan(user3, book17);
-                loanController.checkAndCreateLoan(user4, book20);
-                loanController.checkAndCreateLoan(user1, book12);
+                LoanModel loanToReview1 = (LoanModel) loanController.checkAndCreateLoan(user1, book11).getBody();
+                LoanModel loanToReview2 = (LoanModel) loanController.checkAndCreateLoan(user2, book14).getBody();
+                LoanModel loanToReview3 = (LoanModel) loanController.checkAndCreateLoan(user3, book17).getBody();
+                LoanModel loanToReview4 = (LoanModel) loanController.checkAndCreateLoan(user4, book20).getBody();
+                LoanModel loanToReview5 = (LoanModel) loanController.checkAndCreateLoan(user1, book12).getBody();
                 loanController.checkAndCreateLoan(user2, book15);
                 loanController.checkAndCreateLoan(user3, book19);
                 loanController.checkAndCreateLoan(user4, book13);
+
+
+                //reviews
+                assert loanToReview1 != null;
+                loanToReview1.setWithdrawalDate(LocalDate.now());
+                loanToReview1.setReturnDate(LocalDate.now());
+                ReviewModel reviewModel1 = new ReviewModel();
+                reviewModel1.setDescription("Muy buen libro, lo recomiendo!");
+                reviewModel1.setValue(5);
+                reviewController.createReviewKnowingUser(reviewModel1, book11.getId(), user1);
+
+                assert loanToReview2 != null;
+                loanToReview2.setWithdrawalDate(LocalDate.now());
+                loanToReview2.setReturnDate(LocalDate.now());
+                ReviewModel reviewModel2 = new ReviewModel();
+                reviewModel2.setDescription("Muy dificil de entender, pero buen contenido.");
+                reviewModel2.setValue(3);
+                reviewController.createReviewKnowingUser(reviewModel2, book14.getId(), user2);
+
+                assert loanToReview3 != null;
+                loanToReview3.setWithdrawalDate(LocalDate.now());
+                loanToReview3.setReturnDate(LocalDate.now());
+                ReviewModel reviewModel3 = new ReviewModel();
+                reviewModel3.setDescription("Pesimo libro, me dormi en el segundo capitulo.");
+                reviewModel3.setValue(2);
+                reviewController.createReviewKnowingUser(reviewModel3, book17.getId(), user3);
+
+                assert loanToReview4 != null;
+                loanToReview4.setWithdrawalDate(LocalDate.now());
+                loanToReview4.setReturnDate(LocalDate.now());
+                ReviewModel reviewModel4 = new ReviewModel();
+                reviewModel4.setDescription("Muy buen libro, lo recomiendo! La version es medio vieja ya.");
+                reviewModel4.setValue(4);
+                reviewController.createReviewKnowingUser(reviewModel4, book20.getId(), user4);
+
+                assert loanToReview5 != null;
+                loanToReview5.setWithdrawalDate(LocalDate.now());
+                loanToReview5.setReturnDate(LocalDate.now());
+                ReviewModel reviewModel5 = new ReviewModel();
+                reviewModel5.setDescription("Usa palabras compilacas para confundirte, no me ayudo para nada con el estudio.");
+                reviewModel5.setValue(1);
+                reviewController.createReviewKnowingUser(reviewModel5, book12.getId(), user1);
+
 
 
             } catch (Exception ignored) {
