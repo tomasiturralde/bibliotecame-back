@@ -229,12 +229,12 @@ public class LoanController {
         delayedLoans.forEach(lm -> {
             if(!deliveredEmails.contains(lm.getUserEmail())) {
                 String body = "Estimado " + userService.findUserByEmail(lm.getUserEmail()).getFirstName() + ": <br>" +
-                        "Le recordamos que actualmente tiene los siguientes prestamos en ATRASO: <ul>";
+                        "Le recordamos que actualmente tiene los siguientes prestamos ATRASADOS: <ul>";
                 List<DelayedLoanDetails> userLoans = delayedLoans.stream().filter(loan -> loan.getUserEmail().equals(lm.getUserEmail())).collect(Collectors.toList());
                 for (DelayedLoanDetails loan : userLoans) {
                     body += "<br><li><strong>Libro:</strong> <i>\""+loan.getBookTitle()+"\"</i></li>" +
                             "<li><strong>Fecha de Retiro:</strong> "+loan.getWithdrawDate().format(formatters)+"</li>"+
-                            "<li><strong>Fecha de Devolución:</strong> "+loan.getReturnDate().format(formatters)+"</li>";
+                            "<li><strong>Fecha de Vencimiento:</strong> "+loan.getReturnDate().format(formatters)+"</li>";
                 }
                 body += "</ul><br>Atte, Administración Bibliotecame.";
                 try {
