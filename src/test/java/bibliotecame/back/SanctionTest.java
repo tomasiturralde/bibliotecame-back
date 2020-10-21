@@ -4,6 +4,8 @@ package bibliotecame.back;
 import bibliotecame.back.Sanction.SanctionController;
 import bibliotecame.back.Sanction.SanctionDisplay;
 import bibliotecame.back.Sanction.SanctionForm;
+import bibliotecame.back.Sanction.SanctionModel;
+import bibliotecame.back.Sanction.SanctionService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,6 +35,9 @@ public class SanctionTest {
 
     @Autowired
     private SanctionController sanctionController;
+
+    @Autowired
+    private SanctionService sanctionService;
 
     @Autowired
     private UserService userService;
@@ -183,5 +188,109 @@ public class SanctionTest {
         assertThat(sanctionController.getSanctionList(0, 10, "").getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
 
 
+    }
+
+    @Test
+    public void testModifySanction_OK(){
+        UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        String mail = ("mail" + RandomStringGenerator.getAlphabeticString(10) + "@mail.austral.edu.ar");
+
+        userService.saveUser(new UserModel(mail, "password", "Mail", "Mail", "12345678"));
+        SanctionModel sanctionToChange = (SanctionModel) sanctionController.createSanction(new SanctionForm(mail, "reason", LocalDate.now().plus(Period.ofDays(20)))).getBody();
+
+        assert sanctionToChange != null;
+        sanctionToChange.setEndDate(sanctionToChange.getEndDate().plus(Period.ofDays(3)));
+
+        assertThat(sanctionController.modifySanction(sanctionToChange).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void testModifySanction_BAD_REQUEST(){
+        UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        String mail = ("mail" + RandomStringGenerator.getAlphabeticString(10) + "@mail.austral.edu.ar");
+
+        userService.saveUser(new UserModel(mail, "password", "Mail", "Mail", "12345678"));
+        SanctionModel sanctionToChange = (SanctionModel) sanctionController.createSanction(new SanctionForm(mail, "reason", LocalDate.now().plus(Period.ofDays(20)))).getBody();
+
+        assert sanctionToChange != null;
+        sanctionToChange.setEndDate(LocalDate.now().minus(Period.ofDays(5)));
+        sanctionService.saveSanction(sanctionToChange);
+
+
+        sanctionToChange.setEndDate(LocalDate.now().plus(Period.ofDays(3)));
+
+        assertThat(sanctionController.modifySanction(sanctionToChange).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    //test date before now
+    public void testModifySanction_EXTECTATION_FAILED(){
+        UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        String mail = ("mail" + RandomStringGenerator.getAlphabeticString(10) + "@mail.austral.edu.ar");
+
+        userService.saveUser(new UserModel(mail, "password", "Mail", "Mail", "12345678"));
+        SanctionModel sanctionToChange = (SanctionModel) sanctionController.createSanction(new SanctionForm(mail, "reason", LocalDate.now().plus(Period.ofDays(20)))).getBody();
+
+        assert sanctionToChange != null;
+
+        sanctionToChange.setEndDate(LocalDate.now().minus(Period.ofDays(4)));
+
+        assertThat(sanctionController.modifySanction(sanctionToChange).getStatusCode()).isEqualByComparingTo(HttpStatus.EXPECTATION_FAILED);
+    }
+
+    @Test
+    //test too future date
+    public void testModifySanction_EXTECTATION_FAILED2(){
+        UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        String mail = ("mail" + RandomStringGenerator.getAlphabeticString(10) + "@mail.austral.edu.ar");
+
+        userService.saveUser(new UserModel(mail, "password", "Mail", "Mail", "12345678"));
+        SanctionModel sanctionToChange = (SanctionModel) sanctionController.createSanction(new SanctionForm(mail, "reason", LocalDate.now().plus(Period.ofDays(20)))).getBody();
+
+        assert sanctionToChange != null;
+
+        sanctionToChange.setEndDate(LocalDate.now().plus(Period.ofWeeks(15)));
+
+        assertThat(sanctionController.modifySanction(sanctionToChange).getStatusCode()).isEqualByComparingTo(HttpStatus.EXPECTATION_FAILED);
+    }
+
+    @Test
+    public void testModifySanction_UNAUTHORIZED(){
+        UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        String mail = ("mail" + RandomStringGenerator.getAlphabeticString(10) + "@mail.austral.edu.ar");
+
+        userService.saveUser(new UserModel(mail, "password", "Mail", "Mail", "12345678"));
+        SanctionModel sanctionToChange = (SanctionModel) sanctionController.createSanction(new SanctionForm(mail, "reason", LocalDate.now().plus(Period.ofDays(20)))).getBody();
+
+        UserModel NOTadmin = new UserModel("NOTadmin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(false);
+        userService.saveUser(NOTadmin);
+        setSecurityContext(NOTadmin);
+
+        assert sanctionToChange != null;
+
+        sanctionToChange.setEndDate(LocalDate.now().plus(Period.ofDays(3)));
+
+        assertThat(sanctionController.modifySanction(sanctionToChange).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
     }
 }

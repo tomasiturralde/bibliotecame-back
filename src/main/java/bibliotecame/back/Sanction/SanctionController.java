@@ -69,6 +69,21 @@ public class SanctionController {
         return ResponseEntity.ok(result);
     }
 
+    @PutMapping()
+    public ResponseEntity modifySanction(@Valid @RequestBody SanctionModel sanctionModel){
+        if(!checkAdmin()) return unauthorizedActionError();
+
+        SanctionModel oldSanction = sanctionService.findSanctionById(sanctionModel.getId());
+
+        if(oldSanction.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity(new ErrorMessage("No puede modificar una sanción desactivada."),HttpStatus.BAD_REQUEST);
+        if(sanctionModel.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede terminar antes de la fecha actual!"),HttpStatus.EXPECTATION_FAILED);
+        if(sanctionModel.getEndDate().isAfter(LocalDate.now().plus(Period.ofMonths(3)))) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede durar más de 3 meses!"),HttpStatus.EXPECTATION_FAILED);
+
+        oldSanction.setEndDate(sanctionModel.getEndDate());
+
+        return ResponseEntity.ok(this.sanctionService.saveSanction(oldSanction));
+    }
+
     private boolean checkAdmin(){
         return userService.findLogged().isAdmin();
     }
@@ -76,8 +91,5 @@ public class SanctionController {
     private ResponseEntity unauthorizedActionError(){
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
-
-
-
 
 }

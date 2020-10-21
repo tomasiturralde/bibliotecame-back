@@ -133,6 +133,10 @@ public class LoanController {
     @PutMapping("/{id}/withdraw")
     public ResponseEntity setWithdrawDate(@PathVariable Integer id){
         if(!getLogged().isAdmin()) return unauthorizedActionError();
+        return setWithdrawalPostAdminCheck(id);
+    }
+
+    public ResponseEntity setWithdrawalPostAdminCheck(Integer id){
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
@@ -148,6 +152,10 @@ public class LoanController {
     @PutMapping("/{id}/return")
     public ResponseEntity setReturnDate(@PathVariable Integer id){
         if(!getLogged().isAdmin()) return unauthorizedActionError();
+        return setReturnPostAdminCheck(id);
+    }
+
+    public ResponseEntity setReturnPostAdminCheck(Integer id){
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
@@ -165,6 +173,8 @@ public class LoanController {
         }
         catch (NotFoundException n) { return unexistingLoanError(); }
     }
+
+
 
     private ResponseEntity unauthorizedActionError(){
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
