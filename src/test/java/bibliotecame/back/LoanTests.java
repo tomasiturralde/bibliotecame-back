@@ -632,6 +632,36 @@ public class LoanTests {
 
     }
 
+    @Test
+    public void testDelayedCheckAndNotify() throws NotFoundException {
+        setSecurityContext(admin);
+
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel bookToTest = new BookModel("I'm just a textbook",1969,"Or should I say...","Testbook?");
+        bookService.saveBook(bookToTest);
+        CopyModel copyToTest = new CopyModel("T3STC0PY");
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(copyToTest);
+        bookToTest.setCopies(copies);
+        bookService.saveBook(bookToTest);
+
+        LoanModel loan = (LoanModel) loanController.createLoan(bookToTest.getId()).getBody();
+
+        setSecurityContext(admin);
+
+        loanController.setWithdrawDate(loan.getId());
+        loan = loanService.getLoanById(loan.getId());
+        assertFalse((Boolean) loanController.checkDelayedLoans().getBody());
+        loan.setExpirationDate(LocalDate.now().minusDays(1));
+        loanService.saveLoan(loan);
+        assertTrue((Boolean) loanController.checkDelayedLoans().getBody());
+        assertThat(loanController.notifyDelayedLoans().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(loanController.notifyDelayedLoans().getBody()).isEqualTo(1);
+    }
+
 
 
 }
