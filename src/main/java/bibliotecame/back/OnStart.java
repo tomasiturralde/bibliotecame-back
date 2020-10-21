@@ -291,6 +291,8 @@ public class OnStart {
                 assert loanToReview1 != null;
                 loanToReview1.setWithdrawalDate(LocalDate.now());
                 loanToReview1.setReturnDate(LocalDate.now());
+                loanController.setWithdrawalPostAdminCheck(loanToReview1.getId());
+                loanController.setReturnPostAdminCheck(loanToReview1.getId());
                 ReviewModel reviewModel1 = new ReviewModel();
                 reviewModel1.setDescription("Muy buen libro, lo recomiendo!");
                 reviewModel1.setValue(5);
@@ -299,6 +301,8 @@ public class OnStart {
                 assert loanToReview2 != null;
                 loanToReview2.setWithdrawalDate(LocalDate.now());
                 loanToReview2.setReturnDate(LocalDate.now());
+                loanController.setWithdrawalPostAdminCheck(loanToReview2.getId());
+                loanController.setReturnPostAdminCheck(loanToReview2.getId());
                 ReviewModel reviewModel2 = new ReviewModel();
                 reviewModel2.setDescription("Muy dificil de entender, pero buen contenido.");
                 reviewModel2.setValue(3);
@@ -307,6 +311,8 @@ public class OnStart {
                 assert loanToReview3 != null;
                 loanToReview3.setWithdrawalDate(LocalDate.now());
                 loanToReview3.setReturnDate(LocalDate.now());
+                loanController.setWithdrawalPostAdminCheck(loanToReview3.getId());
+                loanController.setReturnPostAdminCheck(loanToReview3.getId());
                 ReviewModel reviewModel3 = new ReviewModel();
                 reviewModel3.setDescription("Pesimo libro, me dormi en el segundo capitulo.");
                 reviewModel3.setValue(2);
@@ -315,6 +321,8 @@ public class OnStart {
                 assert loanToReview4 != null;
                 loanToReview4.setWithdrawalDate(LocalDate.now());
                 loanToReview4.setReturnDate(LocalDate.now());
+                loanController.setWithdrawalPostAdminCheck(loanToReview4.getId());
+                loanController.setReturnPostAdminCheck(loanToReview4.getId());
                 ReviewModel reviewModel4 = new ReviewModel();
                 reviewModel4.setDescription("Muy buen libro, lo recomiendo! La version es medio vieja ya.");
                 reviewModel4.setValue(4);
@@ -323,6 +331,8 @@ public class OnStart {
                 assert loanToReview5 != null;
                 loanToReview5.setWithdrawalDate(LocalDate.now());
                 loanToReview5.setReturnDate(LocalDate.now());
+                loanController.setWithdrawalPostAdminCheck(loanToReview5.getId());
+                loanController.setReturnPostAdminCheck(loanToReview5.getId());
                 ReviewModel reviewModel5 = new ReviewModel();
                 reviewModel5.setDescription("Usa palabras compilacas para confundirte, no me ayudo para nada con el estudio.");
                 reviewModel5.setValue(1);
