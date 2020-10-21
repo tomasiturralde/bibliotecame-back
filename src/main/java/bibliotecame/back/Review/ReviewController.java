@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -56,13 +55,17 @@ public class ReviewController {
 
         if(checkAdmin()) return unauthorizedActionError();
 
+        return createReviewKnowingUser(reviewModel, bookId, getLogged());
+    }
+
+    public ResponseEntity createReviewKnowingUser(ReviewModel reviewModel, Integer bookId, UserModel userModel){
         if(reviewModel.getValue()<1 || reviewModel.getValue()>5) return illegalValueError();
 
-        reviewModel.setUserModel(getLogged());
+        reviewModel.setUserModel(userModel);
 
-        if(userPreviouslyReviewedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted ya escribió una reseña para este libro, modifiquela en lugar de crear una nueva!"),HttpStatus.TOO_MANY_REQUESTS);
+        if(userPreviouslyReviewedThisOne(bookId, userModel)) return new ResponseEntity<>(new ErrorMessage("¡Usted ya escribió una reseña para este libro, modifiquela en lugar de crear una nueva!"),HttpStatus.TOO_MANY_REQUESTS);
 
-        if(!userPreviouslyBookedThisOne(bookId)) return new ResponseEntity<>(new ErrorMessage("¡Usted no puede escribir una reseña de un libro que no haya retirado y devuelto previamente!"),HttpStatus.BAD_REQUEST);
+        if(!userPreviouslyBookedThisOne(bookId, userModel)) return new ResponseEntity<>(new ErrorMessage("¡Usted no puede escribir una reseña de un libro que no haya retirado y devuelto previamente!"),HttpStatus.BAD_REQUEST);
 
         reviewService.saveReview(reviewModel);
         BookModel bookToUpdate = bookService.findBookById(bookId);
@@ -95,14 +98,14 @@ public class ReviewController {
         return new ResponseEntity(reviewService.saveReview(reviewModel),HttpStatus.OK);
     }
 
-    private boolean userPreviouslyBookedThisOne(Integer bookId){
-        List<LoanModel> loans = getLogged().getLoans().stream().filter(loanModel ->  loanModel.getReturnDate()!=null).collect(Collectors.toList());
+    private boolean userPreviouslyBookedThisOne(Integer bookId, UserModel user){
+        List<LoanModel> loans = user.getLoans().stream().filter(loanModel ->  loanModel.getReturnDate()!=null).collect(Collectors.toList());
         List<String> copiesIds = bookService.findBookById(bookId).getCopies().stream().map(CopyModel::getId).collect(Collectors.toList());
         return loans.stream().map(loanModel -> copiesIds.contains(loanModel.getCopy().getId())).reduce(false, ((aBoolean, aBoolean2) -> aBoolean || aBoolean2));
     }
 
-    private boolean userPreviouslyReviewedThisOne(Integer bookId){
-        List<Integer> reviewsIds = reviewService.findAllByUserModel(getLogged()).stream().map(ReviewModel::getId).collect(Collectors.toList());
+    private boolean userPreviouslyReviewedThisOne(Integer bookId, UserModel user){
+        List<Integer> reviewsIds = reviewService.findAllByUserModel(user).stream().map(ReviewModel::getId).collect(Collectors.toList());
         List<ReviewModel> bookReviews = bookService.findBookById(bookId).getReviews();
         return bookReviews.stream().map(reviewModel -> reviewsIds.contains(reviewModel.getId())).reduce(false, ((aBoolean, aBoolean2) -> aBoolean || aBoolean2));
     }
