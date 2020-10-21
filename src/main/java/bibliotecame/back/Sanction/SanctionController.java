@@ -4,11 +4,14 @@ import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.awt.print.PageFormat;
+import java.awt.print.Pageable;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -51,6 +54,19 @@ public class SanctionController {
         SanctionModel sanction = new SanctionModel(sanctionForm.getReason(), LocalDate.now(), sanctionForm.getEndDate(), user);
 
         return ResponseEntity.ok(this.sanctionService.saveSanction(sanction));
+    }
+
+    @GetMapping("/activeList")
+    public ResponseEntity getSanctionList( @Valid @RequestParam(value = "page") int page,
+                                           @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+                                           @Valid @RequestParam(value = "search") String search){
+        if(!checkAdmin()) return unauthorizedActionError();
+
+        Page<SanctionModel> list = sanctionService.getSanctionList(page, size, search);
+
+        Page<SanctionDisplay> result = list.map(sm -> new SanctionDisplay(sm.getId(), sm.getUser().getEmail(), sm.getCreationDate(), sm.getEndDate()));
+
+        return ResponseEntity.ok(result);
     }
 
     @PutMapping()
