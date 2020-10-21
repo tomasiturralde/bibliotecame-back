@@ -6,10 +6,7 @@ import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -54,6 +51,21 @@ public class SanctionController {
         SanctionModel sanction = new SanctionModel(sanctionForm.getReason(), LocalDate.now(), sanctionForm.getEndDate(), user);
 
         return ResponseEntity.ok(this.sanctionService.saveSanction(sanction));
+    }
+
+    @PutMapping()
+    public ResponseEntity modifySanction(@Valid @RequestBody SanctionModel sanctionModel){
+        if(!checkAdmin()) return unauthorizedActionError();
+
+        SanctionModel oldSanction = sanctionService.findSanctionById(sanctionModel.getId());
+
+        if(oldSanction.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity(new ErrorMessage("No puede modificar una sanción desactivada."),HttpStatus.BAD_REQUEST);
+        if(sanctionModel.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede terminar antes de la fecha actual!"),HttpStatus.EXPECTATION_FAILED);
+        if(sanctionModel.getEndDate().isAfter(LocalDate.now().plus(Period.ofMonths(3)))) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede durar más de 3 meses!"),HttpStatus.EXPECTATION_FAILED);
+
+        oldSanction.setEndDate(sanctionModel.getEndDate());
+
+        return ResponseEntity.ok(this.sanctionService.saveSanction(oldSanction));
     }
 
     private boolean checkAdmin(){
