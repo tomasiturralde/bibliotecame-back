@@ -64,7 +64,7 @@ public class SanctionController {
 
         Page<SanctionModel> list = sanctionService.getSanctionList(page, size, search);
 
-        Page<SanctionDisplay> result = list.map(sm -> new SanctionDisplay(sm.getId(), sm.getUser().getEmail(), sm.getCreationDate(), sm.getEndDate()));
+        Page<SanctionDisplay> result = list.map(sm -> new SanctionDisplay(sm.getId(), sm.getUser().getEmail(), sm.getCreationDate(), sm.getEndDate(), sm.getReason()));
 
         return ResponseEntity.ok(result);
     }

@@ -16,15 +16,25 @@ public class SanctionDisplay {
 
     @NotNull
     private LocalDate endDate;
+    private String reason;
 
     public SanctionDisplay() {
     }
 
-    public SanctionDisplay(int id, String email, LocalDate creationDate, LocalDate endDate) {
+    public SanctionDisplay(int id, String email, LocalDate creationDate, LocalDate endDate, String reason) {
         this.id = id;
         this.email = email;
         this.creationDate = creationDate;
         this.endDate = endDate;
+        this.reason = reason;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public String getEmail() {
