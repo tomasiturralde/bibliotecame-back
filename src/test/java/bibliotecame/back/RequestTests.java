@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -103,6 +104,17 @@ public class RequestTests {
         RequestForm form = new RequestForm("Head-First design patterns",2004,"Eric Freeman & Elisabeth Robson","O'Reilly","Es un muy buen libro para ampliar conocimientos sobre patrones de diseño.");
         ResponseEntity responseEntity = requestController.createRequest(form);
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    public void adminCanGetARequest(){
+        setSecurityContext(nonAdmin);
+        RequestForm form = new RequestForm("Head-First design patterns",2004,"Eric Freeman & Elisabeth Robson","O'Reilly","Es un muy buen libro para ampliar conocimientos sobre patrones de diseño.");
+        ResponseEntity responseEntity = requestController.createRequest(form);
+        setSecurityContext(admin);
+        int id = ((RequestModel) responseEntity.getBody()).getId();
+        assertThat(((RequestModel)requestController.getRequest(id).getBody()).getTitle()).isEqualTo("Head-First design patterns");
+        assertThat(((Page<RequestModel>)requestController.getAll(0,10).getBody()).getTotalElements()).isGreaterThan(0);
     }
 
 }

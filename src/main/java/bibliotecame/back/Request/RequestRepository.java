@@ -1,12 +1,19 @@
 package bibliotecame.back.Request;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface RequestRepository extends CrudRepository<RequestModel, Integer> {
+public interface RequestRepository extends PagingAndSortingRepository<RequestModel, Integer> {
 
     Optional<RequestModel> findById (int id);
+
+    Page<RequestModel> findAllByStatus(RequestStatus status, Pageable pageable);
+
+    Page<RequestModel> findAll(Pageable pageable);
+
 }

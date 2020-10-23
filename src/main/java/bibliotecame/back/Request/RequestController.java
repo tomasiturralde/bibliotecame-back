@@ -6,10 +6,7 @@ import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -49,4 +46,36 @@ public class RequestController {
 
         return new ResponseEntity(requestService.saveRequest(request), HttpStatus.OK);
     }
+
+    @GetMapping()
+    public ResponseEntity getAll(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
+    ){
+        if(size==0) size=10;
+        if(!checkAdmin()) return unauthorizedActionError();
+        return ResponseEntity.ok(requestService.findAll(page,size));
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity getAllPending(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
+    ){
+        if(size==0) size=10;
+        if(!checkAdmin()) return unauthorizedActionError();
+        return ResponseEntity.ok(requestService.findAllByStatus(page,size,RequestStatus.PENDING));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity getRequest(@PathVariable int id){
+        if(!checkAdmin()) return unauthorizedActionError();
+        try{
+            RequestModel requestModel = requestService.findById(id);
+            return ResponseEntity.ok(requestModel);
+        }catch (RuntimeException e){
+            return new ResponseEntity(new ErrorMessage("¡La solicitud requerida no existe!"),HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }
