@@ -4,6 +4,8 @@ import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.Email.Email;
+import bibliotecame.back.Email.EmailSender;
 import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Extension.ExtensionService;
 import bibliotecame.back.User.UserModel;
@@ -16,9 +18,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.internet.InternetAddress;
 import javax.validation.Valid;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -133,6 +138,10 @@ public class LoanController {
     @PutMapping("/{id}/withdraw")
     public ResponseEntity setWithdrawDate(@PathVariable Integer id){
         if(!getLogged().isAdmin()) return unauthorizedActionError();
+        return setWithdrawalPostAdminCheck(id);
+    }
+
+    public ResponseEntity setWithdrawalPostAdminCheck(Integer id){
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
@@ -148,6 +157,10 @@ public class LoanController {
     @PutMapping("/{id}/return")
     public ResponseEntity setReturnDate(@PathVariable Integer id){
         if(!getLogged().isAdmin()) return unauthorizedActionError();
+        return setReturnPostAdminCheck(id);
+    }
+
+    public ResponseEntity setReturnPostAdminCheck(Integer id){
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
@@ -165,6 +178,8 @@ public class LoanController {
         }
         catch (NotFoundException n) { return unexistingLoanError(); }
     }
+
+
 
     private ResponseEntity unauthorizedActionError(){
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
@@ -200,4 +215,49 @@ public class LoanController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping("/delayed/check")
+    public ResponseEntity checkDelayedLoans(){
+
+        if(!getLogged().isAdmin()) return unauthorizedActionError();
+
+        return new ResponseEntity(loanService.getDelayedLoans().size()>0,HttpStatus.OK);
+    }
+
+    @GetMapping("/delayed/notify")
+    public ResponseEntity notifyDelayedLoans(){
+
+        if(!getLogged().isAdmin()) return unauthorizedActionError();
+        EmailSender sender = new EmailSender();
+
+        List<DelayedLoanDetails> delayedLoans = new ArrayList<>();
+        loanService.getDelayedLoans().forEach(loanModel -> delayedLoans.add(loanService.turnLoanModalToDelayedDetails(loanModel)));
+
+        List<String> deliveredEmails = new ArrayList<>();
+        DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<Email> emailsToSend = new ArrayList<>();
+
+        delayedLoans.forEach(lm -> {
+            if(!deliveredEmails.contains(lm.getUserEmail())) {
+                String body = "Estimado " + userService.findUserByEmail(lm.getUserEmail()).getFirstName() + ": <br>" +
+                        "Le recordamos que actualmente tiene los siguientes prestamos ATRASADOS: <ul>";
+                List<DelayedLoanDetails> userLoans = delayedLoans.stream().filter(loan -> loan.getUserEmail().equals(lm.getUserEmail())).collect(Collectors.toList());
+                for (DelayedLoanDetails loan : userLoans) {
+                    body += "<br><li><strong>Libro:</strong> <i>\""+loan.getBookTitle()+"\"</i></li>" +
+                            "<li><strong>Fecha de Retiro:</strong> "+loan.getWithdrawDate().format(formatters)+"</li>"+
+                            "<li><strong>Fecha de Vencimiento:</strong> "+loan.getReturnDate().format(formatters)+"</li>";
+                }
+                body += "</ul><br>Atte, Administración Bibliotecame.";
+                try {
+                    emailsToSend.add(new Email(new InternetAddress(lm.getUserEmail(),lm.getUserName()),"Prestamos atrasados",body));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                deliveredEmails.add(lm.getUserEmail());
+            }
+        });
+
+        emailsToSend.forEach(sender::notifyWithGmail);
+        //The responseEntity holds how many mails it sent in case notification/validation is needed in the future.
+        return new ResponseEntity(emailsToSend.size(),HttpStatus.OK);
+    }
 }

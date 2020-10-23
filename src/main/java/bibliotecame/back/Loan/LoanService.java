@@ -86,6 +86,11 @@ public class LoanService {
         return withStatus? setLoanDisplayStatus(modal, display) : display;
     }
 
+    public DelayedLoanDetails turnLoanModalToDelayedDetails(LoanModel modal){
+        BookModel book = bookService.findBookByCopy(modal.getCopy());
+        return new DelayedLoanDetails(modal,userService.getUserFromLoan(modal),book);
+    }
+
     private Integer getReviewByBook(Integer bookId){
         List<ReviewModel> userReviews = reviewService.findAllByUserModel(userService.findLogged());
         List<ReviewModel> bookReviews = bookService.findBookById(bookId).getReviews();
@@ -129,5 +134,10 @@ public class LoanService {
             copyService.saveCopy(loan.getCopy());
             loanRepository.delete(loan);
         }
+    }
+
+    public List<LoanModel> getDelayedLoans(){
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate()!=null && loan.getReturnDate()==null && loan.getExpirationDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
     }
 }

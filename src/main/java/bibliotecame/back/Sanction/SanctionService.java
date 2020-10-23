@@ -2,7 +2,12 @@ package bibliotecame.back.Sanction;
 
 import bibliotecame.back.User.UserModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 public class SanctionService {
@@ -24,5 +29,10 @@ public class SanctionService {
 
     public boolean userIsSanctioned(UserModel userModel){
         return this.sanctionRepository.findByUser(userModel).isPresent();
+    }
+
+    public Page<SanctionModel> getSanctionList(int page, int size, String search){
+        Pageable pageable = PageRequest.of(page, size);
+        return sanctionRepository.findAllByUserOrReasonAndActive(pageable, search.toLowerCase(), LocalDate.now());
     }
 }

@@ -4,14 +4,14 @@ import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.awt.print.PageFormat;
+import java.awt.print.Pageable;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -54,6 +54,34 @@ public class SanctionController {
         SanctionModel sanction = new SanctionModel(sanctionForm.getReason(), LocalDate.now(), sanctionForm.getEndDate(), user);
 
         return ResponseEntity.ok(this.sanctionService.saveSanction(sanction));
+    }
+
+    @GetMapping("/activeList")
+    public ResponseEntity getSanctionList( @Valid @RequestParam(value = "page") int page,
+                                           @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+                                           @Valid @RequestParam(value = "search") String search){
+        if(!checkAdmin()) return unauthorizedActionError();
+
+        Page<SanctionModel> list = sanctionService.getSanctionList(page, size, search);
+
+        Page<SanctionDisplay> result = list.map(sm -> new SanctionDisplay(sm.getId(), sm.getUser().getEmail(), sm.getCreationDate(), sm.getEndDate(), sm.getReason()));
+
+        return ResponseEntity.ok(result);
+    }
+
+    @PutMapping()
+    public ResponseEntity modifySanction(@Valid @RequestBody SanctionModel sanctionModel){
+        if(!checkAdmin()) return unauthorizedActionError();
+
+        SanctionModel oldSanction = sanctionService.findSanctionById(sanctionModel.getId());
+
+        if(oldSanction.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity(new ErrorMessage("No puede modificar una sanción desactivada."),HttpStatus.BAD_REQUEST);
+        if(sanctionModel.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede terminar antes de la fecha actual!"),HttpStatus.EXPECTATION_FAILED);
+        if(sanctionModel.getEndDate().isAfter(LocalDate.now().plus(Period.ofMonths(3)))) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede durar más de 3 meses!"),HttpStatus.EXPECTATION_FAILED);
+
+        oldSanction.setEndDate(sanctionModel.getEndDate());
+
+        return ResponseEntity.ok(this.sanctionService.saveSanction(oldSanction));
     }
 
     private boolean checkAdmin(){
