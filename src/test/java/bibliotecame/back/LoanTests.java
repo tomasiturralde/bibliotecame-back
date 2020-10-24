@@ -37,6 +37,7 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -290,16 +291,24 @@ public class LoanTests {
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
 
-        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+        BookModel interBook = bookService.saveBook(new BookModel("findInFilter"+RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
 
         List<CopyModel> copies = new ArrayList<>();
         copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
+        BookModel interBook2 = bookService.saveBook(new BookModel("find"+RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
 
-        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0);
+        List<CopyModel> copies2 = new ArrayList<>();
+        copies2.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook2.setCopies(copies2);
+        bookService.updateBook(interBook2.getId(), interBook2);
+
+        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
+        LoanModel loan2 = (LoanModel)loanController.createLoan(interBook2.getId()).getBody();
+
+        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0, "");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
@@ -308,7 +317,20 @@ public class LoanTests {
         loan.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
         loanService.saveLoan(loan);
 
-        loans = loanController.getAllReturnedLoans(0,0);
+        loan2.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
+        loanService.saveLoan(loan2);
+
+        loans = loanController.getAllReturnedLoans(0,0, "2020");
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(2);
+
+        loans = loanController.getAllReturnedLoans(0,0, "find");
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(2);
+
+        loans = loanController.getAllReturnedLoans(0,0, "findinfilter");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
