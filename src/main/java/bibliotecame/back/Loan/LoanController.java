@@ -14,6 +14,7 @@ import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.mail.internet.InternetAddress;
 import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -50,24 +52,21 @@ public class LoanController {
     }
 
     @GetMapping(value = "/history")
-    public ResponseEntity<Page<LoanDisplay>> getAllReturnedLoans(
+    public ResponseEntity getAllReturnedLoans(
             @Valid @RequestParam(value = "page") int page,
-            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
-    ) {
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search") String search,
+            @Valid @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> date
+            ) {
+
         if (size == 0) size = 10;
         UserModel user = userService.findLogged();
 
-        Page<LoanDisplay> loanPage;
-        List<LoanModel> loans = userService.getReturnedLoansPage(page, size, user);
-        List<LoanDisplay> loansDisplay = new ArrayList<>();
+        if(user.isAdmin()) return unauthorizedActionError();
 
-        for (LoanModel loan : loans){
-            loansDisplay.add(loanService.turnLoanModalToDisplay(loan, Optional.empty(), false));
-        }
+        Page<LoanDisplay> loans = loanService.getReturnedLoansPage(page, size, user, date, search.toLowerCase());
 
-        loanPage = new PageImpl<>(loansDisplay);
-
-        return ResponseEntity.ok(loanPage);
+        return ResponseEntity.ok(loans);
     }
 
     @PostMapping("/{bookId}")

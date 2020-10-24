@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.Math.toIntExact;
 
@@ -139,5 +140,35 @@ public class LoanService {
     public List<LoanModel> getDelayedLoans(){
         return findAll().stream().filter(loan -> loan.getWithdrawalDate()!=null && loan.getReturnDate()==null && loan.getExpirationDate().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
+    }
+
+    public Page<LoanDisplay> getReturnedLoansPage(int page, int size, UserModel user, Optional<LocalDate> date, String search){
+        Pageable pageable = PageRequest.of(page, size);
+        List<LoanModel> returned = new ArrayList<>();
+        for(LoanModel loan : user.getLoans()){
+            if(loan.getReturnDate() != null){
+                returned.add(loan);
+            }
+        }
+        returned.sort((l0, l1) -> l1.getReturnDate().compareTo(l0.getReturnDate()));
+
+        Stream<LoanDisplay> result = returned.stream().map(l -> turnLoanModalToDisplay(l, Optional.empty(), false));
+
+        List<LoanDisplay> list;
+        if(!search.equals("")){
+            list = result.filter(l -> l.getBookTitle().toLowerCase().contains(search)).collect(Collectors.toList());
+        } else {
+            list = result.collect(Collectors.toList());
+        }
+        List<LoanDisplay> finalResult = date.map(localDate -> list.stream().filter(l -> (l.getReturnDate().isEqual(localDate) || l.getExpectedReturnDate().isEqual(localDate))).collect(Collectors.toList())).orElseGet(() -> list);
+
+
+        int start = page*size;
+        int end = Math.min((start + size), finalResult.size());
+        List<LoanDisplay> output = new ArrayList<>();
+        if (start <= end) {
+            output = finalResult.subList(start, end);
+        }
+        return new PageImpl<>(output, pageable, finalResult.size());
     }
 }
