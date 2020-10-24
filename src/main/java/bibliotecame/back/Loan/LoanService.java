@@ -142,7 +142,7 @@ public class LoanService {
                 .collect(Collectors.toList());
     }
 
-    public Page<LoanDisplay> getReturnedLoansPage(int page, int size, UserModel user, Optional<LocalDate> date, String search){
+    public Page<LoanDisplay> getReturnedLoansPage(int page, int size, UserModel user, String search){
         Pageable pageable = PageRequest.of(page, size);
         List<LoanModel> returned = new ArrayList<>();
         for(LoanModel loan : user.getLoans()){
@@ -156,19 +156,20 @@ public class LoanService {
 
         List<LoanDisplay> list;
         if(!search.equals("")){
-            list = result.filter(l -> l.getBookTitle().toLowerCase().contains(search)).collect(Collectors.toList());
+            list = result.filter(l -> l.getBookTitle().toLowerCase().contains(search) ||
+                                 l.getExpectedReturnDate().toString().contains(search) ||
+                                 l.getReturnDate().toString().contains(search)).collect(Collectors.toList());
         } else {
             list = result.collect(Collectors.toList());
         }
-        List<LoanDisplay> finalResult = date.map(localDate -> list.stream().filter(l -> (l.getReturnDate().isEqual(localDate) || l.getExpectedReturnDate().isEqual(localDate))).collect(Collectors.toList())).orElseGet(() -> list);
 
 
         int start = page*size;
-        int end = Math.min((start + size), finalResult.size());
+        int end = Math.min((start + size), list.size());
         List<LoanDisplay> output = new ArrayList<>();
         if (start <= end) {
-            output = finalResult.subList(start, end);
+            output = list.subList(start, end);
         }
-        return new PageImpl<>(output, pageable, finalResult.size());
+        return new PageImpl<>(output, pageable, list.size());
     }
 }

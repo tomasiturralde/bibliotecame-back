@@ -55,8 +55,7 @@ public class LoanController {
     public ResponseEntity getAllReturnedLoans(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-            @Valid @RequestParam(value = "search") String search,
-            @Valid @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Optional<LocalDate> date
+            @Valid @RequestParam(value = "search") String search
             ) {
 
         if (size == 0) size = 10;
@@ -64,7 +63,7 @@ public class LoanController {
 
         if(user.isAdmin()) return unauthorizedActionError();
 
-        Page<LoanDisplay> loans = loanService.getReturnedLoansPage(page, size, user, date, search.toLowerCase());
+        Page<LoanDisplay> loans = loanService.getReturnedLoansPage(page, size, user, search.toLowerCase());
 
         return ResponseEntity.ok(loans);
     }

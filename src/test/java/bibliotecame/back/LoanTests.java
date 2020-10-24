@@ -308,7 +308,7 @@ public class LoanTests {
         LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
         LoanModel loan2 = (LoanModel)loanController.createLoan(interBook2.getId()).getBody();
 
-        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0, "", Optional.empty());
+        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0, "");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
@@ -320,17 +320,17 @@ public class LoanTests {
         loan2.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
         loanService.saveLoan(loan2);
 
-        loans = loanController.getAllReturnedLoans(0,0, "", Optional.empty());
+        loans = loanController.getAllReturnedLoans(0,0, "2020");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(2);
 
-        loans = loanController.getAllReturnedLoans(0,0, "find", Optional.of(LocalDate.now().plus(Period.ofDays(1))));
+        loans = loanController.getAllReturnedLoans(0,0, "find");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(2);
 
-        loans = loanController.getAllReturnedLoans(0,0, "findinfilter", Optional.empty());
+        loans = loanController.getAllReturnedLoans(0,0, "findinfilter");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
