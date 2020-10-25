@@ -24,7 +24,7 @@ public class RequestForm {
         this.author = author;
         this.reason = reason;
         this.year = 0;
-        this.publisher = "";
+        this.publisher = null;
     }
 
     public String getTitle() {
