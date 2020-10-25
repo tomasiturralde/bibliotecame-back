@@ -312,4 +312,69 @@ public class ReviewTests {
         assertThat(((ErrorMessage)reviewController.updateReview(review.getId(),review).getBody()).getMessage()).isEqualTo("¡No puedes modificar una reseña escrita por otro alumno!");
     }
 
+    @Test
+    public void userCantDeleteReviewItDidntPost(){
+        setSecurityContext(studentUser);
+        BookModel bookModelIV = new BookModel("GioGio's Bizzarre Adventure Part IV",2003,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyIV = new CopyModel("GG4-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelIV);
+
+        copies.add(bookModelCopyIV);
+        bookModelIV.setCopies(copies);
+        bookService.saveBook(bookModelIV);
+
+        bookModelCopyIV.setBooked(true);
+        copyService.saveCopy(bookModelCopyIV);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyIV, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(savedLoanModel.getId());
+        loanController.setReturnDate(savedLoanModel.getId());
+        setSecurityContext(studentUser);
+
+        assertThat(reviewController.createReview(review,bookModelIV.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        setSecurityContext(studentUser2);
+        assertThat(((ErrorMessage)reviewController.deleteReview(review.getId()).getBody()).getMessage()).isEqualTo("Solo el alumno que realizó esta reseña puede eliminarla");
+    }
+
+    @Test
+    public void userCanDeleteReviewItDidPost(){
+        setSecurityContext(studentUser);
+        BookModel bookModelV = new BookModel("GioGio's Bizzarre Adventure Part V",2003,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyV = new CopyModel("GG5-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelV);
+
+        copies.add(bookModelCopyV);
+        bookModelV.setCopies(copies);
+        bookService.saveBook(bookModelV);
+
+        bookModelCopyV.setBooked(true);
+        copyService.saveCopy(bookModelCopyV);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyV, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        ReviewModel review = new ReviewModel("Great!",5,userService.findLogged());
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(savedLoanModel.getId());
+        loanController.setReturnDate(savedLoanModel.getId());
+
+        setSecurityContext(studentUser);
+
+        assertThat(reviewController.createReview(review,bookModelV.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(reviewController.deleteReview(review.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
 }

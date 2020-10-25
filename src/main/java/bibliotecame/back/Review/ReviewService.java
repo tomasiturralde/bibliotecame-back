@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReviewService {
@@ -25,6 +26,12 @@ public class ReviewService {
     public ReviewModel saveReview(ReviewModel reviewModel){
         if(reviewModel.getDescription()==null) reviewModel.setDescription("");
         return this.reviewRepository.save(reviewModel);
+    }
+
+    public Optional<ReviewModel> deleteReview(Integer id){
+        Optional<ReviewModel> review = this.reviewRepository.findById(id);
+        this.reviewRepository.deleteById(id);
+        return review;
     }
 
     public List<ReviewModel> findAllByUserModel(UserModel userModel){
