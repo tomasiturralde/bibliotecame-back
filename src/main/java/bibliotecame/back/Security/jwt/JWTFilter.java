@@ -10,6 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class JWTFilter extends GenericFilterBean {
@@ -25,9 +26,14 @@ public class JWTFilter extends GenericFilterBean {
             throws IOException, ServletException {
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String jwt = resolveToken(httpServletRequest);
-        if (StringUtils.hasText(jwt) && this.tokenProvider.validateToken(jwt)) {
+        if (StringUtils.hasText(jwt) && this.tokenProvider.validateToken(jwt, httpServletRequest)) {
             Authentication authentication = this.tokenProvider.getAuthentication(jwt);
             SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+        final String expired = (String) httpServletRequest.getAttribute("expired");
+        if (expired != null){
+            HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;
+            httpServletResponse.sendError(HttpServletResponse.SC_FORBIDDEN,expired);
         }
         filterChain.doFilter(servletRequest, servletResponse);
     }

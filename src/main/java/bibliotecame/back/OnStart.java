@@ -3,6 +3,8 @@ package bibliotecame.back;
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Extension.ExtensionController;
+import bibliotecame.back.Loan.LoanController;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
@@ -25,12 +27,16 @@ public class OnStart {
     private final UserController userController;
     private final UserService userService;
     private final BookController bookController;
+    private final LoanController loanController;
+    private final ExtensionController extensionController;
 
     @Autowired
-    public OnStart(UserController userController, BookController bookController, UserService userService) {
+    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ExtensionController extensionController) {
         this.userController = userController;
         this.bookController = bookController;
         this.userService = userService;
+        this.loanController = loanController;
+        this.extensionController = extensionController;
     }
 
     @EventListener
@@ -38,57 +44,101 @@ public class OnStart {
         if(RUN_ON_START) {
 
             try {
-                // users
-                if (!userService.emailExists("salvador.fortes@mail.austral.edu.ar")) {
-                    UserModel admin = new UserModel("salvador.fortes@mail.austral.edu.ar", "contraseña", "Salvador", "Fortes", "011 5555 1234");
+                if(!userService.emailExists("admin@ing.austral.edu.ar")) {
+                    UserModel admin = new UserModel("admin@ing.austral.edu.ar", "admin123", "admin", "admin", "111111111");
                     admin.setAdmin(true);
                     userService.saveUser(admin);
                 }
-                userController.createUser(new UserModel("francisca.canton@ing.austral.edu.ar", "franchu123", "Francisca", "Canton", "011 2222 3333"));
-                userController.createUser(new UserModel("esther.reyes@ing.austral.edu.ar", "123qweasd", "Esther", "Reyes", "011 3333 4444"));
-                userController.createUser(new UserModel("marc.ivanov@ing.austral.edu.ar", "iva123456", "Marc", "Ivanov", "011 4444 0987"));
-                userController.createUser(new UserModel("juanluis.llorens@ing.austral.edu.ar", "juan1234", "Juan Luis", "Lorens", "011 1234 5678"));
+                UserModel user1 = (UserModel) userController.createUser(new UserModel("francisca.canton@ing.austral.edu.ar", "franchu123", "Francisca", "Canton", "011 2222 3333")).getBody();
+                UserModel user2 = (UserModel) userController.createUser(new UserModel("esther.reyes@ing.austral.edu.ar", "123qweasd", "Esther", "Reyes", "011 3333 4444")).getBody();
+                UserModel user3 = (UserModel) userController.createUser(new UserModel("marc.ivanov@ing.austral.edu.ar", "iva123456", "Marc", "Ivanov", "011 4444 0987")).getBody();
+                UserModel user4 = (UserModel) userController.createUser(new UserModel("juanluis.llorens@ing.austral.edu.ar", "juan1234", "Juan Luis", "Lorens", "011 1234 5678")).getBody();
 
                 //libros
                 List<TagModel> tags1 = new ArrayList<>();
                 tags1.add(new TagModel("Filosofía"));
                 tags1.add(new TagModel("Metafísica"));
-                BookModel book1 = bookController.checkAndCreateBook(new BookModel("Crítica de la razón pura", 1781, "Immanuel Kant", "NoBooks", tags1)).getBody();
+                BookModel book1 = (BookModel)bookController.checkAndCreateBook(new BookModel("Crítica de la razón pura", 1781, "Immanuel Kant", "NoBooks", tags1)).getBody();
 
                 List<TagModel> tags2 = new ArrayList<>();
                 tags2.add(new TagModel("Filosofía"));
-                BookModel book2 = bookController.checkAndCreateBook(new BookModel("El mundo de Sofía", 1991, "Jostein Gaarder", "Ediciones Siruela", tags2)).getBody();
+                BookModel book2 = (BookModel)bookController.checkAndCreateBook(new BookModel("El mundo de Sofía", 1991, "Jostein Gaarder", "Ediciones Siruela", tags2)).getBody();
 
                 List<TagModel> tags3 = new ArrayList<>();
                 tags3.add(new TagModel("Historia"));
-                BookModel book3 = bookController.checkAndCreateBook(new BookModel("Sapiens: De animales a dioses", 2011, "Yuval Noah Harari", "DEBATE", tags3)).getBody();
+                BookModel book3 = (BookModel)bookController.checkAndCreateBook(new BookModel("Sapiens: De animales a dioses", 2011, "Yuval Noah Harari", "DEBATE", tags3)).getBody();
 
                 List<TagModel> tags4 = new ArrayList<>();
                 tags4.add(new TagModel("Sátira"));
-                BookModel book4 = bookController.checkAndCreateBook(new BookModel("Orgullo y prejuicio", 1813, "Jane Austen", "ALBA", tags4)).getBody();
+                BookModel book4 = (BookModel)bookController.checkAndCreateBook(new BookModel("Orgullo y prejuicio", 1813, "Jane Austen", "ALBA", tags4)).getBody();
 
                 List<TagModel> tags5 = new ArrayList<>();
                 tags5.add(new TagModel("Poesía"));
                 tags5.add(new TagModel("Novela"));
-                BookModel book5 = bookController.checkAndCreateBook(new BookModel("Ilíada", 1892, "Homero", "Fontana", tags5)).getBody();
+                BookModel book5 = (BookModel)bookController.checkAndCreateBook(new BookModel("Ilíada", 1892, "Homero", "Fontana", tags5)).getBody();
 
                 List<TagModel> tags6 = new ArrayList<>();
                 tags6.add(new TagModel("Ingeniería"));
-                BookModel book6 = bookController.checkAndCreateBook(new BookModel("Ciencia E Ingenieria De Materiales", 1995, "William Castiller", "Reverté", tags6)).getBody();
+                BookModel book6 = (BookModel)bookController.checkAndCreateBook(new BookModel("Ciencia E Ingenieria De Materiales", 1995, "William Castiller", "Reverté", tags6)).getBody();
 
-                BookModel book7 = bookController.checkAndCreateBook(new BookModel("Inteligencia Artificial - Con Aplicaciones A La Ingenia", 2010, "Pedro Ponce Cruz", "Alfaomega", tags6)).getBody();
+                List<TagModel> tags7 = new ArrayList<>();
+                tags7.add(new TagModel("Ingeniería"));
+                BookModel book7 = (BookModel)bookController.checkAndCreateBook(new BookModel("Inteligencia Artificial - Con Aplicaciones A La Ingenia", 2010, "Pedro Ponce Cruz", "Alfaomega", tags7)).getBody();
 
                 List<TagModel> tags8 = new ArrayList<>();
                 tags8.add(new TagModel("Política"));
-                BookModel book8 = bookController.checkAndCreateBook(new BookModel("Como Mueren Las Democracias", 2010, "Steven Levinsky", "Ariel", tags8)).getBody();
+                BookModel book8 = (BookModel)bookController.checkAndCreateBook(new BookModel("Como Mueren Las Democracias", 2010, "Steven Levinsky", "Ariel", tags8)).getBody();
 
                 List<TagModel> tags9 = new ArrayList<>();
                 tags9.add(new TagModel("Psicologia"));
-                BookModel book9 = bookController.checkAndCreateBook(new BookModel("Psicologia Para Mentes Inquietas", 2016, "Marcus Weeks", "DK Publishing", tags9)).getBody();
+                BookModel book9 = (BookModel)bookController.checkAndCreateBook(new BookModel("Psicologia Para Mentes Inquietas", 2016, "Marcus Weeks", "DK Publishing", tags9)).getBody();
 
                 List<TagModel> tags10 = new ArrayList<>();
                 tags10.add(new TagModel("Ciencia"));
-                BookModel book10 = bookController.checkAndCreateBook(new BookModel("Breve historia del tiempo", 1988, "Stephen Hawking", "Bantam Books", tags10)).getBody();
+                BookModel book10 = (BookModel)bookController.checkAndCreateBook(new BookModel("Breve historia del tiempo", 1988, "Stephen Hawking", "Bantam Books", tags10)).getBody();
+
+                //tanda 2 de libros
+                List<TagModel> tags11 = new ArrayList<>();
+                tags11.add(new TagModel("Ingeniería"));
+                tags11.add(new TagModel("Matemática"));
+                BookModel book11 = (BookModel)bookController.checkAndCreateBook(new BookModel("Análisis Matemático 1", 2006, "García Venturini", "Ediciones Cooperativas", tags11)).getBody();
+
+                List<TagModel> tags12 = new ArrayList<>();
+                tags12.add(new TagModel("Ingeniería"));
+                tags12.add(new TagModel("Estadística"));
+                BookModel book12 = (BookModel)bookController.checkAndCreateBook(new BookModel("Probabilidad Y Estadistica Para Ingenieria Ciencias", 1999, "WALPOLE", "Pearson", tags12)).getBody();
+
+                List<TagModel> tags13 = new ArrayList<>();
+                tags13.add(new TagModel("Historia"));
+                BookModel book13 = (BookModel)bookController.checkAndCreateBook(new BookModel("Manuel Belgrano", 2016, "Felipe Pigna", "Ariel", tags13)).getBody();
+
+                List<TagModel> tags14 = new ArrayList<>();
+                tags14.add(new TagModel("Historia"));
+                BookModel book14 = (BookModel)bookController.checkAndCreateBook(new BookModel("Guerra y paz", 1864, "León Tolstói", "Ediciones Siruela", tags14)).getBody();
+
+                List<TagModel> tags15 = new ArrayList<>();
+                tags15.add(new TagModel("Historia"));
+                BookModel book15 = (BookModel)bookController.checkAndCreateBook(new BookModel("Homo deus", 2015, "Yuval Noah Harari", "Harvill Secker", tags15)).getBody();
+
+                List<TagModel> tags16 = new ArrayList<>();
+                tags16.add(new TagModel("Política"));
+                BookModel book16 = (BookModel)bookController.checkAndCreateBook(new BookModel("Politica Moral", 1995, "George Lakoff", "CAPITAN SWING LIBROS", tags16)).getBody();
+
+                List<TagModel> tags17 = new ArrayList<>();
+                tags17.add(new TagModel("Tecnología"));
+                BookModel book17 = (BookModel)bookController.checkAndCreateBook(new BookModel("El Orden Del Tiempo", 2017, "Carlo Rovelli", "Anagrama", tags17)).getBody();
+
+                List<TagModel> tags18 = new ArrayList<>();
+                tags18.add(new TagModel("Tecnología"));
+                BookModel book18 = (BookModel)bookController.checkAndCreateBook(new BookModel("El Fetiche De La Tecnologia", 2015, "Henrique Novaes", "Continente", tags18)).getBody();
+
+                List<TagModel> tags19 = new ArrayList<>();
+                tags19.add(new TagModel("Derecho"));
+                BookModel book19 = (BookModel)bookController.checkAndCreateBook(new BookModel("Codigo De Las Mentes Extraordinarias", 2016, "Vishen Lakhiani", "EDAF", tags19)).getBody();
+
+                List<TagModel> tags20 = new ArrayList<>();
+                tags20.add(new TagModel("Derecho"));
+                BookModel book20 = (BookModel)bookController.checkAndCreateBook(new BookModel("Lineamientos De Derecho Penal", 2019, "Raul Zaffaroni", "Ediar", tags20)).getBody();
 
                 //ejemplares
                 List<CopyModel> copies1 = new ArrayList<>();
@@ -160,6 +210,78 @@ public class OnStart {
                 copies10.add(new CopyModel("64ZVJA"));
                 Objects.requireNonNull(book10).setCopies(copies10);
                 bookController.checkAndUpdateBook(book10.getId(), book10);
+
+                //loans
+                loanController.checkAndCreateLoan(user1, book1);
+                loanController.checkAndCreateLoan(user2, book4);
+                loanController.checkAndCreateLoan(user3, book7);
+                loanController.checkAndCreateLoan(user4, book10);
+                loanController.checkAndCreateLoan(user1, book2);
+                loanController.checkAndCreateLoan(user2, book5);
+                loanController.checkAndCreateLoan(user3, book9);
+                loanController.checkAndCreateLoan(user4, book3);
+
+                //tanda 2 de ejemplares
+                List<CopyModel> copies11 = new ArrayList<>();
+                copies11.add(new CopyModel("C3DF9M"));
+                Objects.requireNonNull(book11).setCopies(copies11);
+                bookController.checkAndUpdateBook(book11.getId(), book11);
+
+                List<CopyModel> copies12 = new ArrayList<>();
+                copies12.add(new CopyModel("PP737J"));
+                Objects.requireNonNull(book12).setCopies(copies12);
+                bookController.checkAndUpdateBook(book12.getId(), book12);
+
+                List<CopyModel> copies13 = new ArrayList<>();
+                copies13.add(new CopyModel("X50F1T"));
+                Objects.requireNonNull(book13).setCopies(copies13);
+                bookController.checkAndUpdateBook(book13.getId(), book13);
+
+                List<CopyModel> copies14 = new ArrayList<>();
+                copies14.add(new CopyModel("TFA09O"));
+                Objects.requireNonNull(book14).setCopies(copies14);
+                bookController.checkAndUpdateBook(book14.getId(), book14);
+
+                List<CopyModel> copies15 = new ArrayList<>();
+                copies15.add(new CopyModel("ZV3XJN"));
+                Objects.requireNonNull(book15).setCopies(copies15);
+                bookController.checkAndUpdateBook(book15.getId(), book15);
+
+                List<CopyModel> copies16 = new ArrayList<>();
+                copies16.add(new CopyModel("7W3U2W"));
+                Objects.requireNonNull(book16).setCopies(copies16);
+                bookController.checkAndUpdateBook(book16.getId(), book16);
+
+                List<CopyModel> copies17 = new ArrayList<>();
+                copies17.add(new CopyModel("EWMGOZ"));
+                Objects.requireNonNull(book17).setCopies(copies17);
+                bookController.checkAndUpdateBook(book17.getId(), book17);
+
+                List<CopyModel> copies18 = new ArrayList<>();
+                copies18.add(new CopyModel("J670C8"));
+                Objects.requireNonNull(book18).setCopies(copies18);
+                bookController.checkAndUpdateBook(book18.getId(), book18);
+
+                List<CopyModel> copies19 = new ArrayList<>();
+                copies19.add(new CopyModel("TH4NK7"));
+                Objects.requireNonNull(book19).setCopies(copies19);
+                bookController.checkAndUpdateBook(book19.getId(), book19);
+
+                List<CopyModel> copies20 = new ArrayList<>();
+                copies20.add(new CopyModel("P9PFUL"));
+                Objects.requireNonNull(book20).setCopies(copies20);
+                bookController.checkAndUpdateBook(book20.getId(), book20);
+
+
+                //loans
+                loanController.checkAndCreateLoan(user1, book11);
+                loanController.checkAndCreateLoan(user2, book14);
+                loanController.checkAndCreateLoan(user3, book17);
+                loanController.checkAndCreateLoan(user4, book20);
+                loanController.checkAndCreateLoan(user1, book12);
+                loanController.checkAndCreateLoan(user2, book15);
+                loanController.checkAndCreateLoan(user3, book19);
+                loanController.checkAndCreateLoan(user4, book13);
 
 
             } catch (Exception ignored) {

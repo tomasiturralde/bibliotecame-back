@@ -1,9 +1,6 @@
 package bibliotecame.back;
 
-import bibliotecame.back.Book.BookController;
-import bibliotecame.back.Book.BookModel;
-import bibliotecame.back.Book.BookRepository;
-import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Book.*;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
@@ -20,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -75,7 +73,7 @@ public class BookTests {
         copyService = new CopyService(copyRepository);
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, bookService);
         bookController = new BookController(bookService, tagService, copyService, userService);
 
         authentication = Mockito.mock(Authentication.class);
@@ -261,6 +259,9 @@ public class BookTests {
         List<GrantedAuthority> auths = new ArrayList<>();
 
         User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+
 
         Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
@@ -537,5 +538,130 @@ public class BookTests {
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertFalse(Objects.requireNonNull(responseEntity.getBody()).getCopies().get(0).getActive());
+    }
+
+    @Test
+    public void testFilterPagedAdminAndNonAdmin() {
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        BookModel book = new BookModel("LaSeñoraDeLasCopiasContraataca",2020,"J. R. R. Testien","La comarca del testeo");
+        bookService.saveBook(book);
+
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"LaSeñora");
+        assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(1);
+        book.setActive(false);
+        bookService.saveBook(book);
+        responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"LaSeñora");
+        assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(1);
+        admin.setAdmin(false);
+        userRepository.save(admin);
+        responseEntity = bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"LaSeñora");
+        assertThat(responseEntity.getBody().getTotalElements()).isEqualTo(0);
+    }
+
+    @Test
+    public void testAdvancedSearch() {
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        BookModel book = new BookModel("libroAAA",2020,"J. R. R. Testien","La comarca del testeo");
+        bookService.saveBook(book);
+        BookModel book2 = new BookModel("libroBBB",2019,"J. R. R. Pepe","La comarca del testing");
+        bookService.saveBook(book2);
+        BookModel book3 = new BookModel("libroCCC",1980,"J. R. R. Pepe","La comarca del testeo");
+        bookService.saveBook(book3);
+        BookModel book4 = new BookModel("libroDDD",1920,"J. R. R. Testien","La comarca del testing");
+        bookService.saveBook(book4);
+
+        testAdvancedByYear();
+        testAdvancedByAuthor();
+        testAdvancedMixingParameters();
+
+
+        tagService.saveTag(new TagModel("TagTesteada"));
+        List<TagModel> tags = new ArrayList<>();
+        tags.add(tagService.findTagByName("TagTesteada"));
+        book3.setTags(tags);
+        bookService.saveBook(book3);
+
+        testAdvancedWithTags();
+    }
+
+    private void testAdvancedByYear(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setYear("19");
+        searchForm.setTitle("libro");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(3);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroBBB");
+        assertThat(responseEntity.getBody().getContent().get(2).getTitle()).isEqualTo("libroDDD");
+    }
+
+    private void testAdvancedByAuthor(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setAuthor("Pepe");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(2);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroBBB");
+        assertThat(responseEntity.getBody().getContent().get(1).getTitle()).isEqualTo("libroCCC");
+    }
+
+    private void testAdvancedMixingParameters(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setAuthor("Pepe");
+        searchForm.setPublisher("Testeo");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(1);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroCCC");
+    }
+
+    private void testAdvancedWithTags(){
+        BookSearchForm searchForm = new BookSearchForm();
+        searchForm.setTitle("libroCCC");
+        ResponseEntity<Page<BookModel>> responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().get(0).getTags().get(0).getName()).isEqualTo("TagTesteada");
+        searchForm.setTitle("");
+        List<String> tags = new ArrayList<>();
+        tags.add("TagTesteada");
+        searchForm.setTags(tags);
+        responseEntity = bookController.advancedSearch(0,10,searchForm);
+        assertThat(responseEntity.getBody().getContent().size()).isEqualTo(1);
+        assertThat(responseEntity.getBody().getContent().get(0).getTitle()).isEqualTo("libroCCC");
+    }
+
+    @Test
+    public void testUpdatingABookToTurnItIntoAnotherExistingBook(){
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        BookModel book1 = new BookModel("LibroQueVaASerClonado",2020,"Clon","Clonadores de libros");
+        bookService.saveBook(book1);
+        BookModel book2 = new BookModel("LibroQueVaAVolverseElOtro",2020,"Alguien poco original","Ladrones de ideas");
+        bookService.saveBook(book2);
+
+        book2 = bookService.findByAttributeCombination(book2.getTitle(),book2.getAuthor(),book2.getPublisher(),book2.getYear());
+        //Le colocamos los atributos del book1, si este nuevo book2 fuera guardado, tendríamos "dos veces" al book1 en la db.
+        book2.setAuthor(book1.getAuthor());
+        book2.setPublisher(book1.getPublisher());
+        book2.setYear(book1.getYear());
+        book2.setTitle(book1.getTitle());
+        assertThat(((ErrorMessage)bookController.updateBook(book2.getId(),book2).getBody()).getMessage()).isEqualTo("¡Ya existe un libro con esos datos en el sistema!");
+
     }
 }

@@ -1,6 +1,7 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Review.ReviewModel;
 import bibliotecame.back.Tag.TagModel;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -35,8 +36,12 @@ public class BookModel {
 
     @OneToMany(cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.FALSE)
-
     private List<CopyModel> copies;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private List<ReviewModel> reviews;
+
 
     @Column
     private boolean active;
@@ -53,6 +58,7 @@ public class BookModel {
         tags = new ArrayList<>();
         this.active= true;
         copies = new ArrayList<>();
+        reviews = new ArrayList<>();
     }
 
     public BookModel(String title, int year, String author, String publisher, List<TagModel> tags) {
@@ -63,6 +69,7 @@ public class BookModel {
         this.tags = tags;
         this.active= true;
         copies = new ArrayList<>();
+        reviews = new ArrayList<>();
     }
 
     public int getId() {
@@ -123,5 +130,13 @@ public class BookModel {
 
     public void setCopies(List<CopyModel> copies) {
         this.copies = copies;
+    }
+
+    public List<ReviewModel> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<ReviewModel> reviews) {
+        this.reviews = reviews;
     }
 }

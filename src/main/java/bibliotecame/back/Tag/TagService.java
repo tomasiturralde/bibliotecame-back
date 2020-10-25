@@ -1,5 +1,6 @@
 package bibliotecame.back.Tag;
 
+import bibliotecame.back.Review.ReviewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,17 @@ public class TagService {
 
     public Optional<TagModel> exists(String name){
         return this.tagRepository.findByName(name);
+    }
+
+    public boolean isPresent(String name){
+        return this.tagRepository.findByName(name).isPresent();
+    }
+
+    public List<TagModel> findAllByNameWildcard(String name){
+        Iterable<TagModel> tags = this.tagRepository.findByNameWildcard(name);
+        List<TagModel> actualList = new ArrayList<>();
+        tags.iterator().forEachRemaining(actualList::add);
+        return actualList;
     }
 
     public List<TagModel> validate(List<TagModel> tags) {
