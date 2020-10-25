@@ -31,6 +31,10 @@ public class RequestController {
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"), HttpStatus.UNAUTHORIZED);
     }
 
+    private ResponseEntity unexistingRequestError(){
+        return new ResponseEntity(new ErrorMessage("¡La solicitud pedida no existe!"),HttpStatus.BAD_REQUEST);
+    }
+
     private UserModel findLogged(){
         return userService.findLogged();
     }
@@ -49,6 +53,32 @@ public class RequestController {
         request.setStatus(RequestStatus.PENDING);
 
         return new ResponseEntity(requestService.saveRequest(request), HttpStatus.OK);
+    }
+
+    @PutMapping("/approve/{id}")
+    public ResponseEntity approveRequest(@PathVariable int id){
+        if(!checkAdmin()) return unauthorizedActionError();
+        try{
+            RequestModel requestModel = requestService.findById(id);
+            if(requestModel.getStatus().getId()!=0) return new ResponseEntity(new ErrorMessage("¡Esta solicitud ya fué evaluada!"),HttpStatus.BAD_REQUEST);
+            requestModel.setStatus(RequestStatus.APPROVED);
+            return new ResponseEntity(requestService.saveRequest(requestModel),HttpStatus.OK);
+        } catch (RuntimeException e){
+            return unexistingRequestError();
+        }
+    }
+
+    @PutMapping("/reject/{id}")
+    public ResponseEntity rejectRequest(@PathVariable int id){
+        if(!checkAdmin()) return unauthorizedActionError();
+        try{
+            RequestModel requestModel = requestService.findById(id);
+            if(requestModel.getStatus().getId()!=0) return new ResponseEntity(new ErrorMessage("¡Esta solicitud ya fué evaluada!"),HttpStatus.BAD_REQUEST);
+            requestModel.setStatus(RequestStatus.REJECTED);
+            return new ResponseEntity(requestService.saveRequest(requestModel),HttpStatus.OK);
+        } catch (RuntimeException e){
+            return unexistingRequestError();
+        }
     }
 
     @GetMapping()

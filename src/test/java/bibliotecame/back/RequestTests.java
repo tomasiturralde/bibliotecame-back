@@ -117,4 +117,19 @@ public class RequestTests {
         assertThat(((Page<RequestModel>)requestController.getAll(0,10).getBody()).getTotalElements()).isGreaterThan(0);
     }
 
+    @Test
+    public void adminCanApproveAndRejectARequestThatIsPending(){
+        setSecurityContext(nonAdmin);
+        RequestForm form = new RequestForm("Head-First design patterns",2004,"Eric Freeman & Elisabeth Robson","O'Reilly","Es un muy buen libro para ampliar conocimientos sobre patrones de diseño.");
+        ResponseEntity responseEntity1 = requestController.createRequest(form);
+        form.setTitle("Head-First tail recursion");
+        ResponseEntity responseEntity2 = requestController.createRequest(form);
+        setSecurityContext(admin);
+        assertThat(requestController.approveRequest(((RequestModel)responseEntity1.getBody()).getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(requestController.rejectRequest(((RequestModel)responseEntity2.getBody()).getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(requestController.approveRequest(((RequestModel)responseEntity1.getBody()).getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+
+    }
+
 }
