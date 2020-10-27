@@ -41,6 +41,8 @@ public class VerificationModel {
         return token;
     }
 
+    public void setToken(String token) { this.token = token; }
+
     public UserModel getUserModel() {
         return userModel;
     }

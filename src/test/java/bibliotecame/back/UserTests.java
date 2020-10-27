@@ -335,4 +335,18 @@ public class UserTests {
         assertThat(userService.findUserById(user.getId()).isVerified()).isEqualTo(true);
     }
 
+    @Test
+    public void testUserCanResetPassword(){
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(16) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        String token = verificationService.findVerificationByUserModel(user).getToken();
+        assertThat(verificationController.verifyAccount(token).getStatusCode()).isEqualTo(HttpStatus.OK);
+        userController.forgotPassword(user.getEmail());
+        token = verificationService.findVerificationByUserModel(user).getToken();
+        user.setPassword("newpassword123");
+        verificationController.resetPassword(token,user);
+        LoginForm loginForm = new LoginForm(user.getEmail(),"newpassword123");
+        assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+    }
+
 }

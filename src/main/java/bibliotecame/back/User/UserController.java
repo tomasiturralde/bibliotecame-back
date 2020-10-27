@@ -111,4 +111,23 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(userModel,id));
     }
 
+    @PutMapping("user/forgot/{email}")
+    public ResponseEntity forgotPassword(@PathVariable String email){
+        try{
+            userService.findLogged();
+            return new ResponseEntity(new ErrorMessage("¡Para modificar su contraseña dirijase a su perfil!"),HttpStatus.BAD_REQUEST);
+        }catch (RuntimeException e){}
+        UserModel user;
+        try{
+            user = userService.findUserByEmail(email);
+            if(!user.isVerified()) return new ResponseEntity(new ErrorMessage("¡Debe verificar su dirección de correo para que podamos enviarle instrucciones!"),HttpStatus.UNAUTHORIZED);
+            VerificationModel verification = new VerificationModel(user);
+            verification.setToken(verification.getToken()+"password");
+            verificationService.savePasswordVerification(verification);
+            return ResponseEntity.ok(email);
+        }catch (RuntimeException e){
+            return new ResponseEntity(new ErrorMessage("¡El email solicitado no pertenece a ninguna cuenta!"),HttpStatus.BAD_REQUEST);
+        }
+    }
+
 }
