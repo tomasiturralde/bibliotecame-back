@@ -17,6 +17,8 @@ import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserRepository;
 import bibliotecame.back.User.UserService;
+import bibliotecame.back.Verification.VerificationController;
+import bibliotecame.back.Verification.VerificationService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -76,6 +78,11 @@ public class UserTests {
     @Autowired
     private SanctionController sanctionController;
 
+    @Autowired
+    private VerificationService verificationService;
+    @Mock
+    private VerificationController verificationController;
+
     Authentication authentication;
     SecurityContext securityContext;
 
@@ -85,10 +92,11 @@ public class UserTests {
         tagService = new TagService(tagRepository);
         bookService = new BookService(bookRepository, tagService);
         userService = new UserService(userRepository, bookService);
-        userController = new UserController(userService);
+        userController = new UserController(userService, verificationService);
         authController = new AuthController(tokenProvider,authProvider,userService, sanctionService);
         authentication = Mockito.mock(Authentication.class);
         securityContext = Mockito.mock(SecurityContext.class);
+        verificationController = new VerificationController(userService,verificationService);
     }
 
     private void setSecurityContext(UserModel user){
@@ -160,10 +168,11 @@ public class UserTests {
     //test delete user
     void testDeleteUser(){
         UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
-
+        user.setVerified(true);
+        userService.saveWithoutEncryption(user);
         assert user != null;
         setSecurityContext(user);
-
+        verificationService.deleteVerification(verificationService.findVerificationByUserModel(user));
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
         assertThat(((ErrorMessage)userController.getUserModel(user.getId()).getBody()).getMessage()).isEqualTo("¡El usuario no existe!");
@@ -284,6 +293,8 @@ public class UserTests {
     void testAuthReturnsAToken(){
         UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
         userController.createUser(user);
+        user.setVerified(true);
+        userService.saveWithoutEncryption(user);
         LoginForm loginForm = new LoginForm(user.getEmail(), "test123");
         assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
     }
@@ -306,4 +317,22 @@ public class UserTests {
         assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
 
     }
+
+    @Test
+    public void testUnverifiedUserCantLogin(){
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(16) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        LoginForm loginForm = new LoginForm(user.getEmail(),user.getPassword());
+        assertThat(((ErrorMessage)authController.authenticate(loginForm).getBody()).getMessage()).isEqualTo("¡Por favor verifique su dirección de correo para poder acceder a Bibliotecame!");
+    }
+    @Test
+    public void testUserCanVerify(){
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(16) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        String token = verificationService.findVerificationByUserModel(user).getToken();
+        assertThat(userService.findUserById(user.getId()).isVerified()).isEqualTo(false);
+        assertThat(verificationController.verifyAccount(token).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(userService.findUserById(user.getId()).isVerified()).isEqualTo(true);
+    }
+
 }

@@ -1,6 +1,8 @@
 package bibliotecame.back.User;
 
 import bibliotecame.back.ErrorMessage;
+import bibliotecame.back.Verification.VerificationModel;
+import bibliotecame.back.Verification.VerificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +14,12 @@ import javax.validation.Valid;
 public class UserController {
 
     private final UserService userService;
+    private final VerificationService verificationService;
 
     @Autowired
-    public UserController(UserService userService){
+    public UserController(UserService userService, VerificationService verificationService){
         this.userService = userService;
+        this.verificationService = verificationService;
     }
 
     @GetMapping("user/{id}")
@@ -37,8 +41,13 @@ public class UserController {
 
         if(userService.emailExists(userModel.getEmail())) return new ResponseEntity<>(new ErrorMessage("¡Usted ya está registrado!"), HttpStatus.BAD_REQUEST);
         userModel.setAdmin(false);
+        userModel.setVerified(false);
+        UserModel savedUser = userService.saveUser(userModel);
 
-        return ResponseEntity.ok(userService.saveUser(userModel));
+        VerificationModel verificationModel = new VerificationModel(userModel);
+        verificationService.saveVerification(verificationModel);
+
+        return ResponseEntity.ok(savedUser);
 
     }
 

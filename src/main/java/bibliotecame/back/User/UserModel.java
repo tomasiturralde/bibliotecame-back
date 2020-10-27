@@ -40,6 +40,9 @@ public class UserModel {
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<LoanModel> loans;
 
+    @Column
+    private boolean verified;
+
     public UserModel() {
         loans = new ArrayList<>();
     }
@@ -111,5 +114,13 @@ public class UserModel {
 
     public void setLoans(List<LoanModel> loans) {
         this.loans = loans;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
     }
 }
