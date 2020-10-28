@@ -49,7 +49,7 @@ public class VerificationService {
                 "Para continuar solo tienes que ingresar aquí: http://localhost:3000/reset/"+verification.getToken();
         body += "<br><br><i>Atentamente, la administración de Bibliotecame.</i>";
         try {
-            Email email = new Email(new InternetAddress(verification.getUserModel().getEmail()),"¡Bienvenido a Bibliotecame!",body);
+            Email email = new Email(new InternetAddress(verification.getUserModel().getEmail()),"Restauración de contraseña",body);
             sender.notifyWithGmail(email);
         } catch (AddressException e) {
         }

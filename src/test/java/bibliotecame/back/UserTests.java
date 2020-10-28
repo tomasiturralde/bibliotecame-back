@@ -17,6 +17,7 @@ import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserRepository;
 import bibliotecame.back.User.UserService;
+import bibliotecame.back.Verification.PasswordContainer;
 import bibliotecame.back.Verification.VerificationController;
 import bibliotecame.back.Verification.VerificationService;
 import org.junit.jupiter.api.BeforeAll;
@@ -343,8 +344,8 @@ public class UserTests {
         assertThat(verificationController.verifyAccount(token).getStatusCode()).isEqualTo(HttpStatus.OK);
         userController.forgotPassword(user.getEmail());
         token = verificationService.findVerificationByUserModel(user).getToken();
-        user.setPassword("newpassword123");
-        verificationController.resetPassword(token,user);
+        PasswordContainer passwordContainer = new PasswordContainer("newpassword123");
+        verificationController.resetPassword(token,passwordContainer);
         LoginForm loginForm = new LoginForm(user.getEmail(),"newpassword123");
         assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
     }

@@ -37,15 +37,14 @@ public class VerificationController {
         }
     }
     @PutMapping("/reset/{token}")
-    public ResponseEntity resetPassword(@PathVariable String token, @RequestBody UserModel userModel){
+    public ResponseEntity resetPassword(@PathVariable String token, @RequestBody PasswordContainer passwordContainer){
         try{
             VerificationModel verificationModel = verificationService.findVerificationByToken(token);
             if(verificationModel.getToken().length()<=40) return new ResponseEntity(new ErrorMessage("¡El token enviado no es un token de reinicio de contraseña valido!"),HttpStatus.BAD_REQUEST);
             UserModel user = verificationModel.getUserModel();
-            if(user.getId()!=userModel.getId()) return new ResponseEntity(new ErrorMessage("¡Los datos recibidos son erroneos!"),HttpStatus.BAD_REQUEST);
             String passwordRegex = "^(?=.*\\d)(?=.*[a-zA-Z])([a-zA-Z0-9]+){7,}$";
-            if(!userModel.getPassword().matches(passwordRegex)) return new ResponseEntity(new ErrorMessage("¡La contraseña ingresada no es valida, por favor intente con otra!"), HttpStatus.BAD_REQUEST);
-            user.setPassword(userModel.getPassword());
+            if(passwordContainer.getPassword().matches(passwordRegex)) return new ResponseEntity(new ErrorMessage("¡La contraseña ingresada no es valida, por favor intente con otra!"), HttpStatus.BAD_REQUEST);
+            user.setPassword(passwordContainer.getPassword());
             userService.saveUser(user);
             verificationService.deleteVerification(verificationModel);
             return ResponseEntity.ok(user);

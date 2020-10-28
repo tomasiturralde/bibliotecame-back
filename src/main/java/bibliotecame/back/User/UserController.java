@@ -124,7 +124,7 @@ public class UserController {
             VerificationModel verification = new VerificationModel(user);
             verification.setToken(verification.getToken()+"password");
             verificationService.savePasswordVerification(verification);
-            return ResponseEntity.ok(email);
+            return ResponseEntity.ok(user);
         }catch (RuntimeException e){
             return new ResponseEntity(new ErrorMessage("¡El email solicitado no pertenece a ninguna cuenta!"),HttpStatus.BAD_REQUEST);
         }
