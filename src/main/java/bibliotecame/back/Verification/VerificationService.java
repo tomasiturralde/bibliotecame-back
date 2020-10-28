@@ -40,6 +40,21 @@ public class VerificationService {
         return verification;
     }
 
+    public VerificationModel savePasswordVerification(VerificationModel verificationModel){
+        VerificationModel verification = this.verificationRepository.save(verificationModel);
+        EmailSender sender = new EmailSender();
+        String body = "Hola " + verification.getUserModel().getFirstName() + ",<br>";
+        body +=  "<br>Has iniciado el proceso para restaurar tu contraseña.<br><br>" +
+                "Para continuar solo tienes que ingresar aquí: http://localhost:3000/reset/"+verification.getToken();
+        body += "<br><br><i>Atentamente, la administración de Bibliotecame.</i>";
+        try {
+            Email email = new Email(new InternetAddress(verification.getUserModel().getEmail()),"Restauración de contraseña",body);
+            sender.notifyWithGmail(email);
+        } catch (AddressException e) {
+        }
+        return verification;
+    }
+
     public void deleteVerification(VerificationModel verificationModel){
         verificationRepository.delete(verificationModel);
     }
