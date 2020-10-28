@@ -111,7 +111,7 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(userModel,id));
     }
 
-    @PutMapping("user/forgot/{email}")
+    @PostMapping("user/forgot/{email}")
     public ResponseEntity forgotPassword(@PathVariable String email){
         try{
             userService.findLogged();
