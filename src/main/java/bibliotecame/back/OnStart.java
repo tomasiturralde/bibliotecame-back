@@ -17,6 +17,7 @@ import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
+import bibliotecame.back.Verification.VerificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -44,9 +45,10 @@ public class OnStart {
     private final LoanService loanService;
     private final CopyService copyService;
     private final RequestService requestService;
+    private final VerificationService verificationService;
 
     @Autowired
-    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ReviewController reviewController, LoanService loanService, CopyService copyService, RequestService requestService) {
+    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ReviewController reviewController, LoanService loanService, CopyService copyService, RequestService requestService, VerificationService verificationService) {
         this.userController = userController;
         this.bookController = bookController;
         this.userService = userService;
@@ -55,6 +57,7 @@ public class OnStart {
         this.loanService = loanService;
         this.copyService = copyService;
         this.requestService = requestService;
+        this.verificationService = verificationService;
     }
 
     @EventListener
@@ -65,12 +68,28 @@ public class OnStart {
                 if(!userService.emailExists("admin@ing.austral.edu.ar")) {
                     UserModel admin = new UserModel("admin@ing.austral.edu.ar", "admin123", "Liliana", "admin", "111111111");
                     admin.setAdmin(true);
+                    admin.setVerified(true);
                     userService.saveUser(admin);
                 }
                 UserModel user1 = (UserModel) userController.createUser(new UserModel("francisca.canton@ing.austral.edu.ar", "franchu123", "Francisca", "Canton", "011 2222 3333")).getBody();
                 UserModel user2 = (UserModel) userController.createUser(new UserModel("esther.reyes@ing.austral.edu.ar", "123qweasd", "Esther", "Reyes", "011 3333 4444")).getBody();
                 UserModel user3 = (UserModel) userController.createUser(new UserModel("marc.ivanov@ing.austral.edu.ar", "iva123456", "Marc", "Ivanov", "011 4444 0987")).getBody();
                 UserModel user4 = (UserModel) userController.createUser(new UserModel("juanluis.llorens@ing.austral.edu.ar", "juan1234", "Juan Luis", "Lorens", "011 1234 5678")).getBody();
+
+                user1.setVerified(true);
+                user2.setVerified(true);
+                user3.setVerified(true);
+                user4.setVerified(true);
+                userService.saveWithoutEncryption(user1);
+                userService.saveWithoutEncryption(user2);
+                userService.saveWithoutEncryption(user3);
+                userService.saveWithoutEncryption(user4);
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(user1));
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(user2));
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(user3));
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(user4));
+
+
 
                 //libros
                 List<TagModel> tags1 = new ArrayList<>();
@@ -411,6 +430,22 @@ public class OnStart {
                 UserModel userEx3 = (UserModel) userController.createUser(new UserModel("marianne.vonedmund@ing.austral.edu.ar", "myscrest77", "Marianne", "Von Edmund", "011 4124 0987")).getBody();
                 UserModel userEx4 = (UserModel) userController.createUser(new UserModel("leonie.pinelli@ing.austral.edu.ar", "jeralt1000", "Leonie", "Pinelli", "011 1234 5678")).getBody();
                 UserModel userEx5 = (UserModel) userController.createUser(new UserModel("holst.goneril@ing.austral.edu.ar", "singlehandedly10", "Holst", "Goneril", "011 2112 3356")).getBody();
+
+                userEx1.setVerified(true);
+                userEx2.setVerified(true);
+                userEx3.setVerified(true);
+                userEx4.setVerified(true);
+                userEx5.setVerified(true);
+                userService.saveWithoutEncryption(userEx1);
+                userService.saveWithoutEncryption(userEx2);
+                userService.saveWithoutEncryption(userEx3);
+                userService.saveWithoutEncryption(userEx4);
+                userService.saveWithoutEncryption(userEx5);
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(userEx1));
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(userEx2));
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(userEx3));
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(userEx4));
+                verificationService.deleteVerification(verificationService.findVerificationByUserModel(userEx5));
 
                 //Books
                 List<TagModel> tagsEx1 = new ArrayList<>();
