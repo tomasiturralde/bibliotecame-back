@@ -43,7 +43,7 @@ public class VerificationController {
             if(verificationModel.getToken().length()<=40) return new ResponseEntity(new ErrorMessage("¡El token enviado no es un token de reinicio de contraseña valido!"),HttpStatus.BAD_REQUEST);
             UserModel user = verificationModel.getUserModel();
             String passwordRegex = "^(?=.*\\d)(?=.*[a-zA-Z])([a-zA-Z0-9]+){7,}$";
-            if(passwordContainer.getPassword().matches(passwordRegex)) return new ResponseEntity(new ErrorMessage("¡La contraseña ingresada no es valida, por favor intente con otra!"), HttpStatus.BAD_REQUEST);
+            if(!passwordContainer.getPassword().matches(passwordRegex)) return new ResponseEntity(new ErrorMessage("¡La contraseña ingresada no es valida, por favor intente con otra!"), HttpStatus.BAD_REQUEST);
             user.setPassword(passwordContainer.getPassword());
             userService.saveUser(user);
             verificationService.deleteVerification(verificationModel);
