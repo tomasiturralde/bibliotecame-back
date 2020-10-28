@@ -122,7 +122,6 @@ public class UserController {
             user = userService.findUserByEmail(email);
             if(!user.isVerified()) return new ResponseEntity(new ErrorMessage("¡Debe verificar su dirección de correo para que podamos enviarle instrucciones!"),HttpStatus.UNAUTHORIZED);
             VerificationModel verification = new VerificationModel(user);
-            verification.setToken(verification.getToken()+"password");
             verificationService.savePasswordVerification(verification);
             return ResponseEntity.ok(user);
         }catch (RuntimeException e){

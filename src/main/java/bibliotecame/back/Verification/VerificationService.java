@@ -41,7 +41,6 @@ public class VerificationService {
     }
 
     public VerificationModel savePasswordVerification(VerificationModel verificationModel){
-        if(verificationModel.getToken().length()<=40) throw new RuntimeException("¡Ese no es un token de recuperación de contraseña!");
         VerificationModel verification = this.verificationRepository.save(verificationModel);
         EmailSender sender = new EmailSender();
         String body = "Hola " + verification.getUserModel().getFirstName() + ",<br>";
