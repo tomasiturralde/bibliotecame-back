@@ -8,6 +8,8 @@ public class PasswordContainer {
         this.password = password;
     }
 
+    public PasswordContainer(){ }
+
     public String getPassword() {
         return password;
     }
