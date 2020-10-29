@@ -132,4 +132,14 @@ public class RequestTests {
 
     }
 
+    @Test
+    public void userCanGetRequests(){
+        setSecurityContext(nonAdmin);
+        RequestForm form = new RequestForm("Head-First design patterns",2004,"Eric Freeman & Elisabeth Robson","O'Reilly","Es un muy buen libro para ampliar conocimientos sobre patrones de diseño.");
+        ResponseEntity responseEntity = requestController.createRequest(form);
+
+        int id = ((RequestModel) responseEntity.getBody()).getId();
+        assertThat(((Page<RequestDisplay>)requestController.getAllByUser(0,10).getBody()).getContent().stream()).anyMatch(requestModel -> requestModel.getId() == id);
+    }
+
 }

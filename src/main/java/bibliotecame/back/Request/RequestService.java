@@ -1,5 +1,6 @@
 package bibliotecame.back.Request;
 
+import bibliotecame.back.User.UserModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -48,7 +49,7 @@ public class RequestService {
         List<RequestDisplay> output = new ArrayList<>();
         if (start <= end) {
             List<RequestModel> temp = result.subList(start, end);
-            temp.stream().forEach(requestModel -> output.add(new RequestDisplay(requestModel)));
+            temp.stream().forEach(requestModel -> output.add(new RequestDisplay(requestModel, true)));
         }
         return new PageImpl<>(output, pageable, result.size());
     }
@@ -64,9 +65,24 @@ public class RequestService {
         List<RequestDisplay> output = new ArrayList<>();
         if (start <= end) {
             List<RequestModel> temp = result.subList(start, end);
-            temp.stream().forEach(requestModel -> output.add(new RequestDisplay(requestModel)));
+            temp.stream().forEach(requestModel -> output.add(new RequestDisplay(requestModel, true)));
         }
         return new PageImpl<>(output, pageable, result.size());
     }
 
+    public Page<RequestDisplay> findAllPagedByUser(int page, int size, UserModel user) {
+        Pageable pageable = PageRequest.of(page, size);
+        List<RequestModel> result = new ArrayList<>();
+        findAll().iterator().forEachRemaining(result::add);
+        result = result.stream().filter(requestModel -> requestModel.getUser().getId() == user.getId()).collect(Collectors.toList());
+        int total = result.size();
+        int start = toIntExact(pageable.getOffset());
+        int end = Math.min((start + pageable.getPageSize()), total);
+        List<RequestDisplay> output = new ArrayList<>();
+        if (start <= end) {
+            List<RequestModel> temp = result.subList(start, end);
+            temp.stream().forEach(requestModel -> output.add(new RequestDisplay(requestModel, false)));
+        }
+        return new PageImpl<>(output, pageable, result.size());
+    }
 }

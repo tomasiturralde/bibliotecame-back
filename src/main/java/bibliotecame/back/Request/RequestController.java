@@ -87,6 +87,16 @@ public class RequestController {
         return ResponseEntity.ok(requestService.findAllPaged(page,size));
     }
 
+    @GetMapping("/user")
+    public ResponseEntity getAllByUser(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
+    ){
+        if(size==0) size=10;
+        if(checkAdmin()) return unauthorizedActionError();
+        return ResponseEntity.ok(requestService.findAllPagedByUser(page,size, findLogged()));
+    }
+
     @GetMapping("/pending")
     public ResponseEntity getAllPending(
             @Valid @RequestParam(value = "page") int page,
