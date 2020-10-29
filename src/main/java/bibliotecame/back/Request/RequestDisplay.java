@@ -8,13 +8,15 @@ public class RequestDisplay {
     private String title;
     private RequestStatus status;
     private String author;
+    private int id;
 
-    public RequestDisplay(RequestModel requestModel) {
+    public RequestDisplay(RequestModel requestModel, boolean withUserEmail) {
         this.date = requestModel.getDate();
-        this.userEmail = requestModel.getUser().getEmail();
+        this.userEmail = withUserEmail ? requestModel.getUser().getEmail() : null;
         this.title = requestModel.getTitle();
         this.status = requestModel.getStatus();
         this.author = requestModel.getAuthor();
+        this.id = requestModel.getId();
     }
 
     public RequestDisplay() {
@@ -58,5 +60,9 @@ public class RequestDisplay {
 
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    public int getId() {
+        return id;
     }
 }
