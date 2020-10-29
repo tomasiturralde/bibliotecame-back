@@ -10,8 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.awt.print.PageFormat;
-import java.awt.print.Pageable;
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -91,5 +89,20 @@ public class SanctionController {
     private ResponseEntity unauthorizedActionError(){
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
+
+    @GetMapping(value = "/search")
+    public ResponseEntity<Page<SanctionDisplay>> getAllByEmailOrStartDateOrEndDate(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search") String search
+    ) {
+        search = search.toLowerCase();
+        if (size == 0) size = 10;
+        if(!checkAdmin()) {
+            return unauthorizedActionError();
+        }
+        return ResponseEntity.ok(sanctionService.findAllByEmailOrStartDateOrEndDate(page,size,search));
+    }
+
 
 }
