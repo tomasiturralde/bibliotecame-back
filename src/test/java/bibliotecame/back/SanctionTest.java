@@ -23,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
@@ -292,5 +293,23 @@ public class SanctionTest {
         sanctionToChange.setEndDate(LocalDate.now().plus(Period.ofDays(3)));
 
         assertThat(sanctionController.modifySanction(sanctionToChange).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testGetAllPagedBySearchString(){
+        UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(6)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
+        admin.setAdmin(true);
+        userService.saveUser(admin);
+        setSecurityContext(admin);
+
+        userService.saveUser(new UserModel("UserToSanctionTillDecember@mail.austral.edu.ar", "password", "Mail", "Mail", "12345678"));
+        userService.saveUser(new UserModel("UserToSanctionTillNovember21@mail.austral.edu.ar", "password", "Mail", "Mail", "12345678"));
+        userService.saveUser(new UserModel("UserToSanctionTillNovember29@mail.austral.edu.ar", "password", "Mail", "Mail", "12345678"));
+        sanctionController.createSanction(new SanctionForm("UserToSanctionTillDecember@mail.austral.edu.ar","Me caia mal",LocalDate.of(2020, Month.DECEMBER,24)));
+        sanctionController.createSanction(new SanctionForm("UserToSanctionTillNovember21@mail.austral.edu.ar","No me caia tan mal como el primero",LocalDate.of(2020, Month.NOVEMBER,21)));
+        sanctionController.createSanction(new SanctionForm("UserToSanctionTillNovember29@mail.austral.edu.ar","Me caia peor que el segundo pero no tanto como el primero",LocalDate.of(2020, Month.NOVEMBER,29)));
+
+        assertThat(sanctionController.getAllByEmailOrStartDateOrEndDate(0,2,"usertosanctiontill").getBody().getTotalPages()).isGreaterThanOrEqualTo(2);
+        assertThat(sanctionController.getAllByEmailOrStartDateOrEndDate(0,10,"2020-11").getBody().getTotalElements()).isGreaterThanOrEqualTo(2);
     }
 }
