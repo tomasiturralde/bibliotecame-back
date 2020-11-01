@@ -34,12 +34,13 @@ public class SanctionService {
     }
 
     public boolean userIsSanctioned(UserModel userModel){
-        return this.sanctionRepository.findByUser(userModel).isPresent();
+        return (this.sanctionRepository.findByUser(userModel).isPresent() && this.sanctionRepository.findByUser(userModel).get().getEndDate().isAfter(LocalDate.now()));
     }
 
-    public Page<SanctionModel> getSanctionList(int page, int size, String search){
+    public Page<SanctionDisplay> getActiveSanctionList(int page, int size){
         Pageable pageable = PageRequest.of(page, size);
-        return sanctionRepository.findAllByUserOrReasonAndActive(pageable, search.toLowerCase(), LocalDate.now());
+        Page<SanctionDisplay> result = sanctionRepository.findAllActive(pageable, LocalDate.now()).map(sm -> new SanctionDisplay(sm.getId(), sm.getUser().getEmail(), sm.getCreationDate(), sm.getEndDate(), sm.getReason()));
+        return result;
     }
 
     public Page<SanctionDisplay> findAllByEmailOrStartDateOrEndDate(int page, int size, String search){

@@ -18,10 +18,9 @@ public interface SanctionRepository extends PagingAndSortingRepository<SanctionM
 
     Optional<SanctionModel> findByUser(UserModel user);
 
-    @Query(value = "select b from SanctionModel b where" +
-            " b.endDate >= :today and " +
-            " lower(b.user.email) like %:search% order by b.endDate")
-    Page<SanctionModel> findAllByUserOrReasonAndActive(Pageable pageable, @Param("search") String title, @Param("today") LocalDate today);
+    @Query(value = "select s from SanctionModel s where" +
+            " s.endDate >= :today order by s.endDate")
+    Page<SanctionModel> findAllActive(Pageable pageable, @Param("today") LocalDate today);
 
     Iterable<SanctionModel> findAll();
 }
