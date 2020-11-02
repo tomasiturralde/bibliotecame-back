@@ -142,17 +142,9 @@ public class SanctionTest {
         userService.saveUser(new UserModel(mail, "password", "Mail", "Mail", "12345678"));
         sanctionController.createSanction(new SanctionForm(mail, "reason", LocalDate.now().plus(Period.ofDays(25))));
 
-        Page<SanctionDisplay> list = (Page<SanctionDisplay>) sanctionController.getSanctionList(0, 10, "").getBody();
+        Page<SanctionDisplay> list = (Page<SanctionDisplay>) sanctionController.getActiveSanctionsWithDateOrUserFilter(0, 10,"").getBody();
         assert list != null;
         assertThat(list.getTotalElements()).isGreaterThan(3);
-
-        Page<SanctionDisplay> list2 = (Page<SanctionDisplay>) sanctionController.getSanctionList(0, 10, "forList").getBody();
-        assert list2 != null;
-        assertThat(list2.getTotalElements()).isEqualTo(4);
-
-        Page<SanctionDisplay> list3 = (Page<SanctionDisplay>) sanctionController.getSanctionList(0, 10, "holacomoestasholacomoestas").getBody();
-        assert list3 != null;
-        assertThat(list3.getTotalElements()).isEqualTo(0);
 
     }
 
@@ -186,7 +178,7 @@ public class SanctionTest {
         userService.saveUser(NOTadmin);
         setSecurityContext(NOTadmin);
 
-        assertThat(sanctionController.getSanctionList(0, 10, "").getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+        assertThat(sanctionController.getActiveSanctionsWithDateOrUserFilter(0, 10,"").getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
 
 
     }
@@ -309,7 +301,7 @@ public class SanctionTest {
         sanctionController.createSanction(new SanctionForm("UserToSanctionTillNovember21@mail.austral.edu.ar","No me caia tan mal como el primero",LocalDate.of(2020, Month.NOVEMBER,21)));
         sanctionController.createSanction(new SanctionForm("UserToSanctionTillNovember29@mail.austral.edu.ar","Me caia peor que el segundo pero no tanto como el primero",LocalDate.of(2020, Month.NOVEMBER,29)));
 
-        assertThat(sanctionController.getAllByEmailOrStartDateOrEndDate(0,2,"usertosanctiontill").getBody().getTotalPages()).isGreaterThanOrEqualTo(2);
-        assertThat(sanctionController.getAllByEmailOrStartDateOrEndDate(0,10,"2020-11").getBody().getTotalElements()).isGreaterThanOrEqualTo(2);
+        assertThat(sanctionController.getActiveSanctionsWithDateOrUserFilter(0,2,"usertosanctiontill").getBody().getTotalPages()).isGreaterThanOrEqualTo(2);
+        assertThat(sanctionController.getActiveSanctionsWithDateOrUserFilter(0,10,"2020-11").getBody().getTotalElements()).isGreaterThanOrEqualTo(2);
     }
 }

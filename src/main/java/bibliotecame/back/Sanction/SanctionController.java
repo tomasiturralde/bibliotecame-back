@@ -54,19 +54,6 @@ public class SanctionController {
         return ResponseEntity.ok(this.sanctionService.saveSanction(sanction));
     }
 
-    @GetMapping("/activeList")
-    public ResponseEntity getSanctionList( @Valid @RequestParam(value = "page") int page,
-                                           @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-                                           @Valid @RequestParam(value = "search") String search){
-        if(!checkAdmin()) return unauthorizedActionError();
-
-        Page<SanctionModel> list = sanctionService.getSanctionList(page, size, search);
-
-        Page<SanctionDisplay> result = list.map(sm -> new SanctionDisplay(sm.getId(), sm.getUser().getEmail(), sm.getCreationDate(), sm.getEndDate(), sm.getReason()));
-
-        return ResponseEntity.ok(result);
-    }
-
     @PutMapping()
     public ResponseEntity modifySanction(@Valid @RequestBody SanctionModel sanctionModel){
         if(!checkAdmin()) return unauthorizedActionError();
@@ -90,17 +77,15 @@ public class SanctionController {
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
 
-    @GetMapping(value = "/search")
-    public ResponseEntity<Page<SanctionDisplay>> getAllByEmailOrStartDateOrEndDate(
+    @GetMapping()
+    public ResponseEntity<Page<SanctionDisplay>> getActiveSanctionsWithDateOrUserFilter(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
-            @Valid @RequestParam(value = "search") String search
+            @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search
     ) {
         search = search.toLowerCase();
         if (size == 0) size = 10;
-        if(!checkAdmin()) {
-            return unauthorizedActionError();
-        }
+        if(!checkAdmin()) return unauthorizedActionError();
         return ResponseEntity.ok(sanctionService.findAllByEmailOrStartDateOrEndDate(page,size,search));
     }
 
