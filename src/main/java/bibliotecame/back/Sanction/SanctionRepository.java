@@ -1,8 +1,6 @@
 package bibliotecame.back.Sanction;
 
 import bibliotecame.back.User.UserModel;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.Param;
@@ -20,7 +18,7 @@ public interface SanctionRepository extends PagingAndSortingRepository<SanctionM
 
     @Query(value = "select s from SanctionModel s where" +
             " s.endDate >= :today order by s.endDate")
-    Page<SanctionModel> findAllActive(Pageable pageable, @Param("today") LocalDate today);
+    Iterable<SanctionModel> findAllActive(@Param("today") LocalDate today);
 
     Iterable<SanctionModel> findAll();
 }

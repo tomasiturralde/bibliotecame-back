@@ -37,16 +37,11 @@ public class SanctionService {
         return (this.sanctionRepository.findByUser(userModel).isPresent() && this.sanctionRepository.findByUser(userModel).get().getEndDate().isAfter(LocalDate.now()));
     }
 
-    public Page<SanctionDisplay> getActiveSanctionList(int page, int size){
-        Pageable pageable = PageRequest.of(page, size);
-        Page<SanctionDisplay> result = sanctionRepository.findAllActive(pageable, LocalDate.now()).map(sm -> new SanctionDisplay(sm.getId(), sm.getUser().getEmail(), sm.getCreationDate(), sm.getEndDate(), sm.getReason()));
-        return result;
-    }
 
     public Page<SanctionDisplay> findAllByEmailOrStartDateOrEndDate(int page, int size, String search){
         Pageable pageable = PageRequest.of(page, size);
         List<SanctionModel> result = new ArrayList<>();
-        sanctionRepository.findAll().iterator().forEachRemaining(result::add);
+        sanctionRepository.findAllActive(LocalDate.now()).iterator().forEachRemaining(result::add);
         result = result.stream().filter(sM -> sM.getUser().getEmail().toLowerCase().contains(search) || sM.getCreationDate().toString().contains(search) || sM.getEndDate().toString().contains(search)).collect(Collectors.toList());
         int total = result.size();
         int start = toIntExact(pageable.getOffset());

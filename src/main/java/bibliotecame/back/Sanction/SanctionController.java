@@ -78,19 +78,15 @@ public class SanctionController {
     }
 
     @GetMapping()
-    public ResponseEntity<Page<SanctionDisplay>> getActiveOrSearch(
+    public ResponseEntity<Page<SanctionDisplay>> getActiveSanctionsWithDateOrUserFilter(
             @Valid @RequestParam(value = "page") int page,
             @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
             @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search
     ) {
         search = search.toLowerCase();
         if (size == 0) size = 10;
-        if(!checkAdmin()) {
-            return unauthorizedActionError();
-        }
-        if(search.equals("") || search.toLowerCase().equals("activas")){
-           return ResponseEntity.ok(sanctionService.getActiveSanctionList(page,size));
-        } else return ResponseEntity.ok(sanctionService.findAllByEmailOrStartDateOrEndDate(page,size,search));
+        if(!checkAdmin()) return unauthorizedActionError();
+        return ResponseEntity.ok(sanctionService.findAllByEmailOrStartDateOrEndDate(page,size,search));
     }
 
 
