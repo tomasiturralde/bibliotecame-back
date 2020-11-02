@@ -42,6 +42,7 @@ public class RequestController {
     @PostMapping()
     public ResponseEntity createRequest(@Valid @RequestBody RequestForm form){
         if(checkAdmin()) return unauthorizedActionError();
+        if(!requestService.isValid(form)) return new ResponseEntity( new ErrorMessage("¡Debe completar correctamente los campos solicitados!"),HttpStatus.BAD_REQUEST);
 
         RequestModel request = new RequestModel(form);
         request.setUser(findLogged());

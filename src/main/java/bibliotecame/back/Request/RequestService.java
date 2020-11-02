@@ -38,6 +38,11 @@ public class RequestService {
         return requestRepository.findAllByStatus(status,PageRequest.of(page, size));
     }
 
+    public boolean isValid(RequestForm form){
+        if(form.getTitle()==null || form.getAuthor()==null || form.getReason()==null) return false;
+        return !form.getTitle().isEmpty() && !form.getAuthor().isEmpty() && !form.getReason().isEmpty();
+    }
+
     public Page<RequestDisplay> findAllPaged(int page, int size){
         Pageable pageable = PageRequest.of(page, size);
         List<RequestModel> result = new ArrayList<>();
