@@ -118,6 +118,16 @@ public class RequestTests {
     }
 
     @Test
+    public void userCanGetARequest(){
+        setSecurityContext(nonAdmin);
+        RequestForm form = new RequestForm("Head-First design patterns",2004,"Eric Freeman & Elisabeth Robson","O'Reilly","Es un muy buen libro para ampliar conocimientos sobre patrones de diseño.");
+        ResponseEntity responseEntity = requestController.createRequest(form);
+
+        int id = ((RequestModel) responseEntity.getBody()).getId();
+        assertThat(((RequestModel)requestController.getRequest(id).getBody()).getTitle()).isEqualTo("Head-First design patterns");
+    }
+
+    @Test
     public void adminCanApproveAndRejectARequestThatIsPending(){
         setSecurityContext(nonAdmin);
         RequestForm form = new RequestForm("Head-First design patterns",2004,"Eric Freeman & Elisabeth Robson","O'Reilly","Es un muy buen libro para ampliar conocimientos sobre patrones de diseño.");
