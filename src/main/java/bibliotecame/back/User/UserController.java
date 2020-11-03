@@ -117,6 +117,7 @@ public class UserController {
         UserModel loggedUser;
         try {
             loggedUser = userService.findLogged();
+            if(loggedUser.getId()!=id) return new ResponseEntity(new ErrorMessage("¡No puedes modificar los datos de otro usuario!"),HttpStatus.UNAUTHORIZED);
         } catch (NullPointerException e) {
             return new ResponseEntity<>(new ErrorMessage("¡Por favor, inicie sesión para poder modificar su contraseña!"),HttpStatus.UNAUTHORIZED);
         }
