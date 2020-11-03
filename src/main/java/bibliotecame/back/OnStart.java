@@ -13,6 +13,8 @@ import bibliotecame.back.Request.RequestService;
 import bibliotecame.back.Request.RequestStatus;
 import bibliotecame.back.Review.ReviewController;
 import bibliotecame.back.Review.ReviewModel;
+import bibliotecame.back.Sanction.SanctionController;
+import bibliotecame.back.Sanction.SanctionForm;
 import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.User.UserController;
 import bibliotecame.back.User.UserModel;
@@ -46,9 +48,10 @@ public class OnStart {
     private final CopyService copyService;
     private final RequestService requestService;
     private final VerificationService verificationService;
+    private final SanctionController sanctionController;
 
     @Autowired
-    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ReviewController reviewController, LoanService loanService, CopyService copyService, RequestService requestService, VerificationService verificationService) {
+    public OnStart(UserController userController, BookController bookController, UserService userService, LoanController loanController, ReviewController reviewController, LoanService loanService, CopyService copyService, RequestService requestService, VerificationService verificationService, SanctionController sanctionController) {
         this.userController = userController;
         this.bookController = bookController;
         this.userService = userService;
@@ -58,6 +61,7 @@ public class OnStart {
         this.copyService = copyService;
         this.requestService = requestService;
         this.verificationService = verificationService;
+        this.sanctionController = sanctionController;
     }
 
     @EventListener
@@ -628,6 +632,79 @@ public class OnStart {
                 form.setAuthor("Genesis Rhapsodos");
                 form.setReason("Siempre que quiero reservarlo está agotado, agreguen más ejemplares!");
                 createAndSaveRequest(form,userEx1);
+
+                //sanciones
+
+                UserModel userS1 = (UserModel) userController.createUser(new UserModel("alba.rodriguez@ing.austral.edu.ar", "soyalba123", "Alba", "Rodriguez", "011 5555 3333")).getBody();
+                UserModel userS2 = (UserModel) userController.createUser(new UserModel("bautista.fernandez@ing.austral.edu.ar", "soybauti123", "Bautista", "Fernandez", "011 5555 4444")).getBody();
+                UserModel userS3 = (UserModel) userController.createUser(new UserModel("constanza.fino@ing.austral.edu.ar", "soyconi123", "Constanza", "Fino", "011 5555 0987")).getBody();
+                UserModel userS4 = (UserModel) userController.createUser(new UserModel("daniel.cora@ing.austral.edu.ar", "soydani123", "Daniel", "Cora", "011 5555 5678")).getBody();
+                UserModel userS5 = (UserModel) userController.createUser(new UserModel("elisa.gomez@ing.austral.edu.ar", "soyelisa123", "Elisa", "Gomez", "011 5555 3356")).getBody();
+                UserModel userS6 = (UserModel) userController.createUser(new UserModel("facundo.cura@ing.austral.edu.ar", "soyfacu123", "Facundo", "Cura", "011 2121 5555")).getBody();
+                UserModel userS7 = (UserModel) userController.createUser(new UserModel("gaston.carpi@ing.austral.edu.ar", "soygaston123", "Gaston", "Carpi", "011 3543 5555")).getBody();
+                UserModel userS8 = (UserModel) userController.createUser(new UserModel("hernan.lora@ing.austral.edu.ar", "soyhernan123", "Hernan", "Lora", "011 4124 5555")).getBody();
+                UserModel userS9 = (UserModel) userController.createUser(new UserModel("isabel.mano@ing.austral.edu.ar", "soyisabel123", "Isabel", "Mano", "011 1234 5555")).getBody();
+                UserModel userS10 = (UserModel) userController.createUser(new UserModel("justo.nanin@ing.austral.edu.ar", "soyjusto123", "Justo", "Nanin", "011 2112 5555")).getBody();
+
+                SanctionForm sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS1.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(3)));
+                sanctionForm.setReason("Devolvio un libro en mal estado.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS2.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(5)));
+                sanctionForm.setReason("Me miro mal.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS3.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(2)));
+                sanctionForm.setReason("No sabe tener una conversacion.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS4.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(3)));
+                sanctionForm.setReason("Robo un lapiz de la biblioteca.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS5.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(4)));
+                sanctionForm.setReason("Escribio todo el libro");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS6.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(3)));
+                sanctionForm.setReason("Devolvio un libro en mal estado.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS7.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(3)));
+                sanctionForm.setReason("Robo una lapicera de la biblioteca.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS8.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(4)));
+                sanctionForm.setReason("Grito.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS9.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(2)));
+                sanctionForm.setReason("Ya muchas veces se retraso.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
+
+                sanctionForm = new SanctionForm();
+                sanctionForm.setEmail(userS10.getEmail());
+                sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(3)));
+                sanctionForm.setReason("Ya muchas veces se retraso.");
+                sanctionController.checkAndCreateSanction(sanctionForm);
 
 
             } catch (Exception ignored) {
