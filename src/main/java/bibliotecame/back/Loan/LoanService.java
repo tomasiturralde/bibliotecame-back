@@ -16,9 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -73,11 +71,10 @@ public class LoanService {
     }
 
     private boolean loanDisplayMatches(LoanDisplay display, String lookFor){
-        if (display.getBookAuthor().toLowerCase().contains(lookFor) ||
+        return display.getBookAuthor().toLowerCase().contains(lookFor) ||
                 display.getBookTitle().toLowerCase().contains(lookFor) ||
                 display.getUserEmail().toLowerCase().contains(lookFor) ||
-                display.getLoanStatus().getLabel().toLowerCase().contains(lookFor)) return true;
-        return false;
+                display.getLoanStatus().getLabel().toLowerCase().contains(lookFor);
     }
 
     public LoanDisplay turnLoanModalToDisplay(LoanModel modal, Optional<UserModel> user, boolean withStatus){
@@ -139,6 +136,16 @@ public class LoanService {
 
     public List<LoanModel> getDelayedLoans(){
         return findAll().stream().filter(loan -> loan.getWithdrawalDate()!=null && loan.getReturnDate()==null && loan.getExpirationDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
+    }
+
+    public List<LoanModel> getWithdrawnLoans(){
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate()!= null && loan.getReturnDate() == null && loan.getExpirationDate().isAfter(LocalDate.now()))
+                .collect(Collectors.toList());
+    }
+
+    public List<LoanModel> getReadyForWithdrawal(){
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate() == null && loan.getReturnDate() == null && loan.getExpirationDate().isAfter(LocalDate.now()))
                 .collect(Collectors.toList());
     }
 
