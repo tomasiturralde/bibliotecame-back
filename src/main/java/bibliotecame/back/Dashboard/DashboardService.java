@@ -7,6 +7,7 @@ import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanService;
 import bibliotecame.back.Review.ReviewModel;
 import bibliotecame.back.Review.ReviewService;
+import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -44,8 +45,8 @@ public class DashboardService {
         return loanService.getReadyForWithdrawal().size();
     }
 
-    public Map<String, Integer> getLoansByMonthOfLastYear() {
-        Map<String, Integer> result = new LinkedHashMap<>();
+    public List<Pair<String, Integer>> getLoansByMonthOfLastYear() {
+        List<Pair<String, Integer>> result = new ArrayList<>();
         Month start = LocalDate.now().getMonth().plus(1);
         int year = LocalDate.now().getYear() -1;
 
@@ -53,29 +54,52 @@ public class DashboardService {
             if(start.plus(i).getValue() == 1) ++year;
             Month actualMonth = start.plus(i);
             int finalYear = year;
-            result.put(actualMonth.toString() + " " + year, Math.toIntExact(loanService.findAll().stream().filter(loan ->
+            result.add(new Pair<>(actualMonth.toString() + " " + year, Math.toIntExact(loanService.findAll().stream().filter(loan ->
                     loan.getReservationDate().getMonth().getValue() == actualMonth.getValue() &&
-                            loan.getReservationDate().getYear() == finalYear).count()));
+                            loan.getReservationDate().getYear() == finalYear).count())));
         }
         return result;
     }
 
     public List<BookModel> get5BestReviewed() {
-        return StreamSupport.stream(bookService.findAll().spliterator(), false).sorted(new Comparator<BookModel>() {
-            @Override
-            public int compare(BookModel book0, BookModel book1) {
-                return Double.compare(getAverageScore(book1), getAverageScore(book0));
+        List<BookModel> result = new ArrayList<>();
+        List<BookModel> books = (List<BookModel>) bookService.findAll();
+        int idOfLargest = 0;
+        for (int i = 0; i < 5; i++) {
+            double max = 0;
+            for(BookModel book : books){
+                double avg = getAverageScore(book);
+                if( avg > max) {
+                    max = avg;
+                    idOfLargest = book.getId();
+                }
             }
-        }).collect(Collectors.toList()).subList(0, 5);
+            BookModel largest = bookService.findBookById(idOfLargest);
+            result.add(largest);
+            books.remove(largest);
+        }
+        return result;
     }
 
     public List<BookModel> get5MostLoaned(){
-        return StreamSupport.stream(bookService.findAll().spliterator(), false).sorted(new Comparator<BookModel>() {
-            @Override
-            public int compare(BookModel book0, BookModel book1) {
-                return Double.compare(getAmountOfLoans(book1), getAmountOfLoans(book0));
+
+        List<BookModel> result = new ArrayList<>();
+        List<BookModel> books = (List<BookModel>) bookService.findAll();
+        int idOfLargest = 0;
+        for (int i = 0; i < 5; i++) {
+            double max = 0;
+            for(BookModel book : books){
+                double loans = getAmountOfLoans(book);
+                if( loans > max) {
+                    max = loans;
+                    idOfLargest = book.getId();
+                }
             }
-        }).collect(Collectors.toList()).subList(0, 5);
+            BookModel largest = bookService.findBookById(idOfLargest);
+            result.add(largest);
+            books.remove(largest);
+        }
+        return result;
     }
 
     public double getAverageScore(BookModel book){

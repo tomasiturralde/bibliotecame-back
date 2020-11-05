@@ -6,6 +6,7 @@ import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Loan.LoanService;
 import bibliotecame.back.Review.ReviewService;
 import bibliotecame.back.User.UserService;
+import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +60,7 @@ public class DashboardController {
         int readyForWithdrawalLoans = dashboardService.getReadyForWithdrawalLoans();
         dashboard.setReadyForWithdrawalLoans(readyForWithdrawalLoans);
 
-        Map<String, Integer> loansByMonth = dashboardService.getLoansByMonthOfLastYear();
+        List<Pair<String, Integer>> loansByMonth = dashboardService.getLoansByMonthOfLastYear();
         dashboard.setLoansByMonth(loansByMonth);
 
         List<BookDashboardDisplay> bestScoreDisplay = dashboardService.get5BestReviewed().stream().map(book ->

@@ -1,6 +1,8 @@
 package bibliotecame.back.Dashboard;
 
 
+import javafx.util.Pair;
+
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +11,7 @@ public class DashboardInformation {
     private int delayedLoans;
     private int withdrawnLoans;
     private int readyForWithdrawalLoans;
-    private Map<String, Integer> loansByMonth;
+    private List<Pair<String, Integer>> loansByMonth;
     private long amountOfBooks;
     private int amountOfStudents;
     private List<BookDashboardDisplay> bestReviewed;
@@ -42,11 +44,11 @@ public class DashboardInformation {
         this.readyForWithdrawalLoans = readyForWithdrawalLoans;
     }
 
-    public Map<String, Integer> getLoansByMonth() {
+    public List<Pair<String, Integer>> getLoansByMonth() {
         return loansByMonth;
     }
 
-    public void setLoansByMonth(Map<String, Integer> loansByMonth) {
+    public void setLoansByMonth(List<Pair<String, Integer>> loansByMonth) {
         this.loansByMonth = loansByMonth;
     }
 
