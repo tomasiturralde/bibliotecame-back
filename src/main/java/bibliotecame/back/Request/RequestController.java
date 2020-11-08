@@ -91,11 +91,13 @@ public class RequestController {
     @GetMapping("/user")
     public ResponseEntity getAllByUser(
             @Valid @RequestParam(value = "page") int page,
-            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search
     ){
         if(size==0) size=10;
         if(checkAdmin()) return unauthorizedActionError();
-        return ResponseEntity.ok(requestService.findAllPagedByUser(page,size, findLogged()));
+        if(search.isEmpty()) return ResponseEntity.ok(requestService.findAllPagedByUser(page,size, findLogged()));
+        else return ResponseEntity.ok(requestService.findAllPagedByUserAndFilter(page,size,findLogged(),search.toLowerCase()));
     }
 
     @GetMapping("/pending")
