@@ -110,10 +110,10 @@ public class RequestController {
 
     @GetMapping("/{id}")
     public ResponseEntity getRequest(@PathVariable int id){
-        if(!checkAdmin()) return unauthorizedActionError();
         try{
             RequestModel requestModel = requestService.findById(id);
-            return ResponseEntity.ok(requestModel);
+            if(checkAdmin() || requestModel.getUser().getId() == findLogged().getId()) return ResponseEntity.ok(requestModel);
+            return unauthorizedActionError();
         }catch (RuntimeException e){
             return new ResponseEntity(new ErrorMessage("¡La solicitud requerida no existe!"),HttpStatus.BAD_REQUEST);
         }
