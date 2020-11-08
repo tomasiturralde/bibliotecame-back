@@ -40,6 +40,15 @@ public class UserService {
         return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User with email: " + email + " not found!"));
     }
 
+    public List<UserModel> findAllStudents(){
+        List<UserModel> result = new ArrayList<>();
+        for(UserModel user : userRepository.findAll()){
+            if(!user.isAdmin()) result.add(user);
+        }
+
+        return result;
+    }
+
     public List<UserModel> getAllByEmailSearch(String search){
 
         return this.userRepository.findAllByEmail(search.toLowerCase());
