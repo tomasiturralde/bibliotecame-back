@@ -114,7 +114,7 @@ public class RequestTests {
         setSecurityContext(admin);
         int id = ((RequestModel) responseEntity.getBody()).getId();
         assertThat(((RequestModel)requestController.getRequest(id).getBody()).getTitle()).isEqualTo("Head-First design patterns");
-        assertThat(((Page<RequestModel>)requestController.getAll(0,10).getBody()).getTotalElements()).isGreaterThan(0);
+        assertThat(((Page<RequestModel>)requestController.getAll(0,10,"").getBody()).getTotalElements()).isGreaterThan(0);
     }
 
     @Test
@@ -160,6 +160,16 @@ public class RequestTests {
 
         int id = ((RequestModel) responseEntity.getBody()).getId();
         assertThat(((Page<RequestDisplay>)requestController.getAllByUser(0,10,"Eric Freeman").getBody()).getTotalElements()).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    public void adminCanGetRequestsWithFilter(){
+        setSecurityContext(nonAdmin);
+        RequestForm form = new RequestForm("Head-First design patterns",2004,"Eric Freeman & Elisabeth Robson","O'Reilly","Es un muy buen libro para ampliar conocimientos sobre patrones de diseño.");
+        requestController.createRequest(form);
+        setSecurityContext(admin);
+
+        assertThat(((Page<RequestDisplay>)requestController.getAll(0,10,"Eric").getBody()).getTotalElements()).isGreaterThanOrEqualTo(1);
     }
 
 }

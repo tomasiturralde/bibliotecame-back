@@ -43,11 +43,12 @@ public class RequestService {
         return !form.getTitle().isEmpty() && !form.getAuthor().isEmpty() && !form.getReason().isEmpty();
     }
 
-    public Page<RequestDisplay> findAllPaged(int page, int size){
+    public Page<RequestDisplay> findAllPaged(int page, int size, String search){
         Pageable pageable = PageRequest.of(page, size);
         List<RequestModel> result = new ArrayList<>();
         findAll().iterator().forEachRemaining(result::add);
-//        result = result.stream().filter(searchForm::matches).collect(Collectors.toList());
+        result = result.stream().filter(rm -> rm.getUser().getEmail().toLowerCase().contains(search) || rm.getAuthor().toLowerCase().contains(search) || rm.getTitle().toLowerCase().contains(search) || rm.getDate().toString().contains(search) || rm.getStatus().getLabel().toLowerCase().contains(search))
+                .collect(Collectors.toList());
         int total = result.size();
         int start = toIntExact(pageable.getOffset());
         int end = Math.min((start + pageable.getPageSize()), total);
