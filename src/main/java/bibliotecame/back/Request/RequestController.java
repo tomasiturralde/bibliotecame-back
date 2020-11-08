@@ -81,11 +81,12 @@ public class RequestController {
     @GetMapping()
     public ResponseEntity getAll(
             @Valid @RequestParam(value = "page") int page,
-            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search
     ){
         if(size==0) size=10;
         if(!checkAdmin()) return unauthorizedActionError();
-        return ResponseEntity.ok(requestService.findAllPaged(page,size));
+        return ResponseEntity.ok(requestService.findAllPaged(page,size,search.toLowerCase()));
     }
 
     @GetMapping("/user")
