@@ -1,7 +1,7 @@
 package bibliotecame.back.Dashboard;
 
 
-import javafx.util.Pair;
+import org.springframework.data.util.Pair;
 
 import java.util.List;
 import java.util.Map;

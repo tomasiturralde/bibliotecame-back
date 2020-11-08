@@ -140,12 +140,12 @@ public class LoanService {
     }
 
     public List<LoanModel> getWithdrawnLoans(){
-        return findAll().stream().filter(loan -> loan.getWithdrawalDate()!= null && loan.getReturnDate() == null && loan.getExpirationDate().isAfter(LocalDate.now()))
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate()!= null && loan.getReturnDate() == null && !loan.getExpirationDate().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
     }
 
     public List<LoanModel> getReadyForWithdrawal(){
-        return findAll().stream().filter(loan -> loan.getWithdrawalDate() == null && loan.getReturnDate() == null && loan.getExpirationDate().isAfter(LocalDate.now()))
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate() == null && loan.getReturnDate() == null && !loan.getExpirationDate().isBefore(LocalDate.now()))
                 .collect(Collectors.toList());
     }
 

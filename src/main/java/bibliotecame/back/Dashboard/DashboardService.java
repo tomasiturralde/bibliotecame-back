@@ -6,15 +6,13 @@ import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanService;
 import bibliotecame.back.Review.ReviewModel;
-import bibliotecame.back.Review.ReviewService;
-import javafx.util.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -54,7 +52,7 @@ public class DashboardService {
             if(start.plus(i).getValue() == 1) ++year;
             Month actualMonth = start.plus(i);
             int finalYear = year;
-            result.add(new Pair<>(actualMonth.toString() + " " + year, Math.toIntExact(loanService.findAll().stream().filter(loan ->
+            result.add(Pair.of(actualMonth.toString() + " " + year, Math.toIntExact(loanService.findAll().stream().filter(loan ->
                     loan.getReservationDate().getMonth().getValue() == actualMonth.getValue() &&
                             loan.getReservationDate().getYear() == finalYear).count())));
         }
