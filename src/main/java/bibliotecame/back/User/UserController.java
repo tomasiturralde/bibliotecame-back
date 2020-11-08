@@ -122,7 +122,7 @@ public class UserController {
             return new ResponseEntity<>(new ErrorMessage("¡Por favor, inicie sesión para poder modificar su contraseña!"),HttpStatus.UNAUTHORIZED);
         }
         String passwordRegex = "^(?=.*\\d)(?=.*[a-zA-Z])([a-zA-Z0-9]+){7,}$";
-        if(!password.getPassword().matches(passwordRegex)) return new ResponseEntity(new ErrorMessage("¡La contraseña debe contener solo letras y números, y al menos una de cada una!"), HttpStatus.BAD_REQUEST);
+        if(!password.getPassword().matches(passwordRegex)) return new ResponseEntity(new ErrorMessage("¡La contraseña debe tener al menos 6 caracteres, contener solo letras y números, y al menos una de cada una!"), HttpStatus.BAD_REQUEST);
         return ResponseEntity.ok(userService.updatePassword(password,id));
     }
 
