@@ -269,17 +269,6 @@ public class UserTests {
     }
 
     @Test
-    void testBadRequestWhenTryingToUpdateUserWithInvalidPassword(){
-        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
-        userController.createUser(user);
-
-        setSecurityContext(user);
-
-        user.setPassword("te12");
-        assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
-    }
-
-    @Test
     void testOkWhenSuccessfullyUpdatingAUserAndVerifyUpdatedPassword(){
         UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
         userController.createUser(user);
@@ -348,6 +337,34 @@ public class UserTests {
         verificationController.resetPassword(token,passwordContainer);
         LoginForm loginForm = new LoginForm(user.getEmail(),"newpassword123");
         assertThat(authController.authenticate(loginForm).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testUpdatePassword(){
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+
+        setSecurityContext(user);
+
+        PasswordContainer passwordContainer = new PasswordContainer();
+        passwordContainer.setPassword("newPasswordte123");
+        assertThat(userController.updatePassword(user.getId(),passwordContainer).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+    }
+
+    @Test
+    void testUpdatePasswordWithInvalidPassword(){
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+
+        setSecurityContext(user);
+
+        PasswordContainer passwordContainer = new PasswordContainer();
+        passwordContainer.setPassword("te123");
+        assertThat(userController.updatePassword(user.getId(),passwordContainer).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
     }
 
 }

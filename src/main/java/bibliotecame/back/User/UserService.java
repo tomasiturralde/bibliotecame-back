@@ -3,11 +3,8 @@ package bibliotecame.back.User;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Loan.LoanModel;
+import bibliotecame.back.Verification.PasswordContainer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
@@ -65,12 +62,17 @@ public class UserService {
     }
 
     public UserModel updateUser(UserModel userModel,int id){
-        userModel.setPassword(BCrypt.hashpw(userModel.getPassword(), BCrypt.gensalt()));
         UserModel userToUpdate = findUserById(id);
-        userToUpdate.setPassword(userModel.getPassword());
         userToUpdate.setFirstName(userModel.getFirstName());
         userToUpdate.setLastName(userModel.getLastName());
         userToUpdate.setPhoneNumber(userModel.getPhoneNumber());
+        return this.userRepository.save(userToUpdate);
+    }
+
+    public UserModel updatePassword(PasswordContainer password, int id){
+        password.setPassword(BCrypt.hashpw(password.getPassword(),BCrypt.gensalt()));
+        UserModel userToUpdate = findUserById(id);
+        userToUpdate.setPassword(password.getPassword());
         return this.userRepository.save(userToUpdate);
     }
 
@@ -82,6 +84,14 @@ public class UserService {
         if(userModel.getFirstName().isEmpty()) return false;
         if(userModel.getLastName().isEmpty()) return false;
         if(!userModel.getPassword().matches(passwordRegex)) return false;
+        return userModel.getEmail().matches(emailRegex);
+    }
+
+    public boolean validUserUpdate(UserModel userModel){
+        String emailRegex = "^[\\w-.]+@([\\w-]+\\.austral.edu.)+[\\w-]{2,4}$";
+        if(userModel.getPhoneNumber().isEmpty()) return false;
+        if(userModel.getFirstName().isEmpty()) return false;
+        if(userModel.getLastName().isEmpty()) return false;
         return userModel.getEmail().matches(emailRegex);
     }
 

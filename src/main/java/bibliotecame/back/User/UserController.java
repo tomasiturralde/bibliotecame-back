@@ -1,6 +1,7 @@
 package bibliotecame.back.User;
 
 import bibliotecame.back.ErrorMessage;
+import bibliotecame.back.Verification.PasswordContainer;
 import bibliotecame.back.Verification.VerificationModel;
 import bibliotecame.back.Verification.VerificationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,9 +107,27 @@ public class UserController {
             return new ResponseEntity<>(new ErrorMessage("¡Usted no puede modificar su correo electrónico!"),HttpStatus.UNAUTHORIZED);
         }
 
-        if(!userService.validUser(userModel))return new ResponseEntity<>(new ErrorMessage("¡Por favor, verifique los datos ingresados!"),HttpStatus.BAD_REQUEST);
+        if(!userService.validUserUpdate(userModel))return new ResponseEntity<>(new ErrorMessage("¡Por favor, verifique los datos ingresados!"),HttpStatus.BAD_REQUEST);
 
         return ResponseEntity.ok(userService.updateUser(userModel,id));
+    }
+
+    @PutMapping("user/{id}/updatePassword")
+    public ResponseEntity updatePassword(@PathVariable Integer id, @RequestBody PasswordContainer password){
+        UserModel loggedUser;
+        try {
+
+            loggedUser = userService.findLogged();
+
+            if(loggedUser.getId()!=id) return new ResponseEntity(new ErrorMessage("¡No puedes modificar los datos de otro usuario!"),HttpStatus.UNAUTHORIZED);
+
+            String passwordRegex = "^(?=.*\\d)(?=.*[a-zA-Z])([a-zA-Z0-9]+){7,}$";
+            if(!password.getPassword().matches(passwordRegex)) return new ResponseEntity(new ErrorMessage("¡La contraseña debe tener al menos 6 caracteres, contener solo letras y números, y al menos una de cada una!"), HttpStatus.BAD_REQUEST);
+
+            return ResponseEntity.ok(userService.updatePassword(password,id));
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(new ErrorMessage("¡Por favor, inicie sesión para poder modificar su contraseña!"),HttpStatus.UNAUTHORIZED);
+        }
     }
 
     @PostMapping("user/forgot/{email}")
