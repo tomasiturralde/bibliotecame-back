@@ -1,8 +1,8 @@
 package bibliotecame.back.Security;
 
+import bibliotecame.back.Auth.AuthService;
 import bibliotecame.back.Security.jwt.JWTConfigurer;
 import bibliotecame.back.Security.jwt.TokenProvider;
-import bibliotecame.back.Auth.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

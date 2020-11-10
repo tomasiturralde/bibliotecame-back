@@ -1,7 +1,6 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
-import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.Tag.TagService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,12 +128,6 @@ public class BookService {
             }
         }
         throw new RuntimeException("Copy with id: " + copy.getId() + " is not associated with any book");
-    }
-
-    public void addTags(BookModel book, List<TagModel> tags) {
-        List<TagModel> actualTags = findBookById(book.getId()).getTags() ;
-        actualTags.addAll(tags);
-        book.setTags(actualTags);
     }
 
     public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(int page, int size, String search){
