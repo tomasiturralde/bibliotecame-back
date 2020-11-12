@@ -21,31 +21,15 @@ public class BookDashboardDisplay {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
     public String getAuthor() {
         return author;
-    }
-
-    public void setAuthor(String author) {
-        this.author = author;
     }
 
     public double getAvgScore() {
         return avgScore;
     }
 
-    public void setAvgScore(double avgScore) {
-        this.avgScore = avgScore;
-    }
-
     public int getAmountOfLoans() {
         return amountOfLoans;
-    }
-
-    public void setAmountOfLoans(int amountOfLoans) {
-        this.amountOfLoans = amountOfLoans;
     }
 }
