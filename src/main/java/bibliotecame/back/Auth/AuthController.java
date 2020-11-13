@@ -47,6 +47,7 @@ public class AuthController {
 
         if(!user.isAdmin() && !user.isVerified()) return new ResponseEntity<>(new ErrorMessage("¡Por favor verifique su dirección de correo para poder acceder a Bibliotecame!"),HttpStatus.UNAUTHORIZED);
         if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(new ErrorMessage("¡Usted está sancionado, por favor comuniquese con administración!"),HttpStatus.UNAUTHORIZED);
+        if(!user.isActive()) return new ResponseEntity(new ErrorMessage("¡Su cuenta está desactivada!"),HttpStatus.UNAUTHORIZED);
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword());
