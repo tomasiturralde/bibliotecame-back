@@ -464,6 +464,7 @@ public class LoanTests {
 
         LoanModel loan = userService.findLogged().getLoans().get(0);
 
+        extensionController.createExtension(loan.getId()).getBody();
         setSecurityContext(admin);
         loanController.setWithdrawDate(loan.getId());
         ExtensionModel extensionModel = (ExtensionModel) extensionController.approveExtension(loan.getId()).getBody();

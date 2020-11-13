@@ -28,10 +28,6 @@ public class RequestService {
         return this.requestRepository.save(requestModel);
     }
 
-    public Iterable<RequestModel> findAll(){
-        return this.requestRepository.findAll();
-    }
-
     public RequestModel findById(int id) { return this.requestRepository.findById(id).orElseThrow(() -> new RuntimeException("bibliotecame.back.Request with id: " + id + " not found!")); }
 
     public boolean isValid(RequestForm form){
@@ -42,7 +38,7 @@ public class RequestService {
     public Page<RequestDisplay> findAllPaged(int page, int size, String search){
         Pageable pageable = PageRequest.of(page, size);
         List<RequestModel> result = new ArrayList<>();
-        findAll().iterator().forEachRemaining(result::add);
+        requestRepository.findAllOrdered().iterator().forEachRemaining(result::add);
         result = result.stream().filter(rm -> rm.getUser().getEmail().toLowerCase().contains(search) || rm.getAuthor().toLowerCase().contains(search) || rm.getTitle().toLowerCase().contains(search) || rm.getDate().toString().contains(search) || rm.getStatus().getLabel().toLowerCase().contains(search))
                 .collect(Collectors.toList());
         int total = result.size();
@@ -59,7 +55,7 @@ public class RequestService {
     public Page<RequestDisplay> findAllPagedByStatus(int page, int size, RequestStatus status){
         Pageable pageable = PageRequest.of(page, size);
         List<RequestModel> result = new ArrayList<>();
-        findAll().iterator().forEachRemaining(result::add);
+        requestRepository.findAllOrdered().iterator().forEachRemaining(result::add);
         result = result.stream().filter(requestModel -> requestModel.getStatus().equals(status)).collect(Collectors.toList());
         int total = result.size();
         int start = toIntExact(pageable.getOffset());
@@ -75,7 +71,7 @@ public class RequestService {
     public Page<RequestDisplay> findAllPagedByUser(int page, int size, UserModel user) {
         Pageable pageable = PageRequest.of(page, size);
         List<RequestModel> result = new ArrayList<>();
-        findAll().iterator().forEachRemaining(result::add);
+        requestRepository.findAllOrdered().iterator().forEachRemaining(result::add);
         result = result.stream().filter(requestModel -> requestModel.getUser().getId() == user.getId()).collect(Collectors.toList());
         int total = result.size();
         int start = toIntExact(pageable.getOffset());
@@ -91,7 +87,7 @@ public class RequestService {
     public Page<RequestDisplay> findAllPagedByUserAndFilter(int page, int size, UserModel user, String search) {
         Pageable pageable = PageRequest.of(page, size);
         List<RequestModel> result = new ArrayList<>();
-        findAll().iterator().forEachRemaining(result::add);
+        requestRepository.findAllOrdered().iterator().forEachRemaining(result::add);
         result = result.stream().filter(rm -> rm.getUser().getId() == user.getId() &&
                 (rm.getAuthor().toLowerCase().contains(search) || rm.getTitle().toLowerCase().contains(search) || rm.getDate().toString().contains(search) || rm.getStatus().getLabel().toLowerCase().contains(search)))
                 .collect(Collectors.toList());
