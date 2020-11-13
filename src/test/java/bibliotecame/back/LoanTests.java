@@ -6,7 +6,10 @@ import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
-import bibliotecame.back.Extension.*;
+import bibliotecame.back.Extension.ExtensionController;
+import bibliotecame.back.Extension.ExtensionModel;
+import bibliotecame.back.Extension.ExtensionRepository;
+import bibliotecame.back.Extension.ExtensionService;
 import bibliotecame.back.Loan.*;
 import bibliotecame.back.Review.ReviewRepository;
 import bibliotecame.back.Review.ReviewService;
@@ -37,11 +40,9 @@ import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -683,6 +684,64 @@ public class LoanTests {
         assertThat(loanController.notifyDelayedLoans().getBody()).isNotEqualTo(0);
     }
 
+    @Test
+    public void testDelayedLoanDetailsMethods(){
+        LoanModel loanModel = new LoanModel(new CopyModel("testing123321"),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5)));
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(40) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        DelayedLoanDetails details = new DelayedLoanDetails(loanModel,notAdmin,bookRepository.findAll().iterator().next());
+        details.setId(1331);
+        details.setBookTitle("New testing method");
+        details.setUserEmail("NewEmail@ing.austral.edu.ar");
+        details.setWithdrawDate(LocalDate.now().minus(Period.ofDays(2)));
+        details.setReturnDate(LocalDate.now().plus(Period.ofDays(10)));
+        details.setUserName(notAdmin.getFirstName()+notAdmin.getLastName());
+        assertTrue(details.getUserName().contains(notAdmin.getFirstName()));
+        assertThat(details.getId()).isEqualTo(1331);
+        assertThat(details.getBookTitle()).contains("testing");
+        assertThat(details.getReturnDate()).isAfter(LocalDate.now());
+        assertThat(details.getWithdrawDate()).isBefore(LocalDate.now());
+        assertThat(details.getUserEmail()).contains("wEmai");
+    }
 
+    @Test
+    public void testLoanDisplayMethods(){
+        LoanDisplay display = new LoanDisplay(13332,"Mortal testing","Ed Boon",LocalDate.now().plus(Period.ofDays(3)),LocalDate.now().plus(Period.ofDays(2)),LoanStatus.APPROVED_EXTENSION);
+        display.setId(display.getId()+2);
+        assertThat(display.getId()).isGreaterThan(13332);
+        display.setBookAuthor("La comarca");
+        display.setBookTitle(" del Testeo");
+        assertThat(display.getBookAuthor()+display.getBookTitle()).contains("comarca del");
+        display.setExpectedReturnDate(LocalDate.now().plus(Period.ofDays(10)));
+        display.setReturnDate(LocalDate.now().plus(Period.ofDays(8)));
+        assertThat(display.getExpectedReturnDate()).isAfter(display.getReturnDate());
+        display.setUserEmail("ElSeñorDeLosEmails@ing.austral.edu.ar");
+        assertThat(display.getUserEmail()).contains("LosEmails");
+        assertNull(display.getReviewId());
+        assertNull(display.getBookId());
+    }
+
+    @Test
+    public void testLoanStatusMethods(){
+        LoanStatus status = LoanStatus.getFromInt(1);
+        assertThat(status.getId()).isEqualTo(1);
+        try {
+            LoanStatus.getFromInt(1000);
+        }catch (IllegalArgumentException e){
+            assertThat(e.getMessage()).contains("Invalid Status");
+        }
+    }
+
+    @Test
+    public void unexistingLoanThrowsError(){
+        assertThat(loanController.setWithdrawalPostAdminCheck(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void settingNewCopyToLoan(){
+        LoanModel loanModel = new LoanModel(new CopyModel("NewCopyNumber1"),LocalDate.now(),LocalDate.now());
+        loanModel.setCopy(new CopyModel("NewNewCopyNumber2"));
+        assertThat(loanModel.getCopy().getId()).contains("Number2");
+    }
 
 }

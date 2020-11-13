@@ -34,10 +34,6 @@ public class RequestService {
 
     public RequestModel findById(int id) { return this.requestRepository.findById(id).orElseThrow(() -> new RuntimeException("bibliotecame.back.Request with id: " + id + " not found!")); }
 
-    public Page<RequestModel> findAllByStatus(int page, int size, RequestStatus status){
-        return requestRepository.findAllByStatus(status,PageRequest.of(page, size));
-    }
-
     public boolean isValid(RequestForm form){
         if(form.getTitle()==null || form.getAuthor()==null || form.getReason()==null) return false;
         return !form.getTitle().isEmpty() && !form.getAuthor().isEmpty() && !form.getReason().isEmpty();

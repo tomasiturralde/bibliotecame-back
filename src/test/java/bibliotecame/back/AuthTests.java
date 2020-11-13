@@ -4,6 +4,7 @@ import bibliotecame.back.Auth.AuthController;
 import bibliotecame.back.Auth.AuthService;
 import bibliotecame.back.Auth.LoginForm;
 import bibliotecame.back.Book.BookService;
+import bibliotecame.back.Sanction.SanctionModel;
 import bibliotecame.back.Sanction.SanctionService;
 import bibliotecame.back.Security.jwt.TokenProvider;
 import bibliotecame.back.User.UserController;
@@ -24,6 +25,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
+
+import java.time.LocalDate;
+import java.time.Period;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -94,5 +98,16 @@ public class AuthTests {
         loginForm.setPassword(user.getPassword());
         Assertions.assertEquals(user.getEmail(),loginForm.getEmail());
         Assertions.assertEquals(user.getPassword(),loginForm.getPassword());
+    }
+
+    @Test
+    void testAuthenticateBranches(){
+        assertThat(authController.authenticate(new LoginForm("UnexistingMail","WrongPassword")).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        UserModel unverifiedUser = new UserModel("emailNoVerificable@ing.austral.edu.ar","password123","name","last","11111");
+        userService.saveUser(unverifiedUser);
+        assertThat(((ErrorMessage)authController.authenticate(new LoginForm(unverifiedUser.getEmail(),unverifiedUser.getPassword())).getBody()).getMessage()).contains("verifique su");
+        sanctionService.saveSanction(new SanctionModel("Tuve que hacerlo", LocalDate.now(),LocalDate.now().plus(Period.ofDays(4)),user));
+        assertThat(((ErrorMessage)authController.authenticate(new LoginForm(user.getEmail(),user.getPassword())).getBody()).getMessage()).contains("sancionado");
+        assertThat(authController.authenticate(new LoginForm(user.getEmail(),user.getPassword()+"a")).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }

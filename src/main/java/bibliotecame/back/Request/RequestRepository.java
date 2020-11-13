@@ -12,8 +12,6 @@ public interface RequestRepository extends PagingAndSortingRepository<RequestMod
 
     Optional<RequestModel> findById (int id);
 
-    Page<RequestModel> findAllByStatus(RequestStatus status, Pageable pageable);
-
     Page<RequestModel> findAll(Pageable pageable);
 
 }

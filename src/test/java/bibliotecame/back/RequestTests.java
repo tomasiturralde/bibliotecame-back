@@ -24,6 +24,8 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -170,6 +172,68 @@ public class RequestTests {
         setSecurityContext(admin);
 
         assertThat(((Page<RequestDisplay>)requestController.getAll(0,10,"Eric").getBody()).getTotalElements()).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    public void adminCantModifyAnUnexistingRequest(){
+        setSecurityContext(admin);
+        assertThat(requestController.rejectRequest(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(requestController.approveRequest(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void testGetAllPending(){
+        setSecurityContext(nonAdmin);
+        assertThat(requestController.getAllPending(0,10).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        setSecurityContext(admin);
+        assertThat(requestController.getAllPending(0,10).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void testGetRequest(){
+        setSecurityContext(nonAdmin);
+        assertThat(requestController.getRequest(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        setSecurityContext(admin);
+        RequestDisplay requestDisplay = ((Page<RequestDisplay>)requestController.getAll(0,10,"").getBody()).getContent().get(0);
+        setSecurityContext(nonAdmin);
+        assertThat(requestController.getRequest(requestDisplay.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    public void testRequestDisplayMethods() {
+        RequestDisplay disp = new RequestDisplay();
+        disp.setAuthor("Author");
+        disp.setDate(LocalDate.now());
+        disp.setStatus(RequestStatus.getFromInt(1));
+        disp.setTitle("Title");
+        disp.setUserEmail("Email@ing.austral.edu.ar");
+        assertThat(disp.getAuthor()).isEqualTo("Author");
+        assertThat(disp.getDate()).isBefore(LocalDate.now().plus(Period.ofDays(10)));
+        assertThat(disp.getUserEmail()).contains("austral");
+        assertThat(disp.getTitle()).isEqualTo("Title");
+        assertThat(disp.getStatus().getId()).isEqualTo(1);
+    }
+
+    @Test
+    public void testRequestModelMethods() {
+        RequestModel rm = new RequestModel("Title",1998,"Author","Publisher","Reason");
+        rm.setId(20);
+        rm.setTitle("Titulo");
+        rm.setYear(20);
+        rm.setAuthor(rm.getYear()+rm.getPublisher());
+        rm.setPublisher("Editorial");
+        rm.setReason("He filled this form in spanish!");
+        assertThat(rm.getAuthor()).contains("20");
+        assertThat(rm.getReason()).contains("pan");
+    }
+
+    @Test
+    public void testRequestFormMethods(){
+        RequestForm rm = new RequestForm("Titulo","Autor","RAZONAMIENTO!");
+        assertThat(rm.getPublisher()).isEqualTo(null);
+        rm.setPublisher("Editorial");
+        rm.setYear(1998);
+        assertThat(rm.getYear()).isLessThan(2000);
     }
 
 }
