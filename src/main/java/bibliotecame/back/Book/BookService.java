@@ -87,12 +87,10 @@ public class BookService {
             return new ResponseEntity<>(book, HttpStatus.NOT_FOUND);
         }
 
-        //check validity
         if (!validBook(book)){
             return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
         }
 
-        //update fields
         bookToUpdate.setTitle(book.getTitle());
         bookToUpdate.setAuthor(book.getAuthor());
         bookToUpdate.setPublisher(book.getPublisher());
@@ -100,7 +98,6 @@ public class BookService {
         bookToUpdate.setYear(book.getYear());
         bookToUpdate.setCopies(book.getCopies());
 
-        //save book and return
         BookModel updated = this.bookRepository.save(bookToUpdate);
         return ResponseEntity.ok(updated);
     }
@@ -109,7 +106,6 @@ public class BookService {
         String updatedTitle = book.getTitle();
         int updatedYear = book.getYear();
 
-        //check validity
         return updatedTitle != null && hasAuthor(book) && hasAuthor(book) && updatedYear >= 800 && updatedYear <= Calendar.getInstance().get(Calendar.YEAR);
     }
 

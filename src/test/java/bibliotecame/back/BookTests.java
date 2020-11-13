@@ -137,12 +137,6 @@ public class BookTests {
     }
 
     @Test
-    //asserts failure for:
-    // empty name
-    // non valid year
-    // non recognised author
-    // non recognised publisher
-    // non recognised tag
     void testBadRequest(){
 
         List<GrantedAuthority> auths = new ArrayList<>();
@@ -164,7 +158,6 @@ public class BookTests {
     }
 
     @Test
-    //asserts failure for: creating already existing book
     void testNotAcceptable(){
 
         List<GrantedAuthority> auths = new ArrayList<>();
@@ -578,7 +571,6 @@ public class BookTests {
         bookService.saveBook(book2);
 
         book2 = bookService.findByAttributeCombination(book2.getTitle(),book2.getAuthor(),book2.getPublisher(),book2.getYear());
-        //Le colocamos los atributos del book1, si este nuevo book2 fuera guardado, tendríamos "dos veces" al book1 en la db.
         book2.setAuthor(book1.getAuthor());
         book2.setPublisher(book1.getPublisher());
         book2.setYear(book1.getYear());

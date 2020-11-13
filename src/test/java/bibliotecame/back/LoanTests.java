@@ -357,8 +357,6 @@ public class LoanTests {
         bookService.saveBook(bookModeltoLoan1);
         bookService.saveBook(bookModeltoLoan2);
 
-        //After all the setup, we create a loan for each book
-
         loanController.createLoan(bookModeltoLoan1.getId());
         loanController.createLoan(bookModeltoLoan2.getId());
 
@@ -366,16 +364,9 @@ public class LoanTests {
         loan.setWithdrawalDate(LocalDate.now());
         loanService.saveLoan(loan);
 
-        //We edit the first loan, so by default it will be at the END of the list
-        //But as the controller returns it by date, it should still be first
-
         assertThat(Objects.requireNonNull((List<LoanDisplay>)loanController.getAllActiveLoans().getBody()).get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
 
-        //It should be returning both loans though, because neither was returned
-
         assertThat(((List<LoanDisplay>)loanController.getAllActiveLoans().getBody()).size()).isEqualTo(2);
-
-        //Finally, if we return one of the loans, it should not be in the active list
 
         loan.setReturnDate(LocalDate.now());
         loanService.saveLoan(loan);
@@ -396,13 +387,9 @@ public class LoanTests {
         bookModeltoLoan1.setCopies(copiestoLoan1);
         bookService.saveBook(bookModeltoLoan1);
 
-        //After all the setup, we create a loan for the user
-
         loanController.createLoan(bookModeltoLoan1.getId());
 
         LoanModel loan = userService.findLogged().getLoans().get(0);
-
-        //A regular user can't set a withdraw date (neither a return)
 
         assertThat(loanController.setWithdrawDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
@@ -411,19 +398,13 @@ public class LoanTests {
         userService.saveUser(admin);
         setSecurityContext(admin);
 
-        //Now that we have an admin, it must be able to set the withdraw date.
-
         assertThat(loanController.setWithdrawDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
-        loan = loanService.getLoanById(loan.getId()); //We refresh our loanmodel
-
-        //We check that the withdraw date is effectively the same as today
+        loan = loanService.getLoanById(loan.getId());
 
         assertThat(loan.getWithdrawalDate().getDayOfWeek()).isEqualTo(LocalDate.now().getDayOfWeek());
 
-        //Finally, we set the return date, and after that we try to edit it again and get a "BAD_REQUEST"
-
         assertThat(loanController.setReturnDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
-        loan = loanService.getLoanById(loan.getId()); //We refresh our loanmodel
+        loan = loanService.getLoanById(loan.getId());
         assertThat(loan.getReturnDate().getDayOfWeek()).isEqualTo(LocalDate.now().getDayOfWeek());
 
         assertThat(loanController.setReturnDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -483,28 +464,18 @@ public class LoanTests {
 
         LoanModel loan = userService.findLogged().getLoans().get(0);
 
-        //Up to here we created a Loan succesfully
-
-        ExtensionModel extensionModel = (ExtensionModel)extensionController.createExtension(loan.getId()).getBody();
-
         setSecurityContext(admin);
         loanController.setWithdrawDate(loan.getId());
-        extensionModel = (ExtensionModel) extensionController.approveExtension(loan.getId()).getBody();
-
-        //Here we created and approved an extension
+        ExtensionModel extensionModel = (ExtensionModel) extensionController.approveExtension(loan.getId()).getBody();
 
         assertTrue(extensionService.findById(extensionModel.getId()).isActive());
         loanController.setReturnDate(loan.getId());
         assertFalse(extensionService.findById(extensionModel.getId()).isActive());
-
-        //We check if it is active before returning the loan, and if after returning the loan it is no longer active.
-
     }
 
     @Test
     void testClearExpiredLoansUserOK(){
 
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -522,12 +493,10 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
-        //clear
         assertThat(loanController.expiredLoansClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
         assertThat(password).isEqualTo(notAdmin.getPassword());
@@ -536,7 +505,6 @@ public class LoanTests {
 
     @Test
     void testClearExpiredLoansUserUNAUTHORIZED(){
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -552,20 +520,17 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel) loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
         setSecurityContext(admin);
 
-        //clear
         assertThat(loanController.expiredLoansClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
     void testClearExpiredLoansAdminOK(){
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(40) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -581,20 +546,17 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
         setSecurityContext(admin);
 
-        //clear
         assertThat(loanController.everyExpiredLoanClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
     }
 
     @Test
     void testClearExpiredLoansAdminUNAUTHORIZED(){
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -610,12 +572,10 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
-        //clear
         assertThat(loanController.everyExpiredLoanClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
     }
 

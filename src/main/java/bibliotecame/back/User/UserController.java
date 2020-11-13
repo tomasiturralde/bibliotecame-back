@@ -90,19 +90,16 @@ public class UserController {
 
         UserModel loggedUser;
 
-        //It mustn't work if the user isn't loggedIn
         try {
             loggedUser = userService.findLogged();
         } catch (NullPointerException e) {
             return new ResponseEntity<>(new ErrorMessage("¡Por favor, inicie sesión para poder modificar sus datos!"),HttpStatus.UNAUTHORIZED);
         }
 
-        //It mustn't work if the Id from loggedUser differs from the one to modify, or if it tries to change its Id
         if(loggedUser.getId() != id){
             return new ResponseEntity<>(new ErrorMessage("¡Usted no puede modificar los datos de otro usuario!"),HttpStatus.UNAUTHORIZED);
         }
 
-        //A user isn't allowed to modify its email
         if(!loggedUser.getEmail().equals(userModel.getEmail())){
             return new ResponseEntity<>(new ErrorMessage("¡Usted no puede modificar su correo electrónico!"),HttpStatus.UNAUTHORIZED);
         }

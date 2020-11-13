@@ -252,7 +252,7 @@ public class LoanController {
         });
 
         emailsToSend.forEach(sender::notifyWithGmail);
-        //The responseEntity holds how many mails it sent in case notification/validation is needed in the future.
+
         return new ResponseEntity(emailsToSend.size(),HttpStatus.OK);
     }
 }

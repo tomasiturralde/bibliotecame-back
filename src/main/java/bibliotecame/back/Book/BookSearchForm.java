@@ -57,7 +57,7 @@ public class BookSearchForm {
                     }
                 }
             }
-            if(!checkTags.isEmpty()) return false;
+            return checkTags.isEmpty();
         }
         return true;
     }
