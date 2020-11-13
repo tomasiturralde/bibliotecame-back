@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -176,7 +177,7 @@ public class UserTests {
         verificationService.deleteVerification(verificationService.findVerificationByUserModel(user));
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        assertThat(((ErrorMessage)userController.getUserModel(user.getId()).getBody()).getMessage()).isEqualTo("¡El usuario no existe!");
+        assertFalse(((UserModel)userController.getUserModel(user.getId()).getBody()).isActive());
     }
 
     @Test
