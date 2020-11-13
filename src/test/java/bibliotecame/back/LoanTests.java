@@ -457,7 +457,7 @@ public class LoanTests {
         loans = loanController.getAllLoansAdmin(0,0, "new Book");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isGreaterThanOrEqualTo(1);
 
         loans = loanController.getAllLoansAdmin(0,0, "other not here");
 
