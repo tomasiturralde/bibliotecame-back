@@ -19,6 +19,9 @@ public class UserModel {
     private int id;
 
     @Column
+    private boolean active;
+
+    @Column
     private String email;
 
     @Column
@@ -45,6 +48,8 @@ public class UserModel {
 
     public UserModel() {
         loans = new ArrayList<>();
+        verified = false;
+        active = true;
     }
 
     public UserModel(String email, String password, String firstName, String lastName, String phoneNumber) {
@@ -53,6 +58,8 @@ public class UserModel {
         this.firstName = firstName;
         this.lastName = lastName;
         this.phoneNumber = phoneNumber;
+        verified = false;
+        active= true;
         loans = new ArrayList<>();
     }
 
@@ -122,5 +129,13 @@ public class UserModel {
 
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }
