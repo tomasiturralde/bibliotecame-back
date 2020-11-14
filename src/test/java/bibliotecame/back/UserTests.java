@@ -301,10 +301,6 @@ public class UserTests {
         assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
     }
 
-
-
-    ///FALTA BAD REQUEST DE MODIFY
-
     @Test
     void testAuthReturnsAToken(){
         UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
