@@ -45,6 +45,7 @@ import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -109,7 +110,6 @@ public class UserTests {
         Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
         Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-
     }
 
     @Test
@@ -181,7 +181,7 @@ public class UserTests {
         verificationService.deleteVerification(verificationService.findVerificationByUserModel(user));
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        assertThat(((ErrorMessage) Objects.requireNonNull(userController.getUserModel(user.getId()).getBody())).getMessage()).isEqualTo("¡El usuario no existe!");
+        assertFalse(((UserModel)userController.getUserModel(user.getId()).getBody()).isActive());
     }
 
     @Test
@@ -300,10 +300,6 @@ public class UserTests {
         user.setPassword("estaesmassegura1432");
         assertThat(userController.updateUser(user.getId(),user).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
     }
-
-
-
-    ///FALTA BAD REQUEST DE MODIFY
 
     @Test
     void testAuthReturnsAToken(){

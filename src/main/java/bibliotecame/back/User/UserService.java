@@ -144,7 +144,8 @@ public class UserService {
     }
 
     public void deleteUser(UserModel user){
-        this.userRepository.delete(user);
+        user.setActive(false);
+        this.userRepository.save(user);
     }
 
     public boolean userExists(int id) {return this.userRepository.findById(id).isPresent(); }
