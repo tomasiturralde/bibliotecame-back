@@ -84,7 +84,7 @@ public class LoanController {
 
         List<CopyModel> copies = bookService.getAvailableCopies(book);
         if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(new ErrorMessage("¡Usted ya tiene solicitado un prestamo de este libro!"),HttpStatus.NOT_ACCEPTABLE);
-        if(copies.isEmpty()) return new ResponseEntity<>(new ErrorMessage("¡Lo sentimos! ¡Este libro ya no tiene ejemplates disponibles!"),HttpStatus.EXPECTATION_FAILED);
+        if(copies.isEmpty()) return new ResponseEntity<>(new ErrorMessage("¡Lo sentimos! ¡Este libro ya no tiene ejemplares disponibles!"),HttpStatus.EXPECTATION_FAILED);
         if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(new ErrorMessage("¡No se pudo realizar el préstamo ya que tiene demasiados prestamos activos!"),HttpStatus.TOO_MANY_REQUESTS);
         if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>(new ErrorMessage("¡Debe devolver sus prestamos atrasados antes de solicitar nuevos!"),HttpStatus.BAD_REQUEST);
 

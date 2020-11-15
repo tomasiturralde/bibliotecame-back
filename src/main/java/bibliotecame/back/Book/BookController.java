@@ -101,10 +101,14 @@ public class BookController {
 
             for(CopyModel copy : copies){
                 if(copyService.exists(copy.getId())){
+                    if(!book.isActive()){
+                        if(copy.getActive() && !copyService.findCopyById(copy.getId()).getActive()) return new ResponseEntity<>(new ErrorMessage("¡No puedes activar un ejemplar si el libro esta desactivado!"),HttpStatus.BAD_REQUEST);
+                    }
                     if ((copy.getBooked() && !copy.getActive())) return new ResponseEntity<>(new ErrorMessage("¡No puedes desactivar un ejemplar reservado!"),HttpStatus.BAD_REQUEST);
                     savedCopies.add(copyService.saveCopy(copy));
                 }
                 else {
+                    if(!book.isActive()) return new ResponseEntity<>(new ErrorMessage("¡No puedes agregar ejemplares a un libro desactivado!"),HttpStatus.BAD_REQUEST);
                     savedCopies.add(copyService.saveCopy(new CopyModel(copy.getId())));
                 }
             }
