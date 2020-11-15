@@ -2,16 +2,12 @@ package bibliotecame.back;
 
 import bibliotecame.back.Book.BookController;
 import bibliotecame.back.Book.BookModel;
-import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
+import bibliotecame.back.Dashboard.BookDashboardDisplay;
 import bibliotecame.back.Dashboard.DashboardController;
 import bibliotecame.back.Dashboard.DashboardInformation;
-import bibliotecame.back.Loan.LoanController;
 import bibliotecame.back.Loan.LoanModel;
 import bibliotecame.back.Loan.LoanService;
-import bibliotecame.back.Review.ReviewService;
-import bibliotecame.back.Sanction.SanctionController;
-import bibliotecame.back.Sanction.SanctionService;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,9 +39,6 @@ public class DashboardTest {
 
     @Autowired
     private LoanService loanService;
-
-    @Autowired
-    private ReviewService reviewService;
 
     @Autowired
     private BookController bookController;
@@ -109,6 +102,11 @@ public class DashboardTest {
         delayed.setWithdrawalDate(LocalDate.now().minus(Period.ofDays(4)));
         loanService.saveLoan(delayed);
 
+        LoanModel returned = new LoanModel(book1.getCopies().get(1), LocalDate.now().minus(Period.ofYears(1).plus(Period.ofWeeks(3))), LocalDate.now().minus(Period.ofDays(1)));
+        returned.setWithdrawalDate(LocalDate.now().minus(Period.ofMonths(9)));
+        returned.setReturnDate(LocalDate.now().minus(Period.ofWeeks(4)));
+        loanService.saveLoan(returned);
+
         LoanModel withdrawn = new LoanModel(book1.getCopies().get(0), LocalDate.now().minus(Period.ofDays(3)), LocalDate.now().plus(Period.ofDays(1)));
         withdrawn.setWithdrawalDate(LocalDate.now().minus(Period.ofDays(1)));
         loanService.saveLoan(withdrawn);
@@ -116,6 +114,7 @@ public class DashboardTest {
         List<LoanModel> loans = new ArrayList<>();
         loans.add(delayed);
         loans.add(withdrawn);
+        loans.add(returned);
 
         user1.setLoans(loans);
         userService.saveUser(user1);
@@ -124,10 +123,29 @@ public class DashboardTest {
 
         DashboardInformation info = (DashboardInformation) dashboardController.getInformation().getBody();
 
+        assert info != null;
         assertThat(info.getAmountOfBooks()).isGreaterThan(1);
         assertThat(info.getAmountOfStudents()).isGreaterThan(0);
         assertThat(info.getDelayedLoans()).isGreaterThan(0);
         assertThat(info.getWithdrawnLoans()).isGreaterThan(0);
+
+        assertThat(info.getReadyForWithdrawalLoans()).isGreaterThan(-1);
+        assertThat(info.getLoansByMonth().isEmpty()).isFalse();
+        assertThat(info.getBestReviewed().isEmpty()).isFalse();
+        assertThat(info.getMostLoaned().isEmpty()).isFalse();
+
+        BookDashboardDisplay empty = new BookDashboardDisplay();
+        BookDashboardDisplay display = new BookDashboardDisplay("Title", "Author", 4.5, 17);
+
+        assertThat(empty.getTitle()).isEqualTo(null);
+        assertThat(empty.getAuthor()).isEqualTo(null);
+        assertThat(empty.getAvgScore()).isEqualTo(0);
+        assertThat(empty.getAmountOfLoans()).isEqualTo(0);
+
+        assertThat(display.getTitle()).isEqualTo("Title");
+        assertThat(display.getAuthor()).isEqualTo("Author");
+        assertThat(display.getAvgScore()).isEqualTo(4.5);
+        assertThat(display.getAmountOfLoans()).isEqualTo(17);
 
     }
 

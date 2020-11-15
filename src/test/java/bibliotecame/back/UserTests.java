@@ -19,6 +19,7 @@ import bibliotecame.back.User.UserRepository;
 import bibliotecame.back.User.UserService;
 import bibliotecame.back.Verification.PasswordContainer;
 import bibliotecame.back.Verification.VerificationController;
+import bibliotecame.back.Verification.VerificationModel;
 import bibliotecame.back.Verification.VerificationService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -40,8 +41,11 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -111,13 +115,14 @@ public class UserTests {
     @Test
     void testAddUser(){
         String email = "name@mail.austral.edu.ar";
-        ResponseEntity<UserModel> create = userController.createUser(new UserModel(email, "123abcd", "Name","LastName", "+54 (911) 1234 5678"));
+        ResponseEntity create = userController.createUser(new UserModel(email, "123abcd", "Name","LastName", "+54 (911) 1234 5678"));
 
         assertThat(create.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
         UserModel savedUser = userService.findUserByEmail(email);
 
         assertThat(userController.getUserModel(savedUser.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(userController.createUser(new UserModel(email, "123qwee", "name", "lastname", "11111111")).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
 
     @Test
@@ -164,14 +169,14 @@ public class UserTests {
     @Test
     void testDeleteUser(){
         UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
+        assert user != null;
         user.setVerified(true);
         userService.saveWithoutEncryption(user);
-        assert user != null;
         setSecurityContext(user);
         verificationService.deleteVerification(verificationService.findVerificationByUserModel(user));
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
-        assertThat(((ErrorMessage)userController.getUserModel(user.getId()).getBody()).getMessage()).isEqualTo("¡El usuario no existe!");
+        assertFalse(((UserModel)userController.getUserModel(user.getId()).getBody()).isActive());
     }
 
     @Test
@@ -206,6 +211,7 @@ public class UserTests {
     void testFailureNotLoggedOnDelete(){
         UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
 
+        assert user != null;
         assertThat(userController.deleteUser(user.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
     }
 
@@ -262,6 +268,22 @@ public class UserTests {
     }
 
     @Test
+    void testUpdateUserWthBadRequest(){
+        String name = RandomStringGenerator.getAlphabeticString(10);
+        UserModel user = new UserModel(name + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userService.saveUser(user);
+        UserModel user4 = new UserModel(name +"@ing.austral.edu.ar","test123","","Stessens","1151111111");
+        UserModel user5 = new UserModel(name +"@ing.austral.edu.ar","test123","Khalil","","1151111111");
+        UserModel user6 = new UserModel(name +"@ing.austral.edu.ar","test123","Khalil","Stessens","");
+
+        setSecurityContext(user);
+
+        assertThat(userController.updateUser(user.getId(),user4).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(userController.updateUser(user.getId(),user5).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(userController.updateUser(user.getId(),user6).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void testOkWhenSuccessfullyUpdatingAUserAndVerifyUpdatedPassword(){
         UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
         userController.createUser(user);
@@ -306,7 +328,7 @@ public class UserTests {
         UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(16) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
         userController.createUser(user);
         LoginForm loginForm = new LoginForm(user.getEmail(),user.getPassword());
-        assertThat(((ErrorMessage)authController.authenticate(loginForm).getBody()).getMessage()).isEqualTo("¡Por favor verifique su dirección de correo para poder acceder a Bibliotecame!");
+        assertThat(((ErrorMessage) Objects.requireNonNull(authController.authenticate(loginForm).getBody())).getMessage()).isEqualTo("¡Por favor verifique su dirección de correo para poder acceder a Bibliotecame!");
     }
     @Test
     public void testUserCanVerify(){
@@ -333,6 +355,24 @@ public class UserTests {
     }
 
     @Test
+    void testForgotPasswordBAD_REQUEST(){
+        assertThat(userController.forgotPassword("asd").getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(16) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userService.saveUser(user);
+        setSecurityContext(user);
+
+        assertThat(userController.forgotPassword(user.getEmail()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testForgotPasswordUNAUTHORIZED(){
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(16) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        assertThat(userController.forgotPassword(user.getEmail()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
     void testUpdatePassword(){
 
         UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
@@ -343,6 +383,27 @@ public class UserTests {
         PasswordContainer passwordContainer = new PasswordContainer();
         passwordContainer.setPassword("newPasswordte123");
         assertThat(userController.updatePassword(user.getId(),passwordContainer).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+    }
+
+    @Test
+    void testUpdatePasswordUNAUTHORIZED(){
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+
+        setSecurityContext(user);
+
+        PasswordContainer passwordContainer = new PasswordContainer();
+        passwordContainer.setPassword("newPasswordte123");
+        assertThat(userController.updatePassword(user.getId(),passwordContainer).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+
+        UserModel user1 = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user1);
+        setSecurityContext(user1);
+
+        PasswordContainer passwordContainer1 = new PasswordContainer();
+        passwordContainer1.setPassword("newPasswordte123");
+        assertThat(userController.updatePassword(0,passwordContainer1).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
 
     }
 
@@ -359,5 +420,79 @@ public class UserTests {
         assertThat(userController.updatePassword(user.getId(),passwordContainer).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
 
     }
+
+    @Test
+    void testGetUsersOK(){
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        user.setAdmin(true);
+        userService.saveUser(user);
+
+        setSecurityContext(user);
+
+        assertThat(userController.getUsers("").getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(userController.getUsers("i").getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+    }
+
+    @Test
+    void testGetUsersUNAUTHORIZED(){
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+
+        setSecurityContext(user);
+
+        assertThat(userController.getUsers("").getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void testGetLogged(){
+        setSecurityContext(new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111"));
+        assertThat(userController.getLoggedUser().getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(6) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+
+        setSecurityContext(user);
+        assertThat(userController.getLoggedUser().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+    }
+
+    @Test
+    void testExceptionOnWrongId(){
+        assertThrows(RuntimeException.class, () -> userService.findUserById(-1));
+    }
+
+    @Test
+    void testVerificationInfo(){
+        VerificationModel verificationInfo = new VerificationModel();
+        verificationInfo.setToken("123qweasd456rtyfgh789uiojkl");
+        verificationInfo.setUserModel(new UserModel("aa@ing.austral.edu.ar","password1", "name", "surname", "phone"));
+
+        assertThat(verificationInfo.getToken()).isEqualTo("123qweasd456rtyfgh789uiojkl");
+        assertThat(verificationInfo.getUserModel().getEmail()).isEqualTo("aa@ing.austral.edu.ar");
+    }
+
+    @Test
+    void testBadRequestVerifyAccount(){
+        assertThat(verificationController.verifyAccount("asd").getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testBadRequestResetPassword(){
+        assertThat(verificationController.resetPassword("asd", new PasswordContainer("123qweasd")).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
+        UserModel user = new UserModel(RandomStringGenerator.getAlphaNumericString(16) + "@ing.austral.edu.ar","test123","Khalil","Stessens","1151111111");
+        userController.createUser(user);
+        String token = verificationService.findVerificationByUserModel(user).getToken();
+        assertThat(verificationController.verifyAccount(token).getStatusCode()).isEqualTo(HttpStatus.OK);
+        userController.forgotPassword(user.getEmail());
+        token = verificationService.findVerificationByUserModel(user).getToken();
+        PasswordContainer passwordContainer = new PasswordContainer("newpassword");
+        assertThat(verificationController.resetPassword(token,passwordContainer).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
+    }
+
 
 }

@@ -26,6 +26,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -36,8 +37,10 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -135,6 +138,7 @@ public class ExtensionTests {
 
         List<CopyModel> copies1 = new ArrayList<>();
         copies1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies1.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
 
         book1.setCopies(copies1);
         bookService.updateBook(book1.getId(), book1);
@@ -201,7 +205,10 @@ public class ExtensionTests {
 
         setSecurityContext(notAdmin2);
 
-        assertThat(extensionController.createExtension(loan2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        ResponseEntity entity = extensionController.createExtension(loan2.getId());
+
+        assertThat(entity.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(((ExtensionModel) Objects.requireNonNull(entity.getBody())).getCreationDate()).isEqualTo(LocalDate.now());
     }
 
     @Test
@@ -244,12 +251,39 @@ public class ExtensionTests {
     }
 
     @Test
+    void testCreateThrowsException(){
+        assertThat(extensionService.createExtension(0).getStatusCode()).isEqualByComparingTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void testUserCanMakeExtensionBAD_REQUEST(){
+        setSecurityContext(notAdmin1);
+        assertThat(extensionService.createExtension(loan2.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void testModifyExtensionOK(){
 
         setSecurityContext(admin);
 
         assertThat(extensionController.approveExtension(loan3.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(extensionController.rejectExtension(loan4.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+    }
+
+
+    @Test
+    public void testRejectAndApproveException(){
+        setSecurityContext(notAdmin2);
+
+        LoanModel loan = (LoanModel)loanController.createLoan(book1.getId()).getBody();
+
+        setSecurityContext(admin);
+
+        assert loan != null;
+        assertThat(extensionController.rejectExtension(loan.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+        assertThat(extensionController.approveExtension(loan.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
 
     }
 
@@ -278,6 +312,24 @@ public class ExtensionTests {
         extension2.setStatus(ExtensionStatus.PENDING_APPROVAL);
         extensionService.saveExtension(extension2);
 
+
+        ExtensionModel extension3 = extensionModel2;
+
+        extension3.setStatus(ExtensionStatus.APPROVED);
+        extensionService.saveExtension(extension3);
+
+        setSecurityContext(admin);
+
+        assertThat(extensionController.rejectExtension(extension3.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.BAD_REQUEST);
+
+        extension3.setStatus(ExtensionStatus.PENDING_APPROVAL);
+        extensionService.saveExtension(extension3);
+
+    }
+
+    @Test
+    void testRuntimeExceptionFindExtensionById(){
+        assertThrows(RuntimeException.class, () -> extensionService.findById(-1));
     }
 
 }
