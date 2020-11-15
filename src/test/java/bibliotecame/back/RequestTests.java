@@ -30,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -234,6 +236,83 @@ public class RequestTests {
         rm.setPublisher("Editorial");
         rm.setYear(1998);
         assertThat(rm.getYear()).isLessThan(2000);
+    }
+
+    @Test
+    public void testRequestFormIsValid(){
+        RequestForm rm = new RequestForm();
+        assertFalse(requestService.isValid(rm));
+        rm.setTitle("Title");
+        assertFalse(requestService.isValid(rm));
+        rm.setAuthor("Author");
+        assertFalse(requestService.isValid(rm));
+        rm.setReason("Reason");
+        assertTrue(requestService.isValid(rm));
+        rm.setTitle("");
+        assertFalse(requestService.isValid(rm));
+        rm.setTitle("Title");
+        rm.setAuthor("");
+        assertFalse(requestService.isValid(rm));
+        rm.setReason("");
+        rm.setAuthor("Author");
+        assertFalse(requestService.isValid(rm));
+    }
+
+    @Test
+    public void testFilterPagedBranches(){
+        Page<RequestDisplay> page;
+        RequestModel rm = new RequestModel("title",1000,"author","publisher","reason");
+        rm.setUser(admin);
+        rm.setDate(LocalDate.now());
+        rm.setStatus(RequestStatus.APPROVED);
+        requestService.saveRequest(rm);
+        page = requestService.findAllPaged(0,10,admin.getEmail());
+        page = requestService.findAllPaged(0,10,"author");
+        page = requestService.findAllPaged(0,10,"title");
+        page = requestService.findAllPaged(0,10,"2020");
+        page = requestService.findAllPaged(0,10,"2020");
+        page = requestService.findAllPaged(0,10,"pro");
+        assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+        page = requestService.findAllPagedByUserAndFilter(0,10,admin,"author");
+        page = requestService.findAllPagedByUserAndFilter(0,10,admin,"title");
+        page = requestService.findAllPagedByUserAndFilter(0,10,admin,"2020");
+        page = requestService.findAllPagedByUserAndFilter(0,10,admin,"pro");
+        page = requestService.findAllPagedByUserAndFilter(0,10,admin,"allsflsfa");
+        assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(0);
+    }
+
+    @Test
+    public void testRequestStatusMethods(){
+        RequestStatus status = RequestStatus.getFromInt(0);
+        status = RequestStatus.getFromInt(1);
+        status = RequestStatus.getFromInt(2);
+        assertThat(status.getLabel()).isEqualTo("Rechazada");
+        try{
+            status = RequestStatus.getFromInt(5);
+        }catch (IllegalArgumentException e){
+            assertThat(e.getMessage()).contains("Invalid Status");
+        }
+    }
+
+    @Test
+    public void testRequestControllerMethods(){
+        setSecurityContext(admin);
+        assertThat(requestController.createRequest(new RequestForm()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        setSecurityContext(nonAdmin);
+        assertThat(requestController.createRequest(new RequestForm()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(requestController.createRequest(new RequestForm("Title","Author","Reason")).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(requestController.approveRequest(-1).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(requestController.rejectRequest(-1).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        RequestDisplay rm = ((Page<RequestDisplay>)requestController.getAllByUser(0,10,"title").getBody()).getContent().get(0);
+        setSecurityContext(admin);
+        requestController.approveRequest(rm.getId());
+        assertThat(requestController.approveRequest(rm.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(requestController.rejectRequest(rm.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        setSecurityContext(nonAdmin);
+        requestController.getAll(0,0,"");
+        setSecurityContext(admin);
+        requestController.getAllByUser(0,0,"");
+        assertThat(requestController.getAllPending(0,0).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
 }
