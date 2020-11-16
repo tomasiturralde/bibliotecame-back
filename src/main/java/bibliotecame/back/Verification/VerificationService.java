@@ -15,8 +15,8 @@ import javax.mail.internet.InternetAddress;
 @Transactional
 public class VerificationService {
 
-    private UserService userService;
-    private VerificationRepository verificationRepository;
+    private final UserService userService;
+    private final VerificationRepository verificationRepository;
 
     @Autowired
     public VerificationService(UserService userService, VerificationRepository verificationRepository) {

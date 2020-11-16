@@ -104,9 +104,8 @@ public class ReviewController {
     @DeleteMapping("/{id}")
     public ResponseEntity deleteReview(@PathVariable Integer id) {
 
-        ReviewModel review = null;
         try {
-            review = reviewService.findReviewById(id);
+            reviewService.findReviewById(id);
         } catch (NotFoundException e) {
             return unexistingReviewError();
         }

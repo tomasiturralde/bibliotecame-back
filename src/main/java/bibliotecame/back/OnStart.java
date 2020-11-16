@@ -95,7 +95,6 @@ public class OnStart {
 
 
 
-                //libros
                 List<TagModel> tags1 = new ArrayList<>();
                 tags1.add(new TagModel("Filosofía"));
                 tags1.add(new TagModel("Metafísica"));
@@ -138,7 +137,6 @@ public class OnStart {
                 tags10.add(new TagModel("Ciencia"));
                 BookModel book10 = (BookModel)bookController.checkAndCreateBook(new BookModel("Breve historia del tiempo", 1988, "Stephen Hawking", "Bantam Books", tags10)).getBody();
 
-                //tanda 2 de libros
                 List<TagModel> tags11 = new ArrayList<>();
                 tags11.add(new TagModel("Ingeniería"));
                 tags11.add(new TagModel("Matemática"));
@@ -181,7 +179,6 @@ public class OnStart {
                 tags20.add(new TagModel("Derecho"));
                 BookModel book20 = (BookModel)bookController.checkAndCreateBook(new BookModel("Lineamientos De Derecho Penal", 2019, "Raul Zaffaroni", "Ediar", tags20)).getBody();
 
-                //ejemplares
                 List<CopyModel> copies1 = new ArrayList<>();
                 copies1.add(new CopyModel("C2DF9M"));
                 copies1.add(new CopyModel("DSUCO7"));
@@ -252,7 +249,6 @@ public class OnStart {
                 Objects.requireNonNull(book10).setCopies(copies10);
                 bookController.checkAndUpdateBook(book10.getId(), book10);
 
-                //loans
                 loanController.checkAndCreateLoan(user1, book1);
                 loanController.checkAndCreateLoan(user2, book4);
                 loanController.checkAndCreateLoan(user3, book7);
@@ -262,7 +258,6 @@ public class OnStart {
                 LoanModel loanToReview9 = (LoanModel)loanController.checkAndCreateLoan(user3, book9).getBody();
                 LoanModel loanToReview10 = (LoanModel)loanController.checkAndCreateLoan(user4, book3).getBody();
 
-                //tanda 2 de ejemplares
                 List<CopyModel> copies11 = new ArrayList<>();
                 copies11.add(new CopyModel("C3DF9M"));
                 Objects.requireNonNull(book11).setCopies(copies11);
@@ -313,8 +308,6 @@ public class OnStart {
                 Objects.requireNonNull(book20).setCopies(copies20);
                 bookController.checkAndUpdateBook(book20.getId(), book20);
 
-
-                //loans
                 LoanModel loanToReview1 = (LoanModel) loanController.checkAndCreateLoan(user1, book11).getBody();
                 LoanModel loanToReview2 = (LoanModel) loanController.checkAndCreateLoan(user2, book14).getBody();
                 LoanModel loanToReview3 = (LoanModel) loanController.checkAndCreateLoan(user3, book17).getBody();
@@ -324,8 +317,6 @@ public class OnStart {
                 LoanModel loanToReview7 = (LoanModel) loanController.checkAndCreateLoan(user3, book19).getBody();
                 LoanModel loanToReview8 = (LoanModel) loanController.checkAndCreateLoan(user4, book13).getBody();
 
-
-                //reviews
                 assert loanToReview1 != null;
                 loanToReview1.setWithdrawalDate(LocalDate.now());
                 loanToReview1.setReturnDate(LocalDate.now());
@@ -426,9 +417,6 @@ public class OnStart {
                 reviewModel10.setValue(5);
                 reviewController.createReviewKnowingUser(reviewModel10, book3.getId(), user4);
 
-                //Aditional on start content since Sprint 3
-
-                //Users
                 UserModel userEx1 = (UserModel) userController.createUser(new UserModel("claude.vonriegan@ing.austral.edu.ar", "goldendeer123", "Claude", "Von Riegan", "011 2121 3333")).getBody();
                 UserModel userEx2 = (UserModel) userController.createUser(new UserModel("ignatz.victor@ing.austral.edu.ar", "iloveart25", "Ignatz", "Victor", "011 3543 4444")).getBody();
                 UserModel userEx3 = (UserModel) userController.createUser(new UserModel("marianne.vonedmund@ing.austral.edu.ar", "myscrest77", "Marianne", "Von Edmund", "011 4124 0987")).getBody();
@@ -451,7 +439,6 @@ public class OnStart {
                 verificationService.deleteVerification(verificationService.findVerificationByUserModel(userEx4));
                 verificationService.deleteVerification(verificationService.findVerificationByUserModel(userEx5));
 
-                //Books
                 List<TagModel> tagsEx1 = new ArrayList<>();
                 tags20.add(new TagModel("Novela"));
                 BookModel bookEx1 = (BookModel)bookController.checkAndCreateBook(new BookModel("El libro de Seiros, parte I", 890, "Lady Rhea", "Fodlan Publishing", tagsEx1)).getBody();
@@ -472,7 +459,6 @@ public class OnStart {
                 tags20.add(new TagModel("Ingeniería"));
                 BookModel bookEx5 = (BookModel)bookController.checkAndCreateBook(new BookModel("Head-First Dessign Patterns", 2005, "Kathy Sierra", "O'Reilly", tagsEx5)).getBody();
 
-                //Ejemplares
                 List<CopyModel> copiesEx1 = new ArrayList<>();
                 copiesEx1.add(new CopyModel("SE1R0SI-001"));
                 copiesEx1.add(new CopyModel("SE1R0SI-002"));
@@ -534,7 +520,6 @@ public class OnStart {
 
                     LocalDate date = LocalDate.of(2020, Month.JANUARY,1);
                     for (int i = 0; i <10 ; i++) {
-                        //Crea 50 prestamos, los retira y devuelve.
                         date = date.plus(Period.ofDays(4));
                         for (int j = 0; j <5; j++) {
                             LoanModel loan = loanService.saveLoan(new LoanModel(copies.get(j),date,date.plus(Period.ofDays(5))));
@@ -553,7 +538,7 @@ public class OnStart {
                         }
                     }
                     date = LocalDate.now();
-                    //Crea 5 prestamos activos, con vencimiento en un año.
+
                         for (int j = 0; j <5; j++) {
                             LoanModel loan = loanService.saveLoan(new LoanModel(copies.get(j),date,date.plus(Period.ofDays(365))));
                             copies.get(j).setBooked(true);
@@ -562,7 +547,7 @@ public class OnStart {
                             loan.setWithdrawalDate( date );
                             loanService.saveLoan(loan);
                         }
-                        //Crea 5 prestamos vencidos.
+
                         for (int j = 0; j <5; j++) {
                             LoanModel loan = loanService.saveLoan(new LoanModel(copies.get(j+5),date.minus(Period.ofDays(5)),date));
                             copies.get(j+5).setBooked(true);
@@ -572,7 +557,6 @@ public class OnStart {
                             loanService.saveLoan(loan);
                         }
 
-                //Solicitudes de incorporación
                 RequestForm form = new RequestForm();
                 form.setTitle("Higher creativity");
                 form.setAuthor("Willis W. Harman");
@@ -632,8 +616,6 @@ public class OnStart {
                 form.setAuthor("Genesis Rhapsodos");
                 form.setReason("Siempre que quiero reservarlo está agotado, agreguen más ejemplares!");
                 createAndSaveRequest(form,userEx1);
-
-                //sanciones
 
                 UserModel userS1 = (UserModel) userController.createUser(new UserModel("alba.rodriguez@ing.austral.edu.ar", "soyalba123", "Alba", "Rodriguez", "011 5555 3333")).getBody();
                 UserModel userS2 = (UserModel) userController.createUser(new UserModel("bautista.fernandez@ing.austral.edu.ar", "soybauti123", "Bautista", "Fernandez", "011 5555 4444")).getBody();
@@ -705,6 +687,72 @@ public class OnStart {
                 sanctionForm.setEndDate(LocalDate.now().plus(Period.ofWeeks(3)));
                 sanctionForm.setReason("Ya muchas veces se retraso.");
                 sanctionController.checkAndCreateSanction(sanctionForm);
+
+
+                if(!userService.emailExists("demo.bibliotecame@ing.austral.edu.ar")) {
+                    UserModel demoUser = new UserModel("demo.bibliotecame@ing.austral.edu.ar","demo123","demo user","demo user","11111111");
+                    demoUser.setVerified(true);
+                    demoUser.setActive(true);
+                    userService.saveUser(demoUser);
+
+                    LoanModel loan = loanService.saveLoan(new LoanModel(copies1.get(1),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5))));
+                    copies1.get(1).setBooked(true);
+                    copyService.saveCopy(copies1.get(1));
+                    userService.addLoan(demoUser,loan);
+                    loan.setWithdrawalDate(LocalDate.now());
+                    loan.setReturnDate( LocalDate.now() );
+                    loanService.saveLoan(loan);
+
+                    loan = loanService.saveLoan(new LoanModel(copies1.get(2),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5))));
+                    copies1.get(2).setBooked(true);
+                    copyService.saveCopy(copies1.get(2));
+                    userService.addLoan(demoUser,loan);
+                    loan.setWithdrawalDate(LocalDate.now());
+                    loan.setReturnDate( LocalDate.now() );
+                    loanService.saveLoan(loan);
+
+                    loan = loanService.saveLoan(new LoanModel(copies1.get(1),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5))));
+                    copies1.get(1).setBooked(true);
+                    copyService.saveCopy(copies1.get(1));
+                    userService.addLoan(demoUser,loan);
+                    loanService.saveLoan(loan);
+
+                    loan = loanService.saveLoan(new LoanModel(copies2.get(1),LocalDate.now().minus(Period.ofDays(10)),LocalDate.now().minus(Period.ofDays(5))));
+                    copies2.get(1).setBooked(true);
+                    copyService.saveCopy(copies2.get(1));
+                    userService.addLoan(demoUser,loan);
+                    loan.setWithdrawalDate(LocalDate.now().minus(Period.ofDays(9)));
+                    loanService.saveLoan(loan);
+
+                    RequestModel rm1 = new RequestModel(new RequestForm("To kill a mockingbird","Harper Lee","¡Es un gran libro clasico!"));
+                    RequestModel rm2 = new RequestModel(new RequestForm("The great gatsby","F. Scott Fitzgerald","Me parece un libro interesante."));
+                    RequestModel rm3 = new RequestModel(new RequestForm("One hundred years of solitude","Gabriel García Márquez","Leí en un foro que es muy bueno."));
+                    RequestModel rm4 = new RequestModel(new RequestForm("In cold blood","Truman Capote","Es una gran novela que tomó muchos años de investigación para realizarse"));
+                    RequestModel rm5 = new RequestModel(new RequestForm("Brave New World","Aldous Huxley","Es muy controversial, pero da mucho que pensar"));
+                    RequestModel rm6 = new RequestModel(new RequestForm("To kill a mockingbird","Harper Lee","Se que rechazaron la solicitud previa, pero insisto en que es muy buen libro."));
+
+                    rm1.setStatus(RequestStatus.REJECTED);
+                    rm2.setStatus(RequestStatus.REJECTED);
+                    rm3.setStatus(RequestStatus.APPROVED);
+                    rm4.setStatus(RequestStatus.PENDING);
+                    rm5.setStatus(RequestStatus.PENDING);
+                    rm6.setStatus(RequestStatus.APPROVED);
+
+                    List<RequestModel> requestModels = new ArrayList<>();
+                    requestModels.add(rm1);
+                    requestModels.add(rm2);
+                    requestModels.add(rm3);
+                    requestModels.add(rm4);
+                    requestModels.add(rm5);
+                    requestModels.add(rm6);
+
+                    requestModels.forEach(rm -> {
+                        rm.setDate(LocalDate.now());
+                        rm.setUser(demoUser);
+                        requestService.saveRequest(rm);
+                    });
+                }
+
 
 
             } catch (Exception ignored) {

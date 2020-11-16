@@ -1,6 +1,5 @@
 package bibliotecame.back.Auth;
 
-
 import javax.validation.constraints.NotNull;
 
 public class LoginForm {

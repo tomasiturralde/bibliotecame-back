@@ -12,7 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Month;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -114,7 +115,7 @@ public class DashboardService {
         List<LoanModel> loans = new ArrayList<>();
 
         for(LoanModel loan : loanService.findAll()){
-            if(loan.getCopy().getId() == copy.getId()) loans.add(loan);
+            if(loan.getCopy().getId().equals(copy.getId())) loans.add(loan);
         }
         return loans.size();
     }
