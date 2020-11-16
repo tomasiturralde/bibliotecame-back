@@ -224,7 +224,6 @@ public class SanctionTest {
     }
 
     @Test
-    //test date before now
     public void testModifySanction_EXTECTATION_FAILED(){
         UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
         admin.setAdmin(true);
@@ -244,7 +243,6 @@ public class SanctionTest {
     }
 
     @Test
-    //test too future date
     public void testModifySanction_EXTECTATION_FAILED2(){
         UserModel admin = new UserModel("admin" + RandomStringGenerator.getAlphabeticString(10)+ "@a.austral.edu.ar", "pass123", "Admin", "Admin", "12345678");
         admin.setAdmin(true);

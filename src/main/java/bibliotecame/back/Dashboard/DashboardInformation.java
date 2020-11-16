@@ -1,10 +1,8 @@
 package bibliotecame.back.Dashboard;
 
-
 import org.springframework.data.util.Pair;
 
 import java.util.List;
-import java.util.Map;
 
 public class DashboardInformation {
 

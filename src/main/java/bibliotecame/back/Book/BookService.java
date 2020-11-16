@@ -1,7 +1,6 @@
 package bibliotecame.back.Book;
 
 import bibliotecame.back.Copy.CopyModel;
-import bibliotecame.back.Tag.TagModel;
 import bibliotecame.back.Tag.TagService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,12 +87,10 @@ public class BookService {
             return new ResponseEntity<>(book, HttpStatus.NOT_FOUND);
         }
 
-        //check validity
         if (!validBook(book)){
             return new ResponseEntity<>(book, HttpStatus.BAD_REQUEST);
         }
 
-        //update fields
         bookToUpdate.setTitle(book.getTitle());
         bookToUpdate.setAuthor(book.getAuthor());
         bookToUpdate.setPublisher(book.getPublisher());
@@ -101,7 +98,6 @@ public class BookService {
         bookToUpdate.setYear(book.getYear());
         bookToUpdate.setCopies(book.getCopies());
 
-        //save book and return
         BookModel updated = this.bookRepository.save(bookToUpdate);
         return ResponseEntity.ok(updated);
     }
@@ -110,7 +106,6 @@ public class BookService {
         String updatedTitle = book.getTitle();
         int updatedYear = book.getYear();
 
-        //check validity
         return updatedTitle != null && hasAuthor(book) && hasAuthor(book) && updatedYear >= 800 && updatedYear <= Calendar.getInstance().get(Calendar.YEAR);
     }
 
@@ -129,12 +124,6 @@ public class BookService {
             }
         }
         throw new RuntimeException("Copy with id: " + copy.getId() + " is not associated with any book");
-    }
-
-    public void addTags(BookModel book, List<TagModel> tags) {
-        List<TagModel> actualTags = findBookById(book.getId()).getTags() ;
-        actualTags.addAll(tags);
-        book.setTags(actualTags);
     }
 
     public Page<BookModel> findAllByTitleOrAuthorOrPublisherOrTags(int page, int size, String search){

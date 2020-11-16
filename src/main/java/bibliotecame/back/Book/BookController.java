@@ -15,10 +15,6 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
-//import bibliotecame.back.User.UserModel;
-//import org.springframework.security.core.Authentication;
-//import org.springframework.security.core.context.SecurityContextHolder;
-
 @RestController
 @RequestMapping("/book")
 public class BookController {
@@ -142,14 +138,6 @@ public class BookController {
         return ResponseEntity.ok(this.bookService.saveBook(bookModel));
     }
 
-    @GetMapping()
-    public ResponseEntity<Iterable<BookModel>> getBookModel(){
-        if(!checkAdmin()){
-            return ResponseEntity.ok(this.bookService.findAllActive());
-        }
-        return ResponseEntity.ok(this.bookService.findAll());
-    }
-
     @GetMapping(value = "/search")
     public ResponseEntity<Page<BookModel>> getAllByTitleOrAuthorOrPublisherOrTag(
             @Valid @RequestParam(value = "page") int page,
@@ -180,12 +168,9 @@ public class BookController {
         return ResponseEntity.ok(bookPage);
     }
 
-
-
     private boolean checkAdmin(){
         return userService.findLogged().isAdmin();
     }
-
 
     private ResponseEntity unauthorizedActionError(){
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);

@@ -1,7 +1,6 @@
 package bibliotecame.back.Request;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,8 +11,6 @@ public interface RequestRepository extends PagingAndSortingRepository<RequestMod
 
     Optional<RequestModel> findById (int id);
 
-    Page<RequestModel> findAllByStatus(RequestStatus status, Pageable pageable);
-
-    Page<RequestModel> findAll(Pageable pageable);
-
+    @Query(value="select r from RequestModel r order by r.status,r.date desc ")
+    Iterable<RequestModel> findAllOrdered();
 }

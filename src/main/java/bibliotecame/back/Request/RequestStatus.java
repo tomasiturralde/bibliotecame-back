@@ -1,7 +1,5 @@
 package bibliotecame.back.Request;
 
-import bibliotecame.back.Loan.LoanStatus;
-
 public enum RequestStatus {
     PENDING(0, "A revisar"),
     APPROVED(1, "Aprobada"),

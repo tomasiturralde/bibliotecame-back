@@ -46,7 +46,7 @@ public class TokenProvider {
                 .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
-        long time = 86400000; // A day
+        long time = 86400000;
         Date validity = new Date(now + time);
 
         return Jwts.builder()

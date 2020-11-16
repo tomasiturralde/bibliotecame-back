@@ -12,8 +12,8 @@ public class LoanDisplay {
     private LocalDate returnDate;
     private LoanStatus loanStatus;
     private String userEmail;
-    private Integer reviewId;
-    private Integer bookId;
+    private final Integer reviewId;
+    private final Integer bookId;
 
     public LoanDisplay(int id, String bookTitle, String bookAuthor, LocalDate expectedReturnDate, LocalDate returnDate, Integer reviewId, Integer bookId) {
         this.id = id;

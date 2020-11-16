@@ -126,7 +126,6 @@ public class UserTests {
     }
 
     @Test
-    // asserts failure for: empty email, no .austral.edu., no @
     void testFailureOnInvalidEmail(){
         assertThat(userController.createUser(new UserModel("name@gmail.com", "123abcABC", "Name",
                 "LastName", "+54 (911) 1234 5678"))
@@ -140,7 +139,6 @@ public class UserTests {
     }
 
     @Test
-    //asserts failure for: empty password, short password
     void testFailureOnInvalidPassword(){
         assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123ab", "Name",
                 "LastName", "+54 (911) 1234 5678"))
@@ -151,7 +149,6 @@ public class UserTests {
     }
 
     @Test
-    //asserts failure for: empty first name, empty last name
     void testFailureOnInvalidName(){
         assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abcd", "",
                 "LastName", "+54 (911) 1234 5678"))
@@ -162,7 +159,6 @@ public class UserTests {
     }
 
     @Test
-    //asserts failure for empty phone number
     void testFailureOnInvalidPhoneNumber(){
         assertThat(userController.createUser(new UserModel("name@ing.austral.edu.ar", "123abcd", "Name",
                 "LastName", ""))
@@ -171,7 +167,6 @@ public class UserTests {
 
 
     @Test
-    //test delete user
     void testDeleteUser(){
         UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
         assert user != null;
@@ -213,7 +208,6 @@ public class UserTests {
     }
 
     @Test
-    //test failure for not logged in
     void testFailureNotLoggedOnDelete(){
         UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
 
@@ -222,7 +216,6 @@ public class UserTests {
     }
 
     @Test
-    //test failure for deleting some other account
     void testFailureWrongAccountOnDelete(){
         UserModel user = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();
         UserModel user2 = (UserModel)userController.createUser(new UserModel(RandomStringGenerator.getAlphaNumericString(7) +"@mail.austral.edu.ar", "123abcd", "name", "surname", "123456789")).getBody();

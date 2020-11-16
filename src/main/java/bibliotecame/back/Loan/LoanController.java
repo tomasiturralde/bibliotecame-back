@@ -13,8 +13,6 @@ import bibliotecame.back.User.UserService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.mail.internet.InternetAddress;
 import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
-import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
@@ -255,7 +252,7 @@ public class LoanController {
         });
 
         emailsToSend.forEach(sender::notifyWithGmail);
-        //The responseEntity holds how many mails it sent in case notification/validation is needed in the future.
+
         return new ResponseEntity(emailsToSend.size(),HttpStatus.OK);
     }
 }

@@ -16,7 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -54,6 +56,7 @@ public class LoanService {
         list.sort((l1, l2) -> {
             if(l1.getReturnDate() == null && l2.getReturnDate() != null) return -1;
             if(l1.getReturnDate() != null && l2.getReturnDate() == null) return 1;
+            if(l1.getReturnDate() != null && l2.getReturnDate() != null) return l2.getReturnDate().compareTo(l1.getReturnDate());
             return l1.getExpirationDate().compareTo(l2.getExpirationDate());
         });
         List<LoanDisplay> result = new ArrayList<>();
