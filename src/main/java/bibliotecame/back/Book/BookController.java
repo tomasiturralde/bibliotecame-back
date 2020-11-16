@@ -15,10 +15,6 @@ import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.List;
 
-//import bibliotecame.back.User.UserModel;
-//import org.springframework.security.core.Authentication;
-//import org.springframework.security.core.context.SecurityContextHolder;
-
 @RestController
 @RequestMapping("/book")
 public class BookController {
@@ -97,20 +93,15 @@ public class BookController {
         List<CopyModel> savedCopies = new ArrayList<>();
 
         if(copies!=null && !copies.isEmpty()){
+
             if(copies.size()>=100) return new ResponseEntity<>(new ErrorMessage("¡El libro ya tiene demasiados ejemplares!"),HttpStatus.BAD_REQUEST);
+            if(copyService.copyActivationWithDisabledBook(copies, book)) return new ResponseEntity<>(new ErrorMessage("¡No puedes activar un ejemplar si el libro esta desactivado!"),HttpStatus.BAD_REQUEST);
+            if(copyService.loanedCopyIsBeingDeactivated(copies)) return new ResponseEntity<>(new ErrorMessage("¡No puedes desactivar un ejemplar reservado!"),HttpStatus.BAD_REQUEST);
+            if(copyService.newCopyWithDisabledBook(copies, book)) return new ResponseEntity<>(new ErrorMessage("¡No puedes agregar ejemplares a un libro desactivado!"),HttpStatus.BAD_REQUEST);
 
             for(CopyModel copy : copies){
-                if(copyService.exists(copy.getId())){
-                    if(!book.isActive()){
-                        if(copy.getActive() && !copyService.findCopyById(copy.getId()).getActive()) return new ResponseEntity<>(new ErrorMessage("¡No puedes activar un ejemplar si el libro esta desactivado!"),HttpStatus.BAD_REQUEST);
-                    }
-                    if ((copy.getBooked() && !copy.getActive())) return new ResponseEntity<>(new ErrorMessage("¡No puedes desactivar un ejemplar reservado!"),HttpStatus.BAD_REQUEST);
-                    savedCopies.add(copyService.saveCopy(copy));
-                }
-                else {
-                    if(!book.isActive()) return new ResponseEntity<>(new ErrorMessage("¡No puedes agregar ejemplares a un libro desactivado!"),HttpStatus.BAD_REQUEST);
-                    savedCopies.add(copyService.saveCopy(new CopyModel(copy.getId())));
-                }
+                if(copyService.exists(copy.getId()))savedCopies.add(copyService.saveCopy(copy));
+                else savedCopies.add(copyService.saveCopy(new CopyModel(copy.getId())));
             }
         }
 
