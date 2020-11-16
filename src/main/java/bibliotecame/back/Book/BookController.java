@@ -93,16 +93,15 @@ public class BookController {
         List<CopyModel> savedCopies = new ArrayList<>();
 
         if(copies!=null && !copies.isEmpty()){
+
             if(copies.size()>=100) return new ResponseEntity<>(new ErrorMessage("¡El libro ya tiene demasiados ejemplares!"),HttpStatus.BAD_REQUEST);
+            if(copyService.copyActivationWithDisabledBook(copies, book)) return new ResponseEntity<>(new ErrorMessage("¡No puedes activar un ejemplar si el libro esta desactivado!"),HttpStatus.BAD_REQUEST);
+            if(copyService.loanedCopyIsBeingDeactivated(copies)) return new ResponseEntity<>(new ErrorMessage("¡No puedes desactivar un ejemplar reservado!"),HttpStatus.BAD_REQUEST);
+            if(copyService.newCopyWithDisabledBook(copies, book)) return new ResponseEntity<>(new ErrorMessage("¡No puedes agregar ejemplares a un libro desactivado!"),HttpStatus.BAD_REQUEST);
 
             for(CopyModel copy : copies){
-                if(copyService.exists(copy.getId())){
-                    if ((copy.getBooked() && !copy.getActive())) return new ResponseEntity<>(new ErrorMessage("¡No puedes desactivar un ejemplar reservado!"),HttpStatus.BAD_REQUEST);
-                    savedCopies.add(copyService.saveCopy(copy));
-                }
-                else {
-                    savedCopies.add(copyService.saveCopy(new CopyModel(copy.getId())));
-                }
+                if(copyService.exists(copy.getId()))savedCopies.add(copyService.saveCopy(copy));
+                else savedCopies.add(copyService.saveCopy(new CopyModel(copy.getId())));
             }
         }
 
