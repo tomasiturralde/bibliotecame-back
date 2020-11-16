@@ -707,6 +707,72 @@ public class OnStart {
                 sanctionController.checkAndCreateSanction(sanctionForm);
 
 
+                if(!userService.emailExists("demo.bibliotecame@ing.austral.edu.ar")) {
+                    UserModel demoUser = new UserModel("demo.bibliotecame@ing.austral.edu.ar","demo123","demo user","demo user","11111111");
+                    demoUser.setVerified(true);
+                    demoUser.setActive(true);
+                    userService.saveUser(demoUser);
+
+                    LoanModel loan = loanService.saveLoan(new LoanModel(copies1.get(1),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5))));
+                    copies1.get(1).setBooked(true);
+                    copyService.saveCopy(copies1.get(1));
+                    userService.addLoan(demoUser,loan);
+                    loan.setWithdrawalDate(LocalDate.now());
+                    loan.setReturnDate( LocalDate.now() );
+                    loanService.saveLoan(loan);
+
+                    loan = loanService.saveLoan(new LoanModel(copies1.get(2),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5))));
+                    copies1.get(2).setBooked(true);
+                    copyService.saveCopy(copies1.get(2));
+                    userService.addLoan(demoUser,loan);
+                    loan.setWithdrawalDate(LocalDate.now());
+                    loan.setReturnDate( LocalDate.now() );
+                    loanService.saveLoan(loan);
+
+                    loan = loanService.saveLoan(new LoanModel(copies1.get(1),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5))));
+                    copies1.get(1).setBooked(true);
+                    copyService.saveCopy(copies1.get(1));
+                    userService.addLoan(demoUser,loan);
+                    loanService.saveLoan(loan);
+
+                    loan = loanService.saveLoan(new LoanModel(copies2.get(1),LocalDate.now().minus(Period.ofDays(10)),LocalDate.now().minus(Period.ofDays(5))));
+                    copies2.get(1).setBooked(true);
+                    copyService.saveCopy(copies2.get(1));
+                    userService.addLoan(demoUser,loan);
+                    loan.setWithdrawalDate(LocalDate.now().minus(Period.ofDays(9)));
+                    loanService.saveLoan(loan);
+
+                    RequestModel rm1 = new RequestModel(new RequestForm("To kill a mockingbird","Harper Lee","¡Es un gran libro clasico!"));
+                    RequestModel rm2 = new RequestModel(new RequestForm("The great gatsby","F. Scott Fitzgerald","Me parece un libro interesante."));
+                    RequestModel rm3 = new RequestModel(new RequestForm("One hundred years of solitude","Gabriel García Márquez","Leí en un foro que es muy bueno."));
+                    RequestModel rm4 = new RequestModel(new RequestForm("In cold blood","Truman Capote","Es una gran novela que tomó muchos años de investigación para realizarse"));
+                    RequestModel rm5 = new RequestModel(new RequestForm("Brave New World","Aldous Huxley","Es muy controversial, pero da mucho que pensar"));
+                    RequestModel rm6 = new RequestModel(new RequestForm("To kill a mockingbird","Harper Lee","Se que rechazaron la solicitud previa, pero insisto en que es muy buen libro."));
+
+                    rm1.setStatus(RequestStatus.REJECTED);
+                    rm2.setStatus(RequestStatus.REJECTED);
+                    rm3.setStatus(RequestStatus.APPROVED);
+                    rm4.setStatus(RequestStatus.PENDING);
+                    rm5.setStatus(RequestStatus.PENDING);
+                    rm6.setStatus(RequestStatus.APPROVED);
+
+                    List<RequestModel> requestModels = new ArrayList<>();
+                    requestModels.add(rm1);
+                    requestModels.add(rm2);
+                    requestModels.add(rm3);
+                    requestModels.add(rm4);
+                    requestModels.add(rm5);
+                    requestModels.add(rm6);
+
+                    requestModels.forEach(rm -> {
+                        rm.setDate(LocalDate.now());
+                        rm.setUser(demoUser);
+                        requestService.saveRequest(rm);
+                    });
+                }
+
+
+
             } catch (Exception ignored) {
             }
 
