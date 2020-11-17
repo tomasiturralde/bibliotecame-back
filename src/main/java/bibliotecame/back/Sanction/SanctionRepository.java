@@ -15,7 +15,7 @@ public interface SanctionRepository extends PagingAndSortingRepository<SanctionM
     Optional<SanctionModel> findById(int id);
 
     @Query(value = "select s from SanctionModel s where s.user=:userModel order by s.endDate")
-    Iterable<SanctionModel> findAllByUser(UserModel userModel);
+    Iterable<SanctionModel> findAllByUser(@Param("userModel") UserModel userModel);
 
     @Query(value = "select s from SanctionModel s where" +
             " s.endDate > :today order by s.endDate")
