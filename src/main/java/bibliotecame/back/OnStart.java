@@ -689,8 +689,8 @@ public class OnStart {
                 sanctionController.checkAndCreateSanction(sanctionForm);
 
 
-                if(!userService.emailExists("demo.bibliotecame@ing.austral.edu.ar")) {
-                    UserModel demoUser = new UserModel("demo.bibliotecame@ing.austral.edu.ar","demo123","demo user","demo user","11111111");
+                if(!userService.emailExists("user.demo.bibliotecame@gmail.com")) {
+                    UserModel demoUser = new UserModel("user.demo.bibliotecame@gmail.com","demo123","demo user","demo user","11111111");
                     demoUser.setVerified(true);
                     demoUser.setActive(true);
                     userService.saveUser(demoUser);
