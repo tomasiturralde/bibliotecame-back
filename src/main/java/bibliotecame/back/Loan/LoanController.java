@@ -4,6 +4,8 @@ import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyService;
+import bibliotecame.back.Email.Email;
+import bibliotecame.back.Email.EmailSender;
 import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.Extension.ExtensionService;
 import bibliotecame.back.User.UserModel;
@@ -11,14 +13,16 @@ import bibliotecame.back.User.UserService;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.internet.InternetAddress;
 import javax.validation.Valid;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -45,24 +49,20 @@ public class LoanController {
     }
 
     @GetMapping(value = "/history")
-    public ResponseEntity<Page<LoanDisplay>> getAllReturnedLoans(
+    public ResponseEntity getAllReturnedLoans(
             @Valid @RequestParam(value = "page") int page,
-            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size
-    ) {
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search") String search
+            ) {
+
         if (size == 0) size = 10;
         UserModel user = userService.findLogged();
 
-        Page<LoanDisplay> loanPage;
-        List<LoanModel> loans = userService.getReturnedLoansPage(page, size, user);
-        List<LoanDisplay> loansDisplay = new ArrayList<>();
+        if(user.isAdmin()) return unauthorizedActionError();
 
-        for (LoanModel loan : loans){
-            loansDisplay.add(loanService.turnLoanModalToDisplay(loan, Optional.empty(), false));
-        }
+        Page<LoanDisplay> loans = loanService.getReturnedLoansPage(page, size, user, search.toLowerCase());
 
-        loanPage = new PageImpl<>(loansDisplay);
-
-        return ResponseEntity.ok(loanPage);
+        return ResponseEntity.ok(loans);
     }
 
     @PostMapping("/{bookId}")
@@ -81,7 +81,7 @@ public class LoanController {
 
         List<CopyModel> copies = bookService.getAvailableCopies(book);
         if(userService.hasLoanOfBook(user, book)) return  new ResponseEntity<>(new ErrorMessage("¡Usted ya tiene solicitado un prestamo de este libro!"),HttpStatus.NOT_ACCEPTABLE);
-        if(copies.isEmpty()) return new ResponseEntity<>(new ErrorMessage("¡Lo sentimos! ¡Este libro ya no tiene ejemplates disponibles!"),HttpStatus.EXPECTATION_FAILED);
+        if(copies.isEmpty()) return new ResponseEntity<>(new ErrorMessage("¡Lo sentimos! ¡Este libro ya no tiene ejemplares disponibles!"),HttpStatus.EXPECTATION_FAILED);
         if(userService.getActiveLoans(user).size() >= 5) return new ResponseEntity<>(new ErrorMessage("¡No se pudo realizar el préstamo ya que tiene demasiados prestamos activos!"),HttpStatus.TOO_MANY_REQUESTS);
         if(!userService.getDelayedLoans(user).isEmpty()) return  new ResponseEntity<>(new ErrorMessage("¡Debe devolver sus prestamos atrasados antes de solicitar nuevos!"),HttpStatus.BAD_REQUEST);
 
@@ -133,6 +133,10 @@ public class LoanController {
     @PutMapping("/{id}/withdraw")
     public ResponseEntity setWithdrawDate(@PathVariable Integer id){
         if(!getLogged().isAdmin()) return unauthorizedActionError();
+        return setWithdrawalPostAdminCheck(id);
+    }
+
+    public ResponseEntity setWithdrawalPostAdminCheck(Integer id){
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
@@ -148,6 +152,10 @@ public class LoanController {
     @PutMapping("/{id}/return")
     public ResponseEntity setReturnDate(@PathVariable Integer id){
         if(!getLogged().isAdmin()) return unauthorizedActionError();
+        return setReturnPostAdminCheck(id);
+    }
+
+    public ResponseEntity setReturnPostAdminCheck(Integer id){
         LoanModel loanModel;
         try{
             loanModel = loanService.getLoanById(id);
@@ -165,6 +173,8 @@ public class LoanController {
         }
         catch (NotFoundException n) { return unexistingLoanError(); }
     }
+
+
 
     private ResponseEntity unauthorizedActionError(){
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
@@ -200,4 +210,49 @@ public class LoanController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @GetMapping("/delayed/check")
+    public ResponseEntity checkDelayedLoans(){
+
+        if(!getLogged().isAdmin()) return unauthorizedActionError();
+
+        return new ResponseEntity(loanService.getDelayedLoans().size()>0,HttpStatus.OK);
+    }
+
+    @GetMapping("/delayed/notify")
+    public ResponseEntity notifyDelayedLoans(){
+
+        if(!getLogged().isAdmin()) return unauthorizedActionError();
+        EmailSender sender = new EmailSender();
+
+        List<DelayedLoanDetails> delayedLoans = new ArrayList<>();
+        loanService.getDelayedLoans().forEach(loanModel -> delayedLoans.add(loanService.turnLoanModalToDelayedDetails(loanModel)));
+
+        List<String> deliveredEmails = new ArrayList<>();
+        DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        List<Email> emailsToSend = new ArrayList<>();
+
+        delayedLoans.forEach(lm -> {
+            if(!deliveredEmails.contains(lm.getUserEmail())) {
+                String body = "Estimado " + userService.findUserByEmail(lm.getUserEmail()).getFirstName() + ": <br>" +
+                        "Le recordamos que actualmente tiene los siguientes prestamos ATRASADOS: <ul>";
+                List<DelayedLoanDetails> userLoans = delayedLoans.stream().filter(loan -> loan.getUserEmail().equals(lm.getUserEmail())).collect(Collectors.toList());
+                for (DelayedLoanDetails loan : userLoans) {
+                    body += "<br><li><strong>Libro:</strong> <i>\""+loan.getBookTitle()+"\"</i></li>" +
+                            "<li><strong>Fecha de Retiro:</strong> "+loan.getWithdrawDate().format(formatters)+"</li>"+
+                            "<li><strong>Fecha de Vencimiento:</strong> "+loan.getReturnDate().format(formatters)+"</li>";
+                }
+                body += "</ul><br>Atte, Administración Bibliotecame.";
+                try {
+                    emailsToSend.add(new Email(new InternetAddress(lm.getUserEmail(),lm.getUserName()),"Prestamos atrasados",body));
+                } catch (UnsupportedEncodingException e) {
+                    e.printStackTrace();
+                }
+                deliveredEmails.add(lm.getUserEmail());
+            }
+        });
+
+        emailsToSend.forEach(sender::notifyWithGmail);
+
+        return new ResponseEntity(emailsToSend.size(),HttpStatus.OK);
+    }
 }

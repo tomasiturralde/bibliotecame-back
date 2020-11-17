@@ -17,7 +17,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
@@ -41,11 +44,13 @@ public class AuthController {
     @PostMapping()
     public ResponseEntity authenticate(@Valid @RequestBody LoginForm loginForm) {
 
-        if(!userService.emailExists(loginForm.getEmail())) return new ResponseEntity(new ErrorMessage("¡Las credenciales ingresadas son incorrectas!"),HttpStatus.UNAUTHORIZED);
+        if(!userService.emailExists(loginForm.getEmail())) return new ResponseEntity<>(new ErrorMessage("¡Las credenciales ingresadas son incorrectas!"),HttpStatus.UNAUTHORIZED);
 
         UserModel user = userService.findUserByEmail(loginForm.getEmail());
 
+        if(!user.isAdmin() && !user.isVerified()) return new ResponseEntity<>(new ErrorMessage("¡Por favor verifique su dirección de correo para poder acceder a Bibliotecame!"),HttpStatus.UNAUTHORIZED);
         if(sanctionService.userIsSanctioned(user)) return new ResponseEntity<>(new ErrorMessage("¡Usted está sancionado, por favor comuniquese con administración!"),HttpStatus.UNAUTHORIZED);
+        if(!user.isActive()) return new ResponseEntity(new ErrorMessage("¡Su cuenta está desactivada!"),HttpStatus.UNAUTHORIZED);
 
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(loginForm.getEmail(), loginForm.getPassword());
@@ -60,9 +65,9 @@ public class AuthController {
             return new ResponseEntity<>(new LoginResponse(new JWTToken(jwt), user.isAdmin(), user.getFirstName() + " " + user.getLastName()), httpHeaders, HttpStatus.OK);
         }
         catch (AuthenticationException e){
-            return new ResponseEntity(new ErrorMessage("¡Las credenciales ingresadas son incorrectas!"),HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("¡Las credenciales ingresadas son incorrectas!"),HttpStatus.UNAUTHORIZED);
         }
 
-         }
+    }
 
 }

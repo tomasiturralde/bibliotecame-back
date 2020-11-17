@@ -2,6 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '2.3.3.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.10.RELEASE'
 	id 'java'
+	id 'jacoco'
 }
 
 group = 'bibliotecame'
@@ -29,7 +30,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.session:spring-session-jdbc'
 	implementation 'jakarta.validation:jakarta.validation-api'
-	compileOnly 'org.projectlombok:lombok'
+    implementation 'junit:junit:4.12'
+    compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -42,8 +44,23 @@ dependencies {
 	testImplementation 'com.h2database:h2'
 	compile("com.auth0:java-jwt:3.4.0")
 	compile group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+	compile group: 'com.sun.mail', name: 'javax.mail', version: '1.6.2'
+
 }
+
+jacoco {
+	toolVersion = "0.8.6"
+	reportsDir = file("$buildDir/jacoco")
+}
+
 
 test {
 	useJUnitPlatform()
+}
+
+test {
+	finalizedBy jacocoTestReport
+}
+jacocoTestReport {
+	dependsOn test
 }

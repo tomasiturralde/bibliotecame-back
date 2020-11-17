@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -149,7 +150,7 @@ public class ReviewTests {
 
         bookModelCopy2.setBooked(true);
         copyService.saveCopy(bookModelCopy2);
-        LoanModel loan2 = new LoanModel(bookModelCopy, today, today.plus(Period.ofDays(5)));
+        LoanModel loan2 = new LoanModel(bookModelCopy2, today, today.plus(Period.ofDays(5)));
         LoanModel savedLoanModel2 = loanService.saveLoan(loan2);
         userService.addLoan(studentUser2, savedLoanModel2);
 
@@ -179,9 +180,30 @@ public class ReviewTests {
 
     @Test
     void testUserCanCreateAReview(){
+        BookModel bm = new BookModel("New Book again",1995,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel cm = new CopyModel("NBA1231");
+        bookService.saveBook(bm);
+        copies = new ArrayList<>();
+        copies.add(cm);
+        bm.setCopies(copies);
+
+        setSecurityContext(studentUser);
+        copyService.saveCopy(cm);
+        bookService.saveBook(bm);
+        cm.setBooked(true);
+        copyService.saveCopy(cm);
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(cm, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(loan.getId());
+        loanController.setReturnDate(loan.getId());
+
+
         setSecurityContext(studentUser);
         ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
-        assertThat(reviewController.createReview(review,bookModel.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(reviewController.createReview(review,bm.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
@@ -219,7 +241,7 @@ public class ReviewTests {
     @Test
     void testStudentCanGetItsOwnReview(){
         setSecurityContext(studentUser);
-        ReviewModel review = getStudentFirstReview(studentUser, bookModel);
+        ReviewModel review = reviewService.findAllByUserModel(studentUser).get(0);
         if (review == null) {
             ReviewModel reviewModel = new ReviewModel("Great", 5, userService.findLogged());
             review = (ReviewModel) reviewController.createReview(reviewModel, bookModel.getId()).getBody();
@@ -310,6 +332,164 @@ public class ReviewTests {
         review.setDescription("It was even better than just breathtaking!");
         setSecurityContext(studentUser2);
         assertThat(((ErrorMessage)reviewController.updateReview(review.getId(),review).getBody()).getMessage()).isEqualTo("¡No puedes modificar una reseña escrita por otro alumno!");
+    }
+
+    @Test
+    public void userCantDeleteReviewItDidntPost(){
+        setSecurityContext(studentUser);
+        BookModel bookModelIV = new BookModel("GioGio's Bizzarre Adventure Part IV",2003,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyIV = new CopyModel("GG4-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelIV);
+
+        copies.add(bookModelCopyIV);
+        bookModelIV.setCopies(copies);
+        bookService.saveBook(bookModelIV);
+
+        bookModelCopyIV.setBooked(true);
+        copyService.saveCopy(bookModelCopyIV);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyIV, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(savedLoanModel.getId());
+        loanController.setReturnDate(savedLoanModel.getId());
+        setSecurityContext(studentUser);
+
+        assertThat(reviewController.createReview(review,bookModelIV.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        setSecurityContext(studentUser2);
+        assertThat(((ErrorMessage)reviewController.deleteReview(review.getId()).getBody()).getMessage()).isEqualTo("Solo el alumno que realizó esta reseña puede eliminarla");
+    }
+
+    @Test
+    public void userCanDeleteReviewItDidPost(){
+        setSecurityContext(studentUser);
+        BookModel bookModelV = new BookModel("GioGio's Bizzarre Adventure Part V",2003,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyV = new CopyModel("GG5-001");
+        List<CopyModel> copies = new ArrayList<>();
+        bookService.saveBook(bookModelV);
+
+        copies.add(bookModelCopyV);
+        bookModelV.setCopies(copies);
+        bookService.saveBook(bookModelV);
+
+        bookModelCopyV.setBooked(true);
+        copyService.saveCopy(bookModelCopyV);
+
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyV, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        ReviewModel review = new ReviewModel("Great!",5,userService.findLogged());
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(savedLoanModel.getId());
+        loanController.setReturnDate(savedLoanModel.getId());
+
+        setSecurityContext(studentUser);
+
+        assertThat(reviewController.createReview(review,bookModelV.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(reviewController.deleteReview(review.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void requestingUnexistingReviewFails(){
+        assertThat(reviewController.getReviewModel(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void testUserCantCreateTwoReviewsForSameBook(){
+        BookModel bookModelAgain = new BookModel("GioGio's Bizzarre Adventure III",1995,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookModelCopyAgain = new CopyModel("GGIII-001");
+        CopyModel bookModelCopy2Again = new CopyModel("GGIII-002");
+        bookService.saveBook(bookModelAgain);
+        copies = new ArrayList<>();
+        copies.add(bookModelCopyAgain);
+        copies.add(bookModelCopy2Again);
+        bookModelAgain.setCopies(copies);
+
+        setSecurityContext(studentUser);
+        copyService.saveCopy(bookModelCopyAgain);
+        copyService.saveCopy(bookModelCopy2Again);
+        bookService.saveBook(bookModelAgain);
+        bookModelCopyAgain.setBooked(true);
+        copyService.saveCopy(bookModelCopyAgain);
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookModelCopyAgain, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(loan.getId());
+        loanController.setReturnDate(loan.getId());
+        setSecurityContext(studentUser);
+
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        assertThat(reviewController.createReview(review,bookModelAgain.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        ReviewModel review2 = new ReviewModel("It was breathtaking!",1,userService.findLogged());
+        assertThat(reviewController.createReview(review2,bookModelAgain.getId()).getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    @Test
+    public void testUpdateReviewUnsuccesfullCalls(){
+        BookModel bookieModel = new BookModel("GioGio's IV",1995,"Araki Hirohiko","Weekly Shonen Jump");
+        CopyModel bookieModelCopy = new CopyModel("GGIV-1");
+        bookService.saveBook(bookieModel);
+        copies = new ArrayList<>();
+        copies.add(bookieModelCopy);
+        bookieModel.setCopies(copies);
+
+        setSecurityContext(studentUser);
+        copyService.saveCopy(bookieModelCopy);
+        bookService.saveBook(bookieModel);
+        bookieModelCopy.setBooked(true);
+        copyService.saveCopy(bookieModelCopy);
+        LocalDate today = LocalDate.now();
+        LoanModel loan = new LoanModel(bookieModelCopy, today, today.plus(Period.ofDays(5)));
+        LoanModel savedLoanModel = loanService.saveLoan(loan);
+        userService.addLoan(studentUser, savedLoanModel);
+        setSecurityContext(admin);
+        loanController.setWithdrawDate(loan.getId());
+        loanController.setReturnDate(loan.getId());
+        setSecurityContext(studentUser);
+        ReviewModel review = new ReviewModel("It was breathtaking!",5,userService.findLogged());
+        assertThat(reviewController.createReview(review,bookieModel.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        setSecurityContext(studentUser2);
+        assertThat(reviewController.updateReview(-1,new ReviewModel()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        setSecurityContext(admin);
+        assertThat(reviewController.updateReview(review.getId(),new ReviewModel()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        setSecurityContext(studentUser);
+        assertThat(reviewController.updateReview(review.getId(),new ReviewModel()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+    }
+
+    @Test
+    public void testUnexistingReviewResponses(){
+        setSecurityContext(admin);
+        assertThat(reviewController.getReviewModel(-1).getStatusCode()).isNotEqualTo(HttpStatus.OK);
+        assertThat(reviewController.deleteReview(-1).getStatusCode()).isNotEqualTo(HttpStatus.OK);
+        assertThat(reviewController.createReview(new ReviewModel(3,admin),-1).getStatusCode()).isNotEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    public void reviewModelCanGetItsIDchanged(){
+        ReviewModel review = new ReviewModel(3,new UserModel());
+        review.setId(5);
+        assertThat(review.getId()).isEqualTo(5);
+    }
+
+    @Test
+    public void reviewServiceReturnsFalseForUnexistingReview(){
+        assertFalse(reviewService.exists(-1));
     }
 
 }

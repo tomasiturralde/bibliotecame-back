@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -136,28 +136,7 @@ public class BookTests {
 
     }
 
-//    @Test
-//    //asserts failure for: not admin user creating book
-//    void testUnauthorized(){
-//
-//        UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
-//        user.setAdmin(false);
-//
-//        Mockito.when(authentication.getPrincipal()).thenReturn(user);
-//        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        assertThat(bookController.createBook(new BookModel("Las calles", 2012, RandomStringGenerator.getAlphaNumericString(10), RandomStringGenerator.getAlphaNumericString(10))).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
-//
-//    }
-
     @Test
-    //asserts failure for:
-    // empty name
-    // non valid year
-    // non recognised author
-    // non recognised publisher
-    // non recognised tag
     void testBadRequest(){
 
         List<GrantedAuthority> auths = new ArrayList<>();
@@ -179,7 +158,6 @@ public class BookTests {
     }
 
     @Test
-    //asserts failure for: creating already existing book
     void testNotAcceptable(){
 
         List<GrantedAuthority> auths = new ArrayList<>();
@@ -234,24 +212,6 @@ public class BookTests {
         assertThat(!result.contains(lasMarias));
 
     }
-
-//    @Test
-//    void testUnauthorizedForDeactivate() {
-//
-//        UserModel user = new UserModel("khalil@mail.austral.edu.ar", "password", "Khalil", "Stessens", "12341234");
-//        user.setAdmin(false);
-//
-//        Mockito.when(authentication.getPrincipal()).thenReturn(user);
-//        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        assertThat(bookController.deactivateBook(new BookModel("Las calles",
-//                                                    2012,
-//                                                    RandomStringGenerator.getAlphabeticString(18),
-//                                                    RandomStringGenerator.getAlphabeticString(22))
-//                                                    .getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
-//
-//    }
 
     @Test
     void testDeactivatingNonexistentBookReturnsBadRequest() {
@@ -339,51 +299,6 @@ public class BookTests {
         replacementTags.add(new TagModel(RandomStringGenerator.getAlphabeticString(5)));
         testTagModification(book, saved, HttpStatus.OK, replacementTags);
     }
-
-//    @Test
-//    public void testBookModificationUnAuthorized() {
-//        String randomName1 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
-//        String randomName2 = RandomStringGenerator.getAlphaNumericStringWithSymbols(30);
-//        UserModel user = new UserModel("rocio@mail.austral.edu.ar", "password", "Rocio", "Ferreiro", "12341234");
-//        user.setAdmin(true);
-//
-//        Mockito.when(authentication.getPrincipal()).thenReturn(user);
-//        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
-//        SecurityContextHolder.setContext(securityContext);
-//
-//        TagModel tag1 = tagService.findTagByName("tag1");
-//        TagModel tag2 = tagService.findTagByName("tag2");
-//
-//        List<TagModel> tagList = new ArrayList<>();
-//        tagList.add(tag1);
-//        tagList.add(tag2);
-//
-//        BookModel book = new BookModel(randomName1, 2010, RandomStringGenerator.getAlphabeticString(10), RandomStringGenerator.getAlphaNumericString(10), tagList);
-//
-//        ResponseEntity<BookModel> response = bookController.createBook(book);
-//
-//        BookModel saved = response.getBody();
-//
-//        user.setAdmin(false);
-//
-//        List<CopyModel> copies = new ArrayList<>();
-//        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
-//        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
-//        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
-//        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(15)));
-//
-//        assert saved != null;
-//        testTitleModification(book, saved, HttpStatus.UNAUTHORIZED, randomName2);
-//        testYearModification(book, saved, HttpStatus.UNAUTHORIZED, 2007);
-//        testAuthorModification(book, saved, HttpStatus.UNAUTHORIZED, "new Author");
-//        testPublisherModification(book, saved, HttpStatus.UNAUTHORIZED, "new Publisher");
-//        testModificationWithNewCopies(book, saved, HttpStatus.UNAUTHORIZED, copies);
-//
-//
-//        List<TagModel> replacementTags = new ArrayList<>();
-//        replacementTags.add(tag1);
-//        testTagModification(book, saved, HttpStatus.UNAUTHORIZED, replacementTags);
-//    }
 
     @Test
     public void testBookModificationBadRequest() {
@@ -656,12 +571,92 @@ public class BookTests {
         bookService.saveBook(book2);
 
         book2 = bookService.findByAttributeCombination(book2.getTitle(),book2.getAuthor(),book2.getPublisher(),book2.getYear());
-        //Le colocamos los atributos del book1, si este nuevo book2 fuera guardado, tendríamos "dos veces" al book1 en la db.
         book2.setAuthor(book1.getAuthor());
         book2.setPublisher(book1.getPublisher());
         book2.setYear(book1.getYear());
         book2.setTitle(book1.getTitle());
         assertThat(((ErrorMessage)bookController.updateBook(book2.getId(),book2).getBody()).getMessage()).isEqualTo("¡Ya existe un libro con esos datos en el sistema!");
 
+    }
+
+    @Test
+    public void testNonAdminCases(){
+        UserModel nonAdmin = new UserModel("ImGonnaTestAllNonAdminBranches@ing.austral.edu.ar","password12233","Ralph","Wreck it","111111111");
+        userService.saveUser(nonAdmin);
+        List<GrantedAuthority> auths = new ArrayList<>();
+        User unauthorizedUser = new User(nonAdmin.getEmail(), nonAdmin.getPassword(), auths);
+        Mockito.when(authentication.getPrincipal()).thenReturn(unauthorizedUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        assertThat(bookController.createBook(new BookModel("a",1111,"a","a")).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(bookController.updateBook(1,new BookModel("a",1111,"a","a")).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(bookController.deactivateBook(1).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(bookController.activateBook(1).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(bookController.advancedSearch(0,10,new BookSearchForm("","","",new ArrayList<>(),"2")).getBody().getContent().get(0).isActive()).isEqualTo(true);
+        assertThat(bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"").getBody().getTotalElements()).isGreaterThanOrEqualTo(1);
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        BookModel bookModel = new BookModel("Este Libro va a estar desactivado",1111,"De esta forma","Un no admin no puede buscarlo");
+        bookController.createBook(bookModel);
+        bookController.deactivateBook(bookModel.getId());
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(unauthorizedUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        assertThat(bookController.getBookModel(bookModel.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    public void testAdminCases(){
+        List<GrantedAuthority> auths = new ArrayList<>();
+
+        User securityUser = new User(admin.getEmail(), admin.getPassword(), auths);
+
+        Mockito.when(authentication.getPrincipal()).thenReturn(securityUser);
+        Mockito.when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        assertThat(bookController.getBookModel(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(bookController.updateBook(-1,new BookModel("a",1111,"a","a")).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        BookModel bookModel = Objects.requireNonNull(bookController.advancedSearch(0, 10, new BookSearchForm("", "", "", new ArrayList<>(), "")).getBody().getContent().get(0));
+        assertThat(bookController.updateBook(bookModel.getId(),new BookModel("a",1111,"a","a")).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(bookController.getAllByTitleOrAuthorOrPublisherOrTag(0,10,"").getBody().getTotalElements()).isGreaterThanOrEqualTo(1);
+        assertThat(bookController.activateBook(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(bookController.deactivateBook(bookModel.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(bookController.activateBook(bookModel.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(bookService.findAllByTitleOrAuthorOrPublisherOrTags(0,10,"").getTotalElements()).isGreaterThanOrEqualTo(1);
+        assertThat(bookService.findAllByTitleOrAuthorOrPublisherOrTagsAndActive(0,10,"").getTotalElements()).isGreaterThanOrEqualTo(1);
+    }
+
+    @Test
+    public void bookSearchFormFieldsWorkCorrectly(){
+        BookSearchForm form = new BookSearchForm();
+        form.setTitle("Title");
+        form.setAuthor("Author");
+        form.setYear("1111");
+        form.setPublisher("Publisher");
+        form.setTags(new ArrayList<>());
+        form.lowerCase();
+        assertEquals(form.getTitle(),"title");
+        assertEquals(form.getAuthor(),"author");
+        assertEquals(form.getYear(),"1111");
+        assertEquals(form.getPublisher(),"publisher");
+        assertEquals(form.getTags().size(),0);
+    }
+
+    @Test
+    public void testBookServiceExceptions(){
+        assertThat(bookService.updateBook(-1,new BookModel()).getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        try{
+            bookService.findBookByCopy(new CopyModel("LALALALALALA"));
+        }catch (RuntimeException e){
+            assertThat(e.getMessage().equals("Copy with id: " + "LALALALALALA" + " is not associated with any book"));
+        }
     }
 }

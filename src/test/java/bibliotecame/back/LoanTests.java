@@ -6,7 +6,10 @@ import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Copy.CopyModel;
 import bibliotecame.back.Copy.CopyRepository;
 import bibliotecame.back.Copy.CopyService;
-import bibliotecame.back.Extension.*;
+import bibliotecame.back.Extension.ExtensionController;
+import bibliotecame.back.Extension.ExtensionModel;
+import bibliotecame.back.Extension.ExtensionRepository;
+import bibliotecame.back.Extension.ExtensionService;
 import bibliotecame.back.Loan.*;
 import bibliotecame.back.Review.ReviewRepository;
 import bibliotecame.back.Review.ReviewService;
@@ -39,8 +42,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -146,7 +148,19 @@ public class LoanTests {
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
+        ResponseEntity response = loanController.createLoan(interBook.getId());
+
+        assertThat(response.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+        LoanModel loan = (LoanModel) response.getBody();
+
+        assert loan != null;
+        loan.setReturnDate(LocalDate.now().minus(Period.ofDays(2)));
+        loanService.saveLoan(loan);
+
         assertThat(loanController.createLoan(interBook.getId()).getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+
+
     }
 
     @Test
@@ -290,16 +304,24 @@ public class LoanTests {
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
 
-        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+        BookModel interBook = bookService.saveBook(new BookModel("findInFilter"+RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
 
         List<CopyModel> copies = new ArrayList<>();
         copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
         interBook.setCopies(copies);
         bookService.updateBook(interBook.getId(), interBook);
 
-        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
+        BookModel interBook2 = bookService.saveBook(new BookModel("find"+RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
 
-        ResponseEntity<Page<LoanDisplay>> loans = loanController.getAllReturnedLoans(0,0);
+        List<CopyModel> copies2 = new ArrayList<>();
+        copies2.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook2.setCopies(copies2);
+        bookService.updateBook(interBook2.getId(), interBook2);
+
+        LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
+        LoanModel loan2 = (LoanModel)loanController.createLoan(interBook2.getId()).getBody();
+
+        ResponseEntity<Page<LoanDisplay>> loans = (ResponseEntity<Page<LoanDisplay>>) loanController.getAllReturnedLoans(0,0, "");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(0);
@@ -308,7 +330,21 @@ public class LoanTests {
         loan.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
         loanService.saveLoan(loan);
 
-        loans = loanController.getAllReturnedLoans(0,0);
+        assert loan2 != null;
+        loan2.setReturnDate(LocalDate.now().plus(Period.ofDays(1)));
+        loanService.saveLoan(loan2);
+
+        loans = loanController.getAllReturnedLoans(0,0, "2020");
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(2);
+
+        loans = loanController.getAllReturnedLoans(0,0, "find");
+
+        assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(2);
+
+        loans = loanController.getAllReturnedLoans(0,0, "findinfilter");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
         assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
@@ -334,8 +370,6 @@ public class LoanTests {
         bookService.saveBook(bookModeltoLoan1);
         bookService.saveBook(bookModeltoLoan2);
 
-        //After all the setup, we create a loan for each book
-
         loanController.createLoan(bookModeltoLoan1.getId());
         loanController.createLoan(bookModeltoLoan2.getId());
 
@@ -343,16 +377,9 @@ public class LoanTests {
         loan.setWithdrawalDate(LocalDate.now());
         loanService.saveLoan(loan);
 
-        //We edit the first loan, so by default it will be at the END of the list
-        //But as the controller returns it by date, it should still be first
-
         assertThat(Objects.requireNonNull((List<LoanDisplay>)loanController.getAllActiveLoans().getBody()).get(0).getLoanStatus()).isEqualByComparingTo(LoanStatus.WITHDRAWN);
 
-        //It should be returning both loans though, because neither was returned
-
         assertThat(((List<LoanDisplay>)loanController.getAllActiveLoans().getBody()).size()).isEqualTo(2);
-
-        //Finally, if we return one of the loans, it should not be in the active list
 
         loan.setReturnDate(LocalDate.now());
         loanService.saveLoan(loan);
@@ -373,13 +400,9 @@ public class LoanTests {
         bookModeltoLoan1.setCopies(copiestoLoan1);
         bookService.saveBook(bookModeltoLoan1);
 
-        //After all the setup, we create a loan for the user
-
         loanController.createLoan(bookModeltoLoan1.getId());
 
         LoanModel loan = userService.findLogged().getLoans().get(0);
-
-        //A regular user can't set a withdraw date (neither a return)
 
         assertThat(loanController.setWithdrawDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
@@ -388,19 +411,13 @@ public class LoanTests {
         userService.saveUser(admin);
         setSecurityContext(admin);
 
-        //Now that we have an admin, it must be able to set the withdraw date.
-
         assertThat(loanController.setWithdrawDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
-        loan = loanService.getLoanById(loan.getId()); //We refresh our loanmodel
-
-        //We check that the withdraw date is effectively the same as today
+        loan = loanService.getLoanById(loan.getId());
 
         assertThat(loan.getWithdrawalDate().getDayOfWeek()).isEqualTo(LocalDate.now().getDayOfWeek());
 
-        //Finally, we set the return date, and after that we try to edit it again and get a "BAD_REQUEST"
-
         assertThat(loanController.setReturnDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.OK);
-        loan = loanService.getLoanById(loan.getId()); //We refresh our loanmodel
+        loan = loanService.getLoanById(loan.getId());
         assertThat(loan.getReturnDate().getDayOfWeek()).isEqualTo(LocalDate.now().getDayOfWeek());
 
         assertThat(loanController.setReturnDate(loan.getId()).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -434,7 +451,7 @@ public class LoanTests {
         loans = loanController.getAllLoansAdmin(0,0, "new Book");
 
         assertThat(loans.getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
-        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isEqualTo(1);
+        assertThat(Objects.requireNonNull(loans.getBody()).getTotalElements()).isGreaterThanOrEqualTo(1);
 
         loans = loanController.getAllLoansAdmin(0,0, "other not here");
 
@@ -460,28 +477,20 @@ public class LoanTests {
 
         LoanModel loan = userService.findLogged().getLoans().get(0);
 
-        //Up to here we created a Loan succesfully
-
-        ExtensionModel extensionModel = (ExtensionModel)extensionController.createExtension(loan.getId()).getBody();
-
+        extensionController.createExtension(loan.getId()).getBody();
         setSecurityContext(admin);
         loanController.setWithdrawDate(loan.getId());
-        extensionModel = (ExtensionModel) extensionController.approveExtension(loan.getId()).getBody();
+        ExtensionModel extensionModel = (ExtensionModel) extensionController.approveExtension(loan.getId()).getBody();
 
-        //Here we created and approved an extension
-
+        assert extensionModel != null;
         assertTrue(extensionService.findById(extensionModel.getId()).isActive());
         loanController.setReturnDate(loan.getId());
         assertFalse(extensionService.findById(extensionModel.getId()).isActive());
-
-        //We check if it is active before returning the loan, and if after returning the loan it is no longer active.
-
     }
 
     @Test
     void testClearExpiredLoansUserOK(){
 
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -499,12 +508,10 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
-        //clear
         assertThat(loanController.expiredLoansClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
 
         assertThat(password).isEqualTo(notAdmin.getPassword());
@@ -513,7 +520,6 @@ public class LoanTests {
 
     @Test
     void testClearExpiredLoansUserUNAUTHORIZED(){
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -529,20 +535,17 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel) loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
         setSecurityContext(admin);
 
-        //clear
         assertThat(loanController.expiredLoansClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test
     void testClearExpiredLoansAdminOK(){
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(40) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -558,20 +561,17 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
         setSecurityContext(admin);
 
-        //clear
         assertThat(loanController.everyExpiredLoanClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
     }
 
     @Test
     void testClearExpiredLoansAdminUNAUTHORIZED(){
-        //creation of loan
         UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
@@ -587,12 +587,10 @@ public class LoanTests {
 
         LoanModel loan = (LoanModel)loanController.createLoan(interBook.getId()).getBody();
 
-        //change expiration date
         assert loan != null;
         loan.setExpirationDate(LocalDate.now().minus(Period.ofDays(2)));
         loanService.saveLoan(loan);
 
-        //clear
         assertThat(loanController.everyExpiredLoanClearer().getStatusCode()).isEqualByComparingTo(HttpStatus.UNAUTHORIZED);
     }
 
@@ -604,7 +602,7 @@ public class LoanTests {
         userRepository.save(notAdmin);
         setSecurityContext(notAdmin);
 
-        assertThat(((ErrorMessage)loanController.createLoan(-11111).getBody()).getMessage()).isEqualTo("¡El libro solicitado no existe!");
+        assertThat(((ErrorMessage) Objects.requireNonNull(loanController.createLoan(-11111).getBody())).getMessage()).isEqualTo("¡El libro solicitado no existe!");
     }
 
     @Test
@@ -625,6 +623,7 @@ public class LoanTests {
 
         setSecurityContext(admin);
 
+        assert loan != null;
         loanController.setWithdrawDate(loan.getId());
         assertTrue(loanService.getLoanById(loan.getId()).getCopy().getBooked());
         loanController.setReturnDate(loan.getId());
@@ -632,6 +631,113 @@ public class LoanTests {
 
     }
 
+    @Test
+    public void testDelayedCheckAndNotify() throws NotFoundException {
+        setSecurityContext(admin);
 
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(10) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        setSecurityContext(notAdmin);
+
+        BookModel bookToTest = new BookModel("I'm just a textbook",1969,"Or should I say...","Testbook?");
+        bookService.saveBook(bookToTest);
+        CopyModel copyToTest = new CopyModel("T3STC0PY");
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(copyToTest);
+        bookToTest.setCopies(copies);
+        bookService.saveBook(bookToTest);
+
+        LoanModel loan = (LoanModel) loanController.createLoan(bookToTest.getId()).getBody();
+
+        setSecurityContext(admin);
+
+        assert loan != null;
+        loanController.setWithdrawDate(loan.getId());
+        loan = loanService.getLoanById(loan.getId());
+        loan.setExpirationDate(LocalDate.now().minusDays(1));
+        loanService.saveLoan(loan);
+        assertTrue((Boolean) loanController.checkDelayedLoans().getBody());
+        assertThat(loanController.notifyDelayedLoans().getStatusCode()).isEqualByComparingTo(HttpStatus.OK);
+        assertThat(loanController.notifyDelayedLoans().getBody()).isNotEqualTo(0);
+    }
+
+    @Test
+    void testLoanWithNoUserException(){
+        setSecurityContext(admin);
+        BookModel interBook = bookService.saveBook(new BookModel(RandomStringGenerator.getAlphabeticString(10), 2000, authorForSavedBook, publisherForSavedBook));
+
+        List<CopyModel> copies = new ArrayList<>();
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        copies.add(new CopyModel(RandomStringGenerator.getAlphaNumericString(6)));
+        interBook.setCopies(copies);
+        bookService.updateBook(interBook.getId(), interBook);
+        LoanModel loan = new LoanModel(interBook.getCopies().get(0), LocalDate.now(), LocalDate.now());
+
+        loanRepository.save(loan);
+
+        assertThrows(RuntimeException.class, ()-> userService.getUserFromLoan(loan));
+    }
+
+
+    @Test
+    public void testDelayedLoanDetailsMethods(){
+        LoanModel loanModel = new LoanModel(new CopyModel("testing123321"),LocalDate.now(),LocalDate.now().plus(Period.ofDays(5)));
+        UserModel notAdmin = new UserModel(RandomStringGenerator.getAlphaNumericString(40) + "@mail.austral.edu.ar", "password", "Name", "Surname", "12341234");
+        userRepository.save(notAdmin);
+        DelayedLoanDetails details = new DelayedLoanDetails(loanModel,notAdmin,bookRepository.findAll().iterator().next());
+        details.setId(1331);
+        details.setBookTitle("New testing method");
+        details.setUserEmail("NewEmail@ing.austral.edu.ar");
+        details.setWithdrawDate(LocalDate.now().minus(Period.ofDays(2)));
+        details.setReturnDate(LocalDate.now().plus(Period.ofDays(10)));
+        details.setUserName(notAdmin.getFirstName()+notAdmin.getLastName());
+        assertTrue(details.getUserName().contains(notAdmin.getFirstName()));
+        assertThat(details.getId()).isEqualTo(1331);
+        assertThat(details.getBookTitle()).contains("testing");
+        assertThat(details.getReturnDate()).isAfter(LocalDate.now());
+        assertThat(details.getWithdrawDate()).isBefore(LocalDate.now());
+        assertThat(details.getUserEmail()).contains("wEmai");
+    }
+
+    @Test
+    public void testLoanDisplayMethods(){
+        LoanDisplay display = new LoanDisplay(13332,"Mortal testing","Ed Boon",LocalDate.now().plus(Period.ofDays(3)),LocalDate.now().plus(Period.ofDays(2)),LoanStatus.APPROVED_EXTENSION);
+        display.setId(display.getId()+2);
+        assertThat(display.getId()).isGreaterThan(13332);
+        display.setBookAuthor("La comarca");
+        display.setBookTitle(" del Testeo");
+        assertThat(display.getBookAuthor()+display.getBookTitle()).contains("comarca del");
+        display.setExpectedReturnDate(LocalDate.now().plus(Period.ofDays(10)));
+        display.setReturnDate(LocalDate.now().plus(Period.ofDays(8)));
+        assertThat(display.getExpectedReturnDate()).isAfter(display.getReturnDate());
+        display.setUserEmail("ElSeñorDeLosEmails@ing.austral.edu.ar");
+        assertThat(display.getUserEmail()).contains("LosEmails");
+        assertNull(display.getReviewId());
+        assertNull(display.getBookId());
+    }
+
+    @Test
+    public void testLoanStatusMethods(){
+        LoanStatus status = LoanStatus.getFromInt(1);
+        assertThat(status.getId()).isEqualTo(1);
+        try {
+            LoanStatus.getFromInt(1000);
+        }catch (IllegalArgumentException e){
+            assertThat(e.getMessage()).contains("Invalid Status");
+        }
+    }
+
+    @Test
+    public void unexistingLoanThrowsError(){
+        assertThat(loanController.setWithdrawalPostAdminCheck(-1).getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    public void settingNewCopyToLoan(){
+        LoanModel loanModel = new LoanModel(new CopyModel("NewCopyNumber1"),LocalDate.now(),LocalDate.now());
+        loanModel.setCopy(new CopyModel("NewNewCopyNumber2"));
+        assertThat(loanModel.getCopy().getId()).contains("Number2");
+    }
 
 }

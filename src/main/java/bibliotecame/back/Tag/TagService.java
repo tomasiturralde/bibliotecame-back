@@ -1,6 +1,5 @@
 package bibliotecame.back.Tag;
 
-import bibliotecame.back.Review.ReviewModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,10 +17,6 @@ public class TagService {
         this.tagRepository = tagRepository;
     }
 
-    public TagModel findTagById (int id){
-        return this.tagRepository.findById(id).orElseThrow(() -> new RuntimeException("Tag with id: " + id + " not found!"));
-    }
-
     public TagModel saveTag(TagModel tagModel){
         return this.tagRepository.save(tagModel);
     }
@@ -32,10 +27,6 @@ public class TagService {
 
     public Optional<TagModel> exists(String name){
         return this.tagRepository.findByName(name);
-    }
-
-    public boolean isPresent(String name){
-        return this.tagRepository.findByName(name).isPresent();
     }
 
     public List<TagModel> findAllByNameWildcard(String name){

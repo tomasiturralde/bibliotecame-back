@@ -12,7 +12,7 @@ public class SanctionForm {
     private String reason;
 
     @NotNull
-    private LocalDate endDate;  //in request MUST be written in format "yyyy-MM-dd"
+    private LocalDate endDate;
 
     public SanctionForm() {
     }

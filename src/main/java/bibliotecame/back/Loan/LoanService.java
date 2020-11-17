@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.Math.toIntExact;
 
@@ -55,6 +56,7 @@ public class LoanService {
         list.sort((l1, l2) -> {
             if(l1.getReturnDate() == null && l2.getReturnDate() != null) return -1;
             if(l1.getReturnDate() != null && l2.getReturnDate() == null) return 1;
+            if(l1.getReturnDate() != null && l2.getReturnDate() != null) return l2.getReturnDate().compareTo(l1.getReturnDate());
             return l1.getExpirationDate().compareTo(l2.getExpirationDate());
         });
         List<LoanDisplay> result = new ArrayList<>();
@@ -72,11 +74,10 @@ public class LoanService {
     }
 
     private boolean loanDisplayMatches(LoanDisplay display, String lookFor){
-        if (display.getBookAuthor().toLowerCase().contains(lookFor) ||
+        return display.getBookAuthor().toLowerCase().contains(lookFor) ||
                 display.getBookTitle().toLowerCase().contains(lookFor) ||
                 display.getUserEmail().toLowerCase().contains(lookFor) ||
-                display.getLoanStatus().getLabel().toLowerCase().contains(lookFor)) return true;
-        return false;
+                display.getLoanStatus().getLabel().toLowerCase().contains(lookFor);
     }
 
     public LoanDisplay turnLoanModalToDisplay(LoanModel modal, Optional<UserModel> user, boolean withStatus){
@@ -84,6 +85,11 @@ public class LoanService {
         LoanDisplay display = user.map(userModel -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), userModel.getEmail()))
                 .orElseGet(() -> new LoanDisplay(modal.getId(),book.getTitle(), book.getAuthor(), modal.getExpirationDate(), modal.getReturnDate(), getReviewByBook(book.getId()), book.getId()));
         return withStatus? setLoanDisplayStatus(modal, display) : display;
+    }
+
+    public DelayedLoanDetails turnLoanModalToDelayedDetails(LoanModel modal){
+        BookModel book = bookService.findBookByCopy(modal.getCopy());
+        return new DelayedLoanDetails(modal,userService.getUserFromLoan(modal),book);
     }
 
     private Integer getReviewByBook(Integer bookId){
@@ -129,5 +135,51 @@ public class LoanService {
             copyService.saveCopy(loan.getCopy());
             loanRepository.delete(loan);
         }
+    }
+
+    public List<LoanModel> getDelayedLoans(){
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate()!=null && loan.getReturnDate()==null && loan.getExpirationDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
+    }
+
+    public List<LoanModel> getWithdrawnLoans(){
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate()!= null && loan.getReturnDate() == null && !loan.getExpirationDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
+    }
+
+    public List<LoanModel> getReadyForWithdrawal(){
+        return findAll().stream().filter(loan -> loan.getWithdrawalDate() == null && loan.getReturnDate() == null && !loan.getExpirationDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
+    }
+
+    public Page<LoanDisplay> getReturnedLoansPage(int page, int size, UserModel user, String search){
+        Pageable pageable = PageRequest.of(page, size);
+        List<LoanModel> returned = new ArrayList<>();
+        for(LoanModel loan : user.getLoans()){
+            if(loan.getReturnDate() != null){
+                returned.add(loan);
+            }
+        }
+        returned.sort((l0, l1) -> l1.getReturnDate().compareTo(l0.getReturnDate()));
+
+        Stream<LoanDisplay> result = returned.stream().map(l -> turnLoanModalToDisplay(l, Optional.empty(), false));
+
+        List<LoanDisplay> list;
+        if(!search.equals("")){
+            list = result.filter(l -> l.getBookTitle().toLowerCase().contains(search) ||
+                                 l.getExpectedReturnDate().toString().contains(search) ||
+                                 l.getReturnDate().toString().contains(search)).collect(Collectors.toList());
+        } else {
+            list = result.collect(Collectors.toList());
+        }
+
+
+        int start = page*size;
+        int end = Math.min((start + size), list.size());
+        List<LoanDisplay> output = new ArrayList<>();
+        if (start <= end) {
+            output = list.subList(start, end);
+        }
+        return new PageImpl<>(output, pageable, list.size());
     }
 }

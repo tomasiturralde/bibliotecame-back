@@ -10,7 +10,7 @@ public class JWTConfigurer extends SecurityConfigurerAdapter<DefaultSecurityFilt
 
     public static final String AUTHORIZATION_HEADER = "Authorization";
 
-    private TokenProvider tokenProvider;
+    private final TokenProvider tokenProvider;
 
     public JWTConfigurer(TokenProvider tokenProvider) {
         this.tokenProvider = tokenProvider;

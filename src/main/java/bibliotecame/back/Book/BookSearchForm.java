@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 public class BookSearchForm {
 
     String title;
@@ -58,7 +57,7 @@ public class BookSearchForm {
                     }
                 }
             }
-            if(!checkTags.isEmpty()) return false;
+            return checkTags.isEmpty();
         }
         return true;
     }

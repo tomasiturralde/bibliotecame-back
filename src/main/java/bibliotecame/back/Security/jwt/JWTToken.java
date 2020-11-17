@@ -10,11 +10,11 @@ public class JWTToken {
     }
 
     @JsonProperty("token")
-    String getToken() {
+    public String getToken() {
         return token;
     }
 
-    void setIdToken(String token) {
+    public void setIdToken(String token) {
         this.token = token;
     }
 }

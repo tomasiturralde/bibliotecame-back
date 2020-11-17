@@ -4,12 +4,10 @@ import bibliotecame.back.ErrorMessage;
 import bibliotecame.back.User.UserModel;
 import bibliotecame.back.User.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
@@ -56,6 +54,21 @@ public class SanctionController {
         return ResponseEntity.ok(this.sanctionService.saveSanction(sanction));
     }
 
+    @PutMapping()
+    public ResponseEntity modifySanction(@Valid @RequestBody SanctionModel sanctionModel){
+        if(!checkAdmin()) return unauthorizedActionError();
+
+        SanctionModel oldSanction = sanctionService.findSanctionById(sanctionModel.getId());
+
+        if(oldSanction.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity(new ErrorMessage("No puede modificar una sanción desactivada."),HttpStatus.BAD_REQUEST);
+        if(sanctionModel.getEndDate().isBefore(LocalDate.now())) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede terminar antes de la fecha actual!"),HttpStatus.EXPECTATION_FAILED);
+        if(sanctionModel.getEndDate().isAfter(LocalDate.now().plus(Period.ofMonths(3)))) return new ResponseEntity<>(new ErrorMessage("¡La sanción no puede durar más de 3 meses!"),HttpStatus.EXPECTATION_FAILED);
+
+        oldSanction.setEndDate(sanctionModel.getEndDate());
+
+        return ResponseEntity.ok(this.sanctionService.saveSanction(oldSanction));
+    }
+
     private boolean checkAdmin(){
         return userService.findLogged().isAdmin();
     }
@@ -63,5 +76,18 @@ public class SanctionController {
     private ResponseEntity unauthorizedActionError(){
         return new ResponseEntity<>(new ErrorMessage("¡Usted no está autorizado a realizar esta acción!"),HttpStatus.UNAUTHORIZED);
     }
+
+    @GetMapping()
+    public ResponseEntity<Page<SanctionDisplay>> getActiveSanctionsWithDateOrUserFilter(
+            @Valid @RequestParam(value = "page") int page,
+            @Valid @RequestParam(value = "size", required = false, defaultValue = "10") Integer size,
+            @Valid @RequestParam(value = "search", required = false, defaultValue = "") String search
+    ) {
+        search = search.toLowerCase();
+        if (size == 0) size = 10;
+        if(!checkAdmin()) return unauthorizedActionError();
+        return ResponseEntity.ok(sanctionService.findAllByEmailOrStartDateOrEndDate(page,size,search));
+    }
+
 
 }

@@ -3,6 +3,7 @@ package bibliotecame.back.User;
 import bibliotecame.back.Book.BookModel;
 import bibliotecame.back.Book.BookService;
 import bibliotecame.back.Loan.LoanModel;
+import bibliotecame.back.Verification.PasswordContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,6 +37,15 @@ public class UserService {
         return this.userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User with email: " + email + " not found!"));
     }
 
+    public List<UserModel> findAllStudents(){
+        List<UserModel> result = new ArrayList<>();
+        for(UserModel user : userRepository.findAll()){
+            if(!user.isAdmin()) result.add(user);
+        }
+
+        return result;
+    }
+
     public List<UserModel> getAllByEmailSearch(String search){
 
         return this.userRepository.findAllByEmail(search.toLowerCase());
@@ -52,12 +62,17 @@ public class UserService {
     }
 
     public UserModel updateUser(UserModel userModel,int id){
-        userModel.setPassword(BCrypt.hashpw(userModel.getPassword(), BCrypt.gensalt()));
         UserModel userToUpdate = findUserById(id);
-        userToUpdate.setPassword(userModel.getPassword());
         userToUpdate.setFirstName(userModel.getFirstName());
         userToUpdate.setLastName(userModel.getLastName());
         userToUpdate.setPhoneNumber(userModel.getPhoneNumber());
+        return this.userRepository.save(userToUpdate);
+    }
+
+    public UserModel updatePassword(PasswordContainer password, int id){
+        password.setPassword(BCrypt.hashpw(password.getPassword(),BCrypt.gensalt()));
+        UserModel userToUpdate = findUserById(id);
+        userToUpdate.setPassword(password.getPassword());
         return this.userRepository.save(userToUpdate);
     }
 
@@ -69,6 +84,14 @@ public class UserService {
         if(userModel.getFirstName().isEmpty()) return false;
         if(userModel.getLastName().isEmpty()) return false;
         if(!userModel.getPassword().matches(passwordRegex)) return false;
+        return userModel.getEmail().matches(emailRegex);
+    }
+
+    public boolean validUserUpdate(UserModel userModel){
+        String emailRegex = "^[\\w-.]+@([\\w-]+\\.austral.edu.)+[\\w-]{2,4}$";
+        if(userModel.getPhoneNumber().isEmpty()) return false;
+        if(userModel.getFirstName().isEmpty()) return false;
+        if(userModel.getLastName().isEmpty()) return false;
         return userModel.getEmail().matches(emailRegex);
     }
 
@@ -86,20 +109,6 @@ public class UserService {
             }
         }
         return actives;
-    }
-
-    public List<LoanModel> getReturnedLoansPage(int page, int size, UserModel user){
-        List<LoanModel> returned = new ArrayList<>();
-        for(LoanModel loan : user.getLoans()){
-            if(loan.getReturnDate() != null){
-                returned.add(loan);
-            }
-        }
-        returned.sort((l0, l1) -> l1.getReturnDate().compareTo(l0.getReturnDate()));
-
-        int start = page*size;
-        int end = Math.min((start + size), returned.size());
-        return returned.subList(start, end);
     }
 
     public boolean hasLoanOfBook(UserModel user, BookModel book){
@@ -135,7 +144,8 @@ public class UserService {
     }
 
     public void deleteUser(UserModel user){
-        this.userRepository.delete(user);
+        user.setActive(false);
+        this.userRepository.save(user);
     }
 
     public boolean userExists(int id) {return this.userRepository.findById(id).isPresent(); }
