@@ -34,7 +34,11 @@ public class SanctionService {
     }
 
     public boolean userIsSanctioned(UserModel userModel){
-        return (this.sanctionRepository.findByUser(userModel).isPresent() && this.sanctionRepository.findByUser(userModel).get().getEndDate().isAfter(LocalDate.now()));
+        SanctionModel sanction = null;
+        for (SanctionModel sanctionModel : sanctionRepository.findAllByUser(userModel)) {
+            sanction = sanctionModel;
+        }
+        return ( sanction != null && sanction.getEndDate().isAfter(LocalDate.now()));
     }
 
 
